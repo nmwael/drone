@@ -69,10 +69,10 @@
 
 | Item | Qty | Status | Est. Cost | Recommended Part / Links |
 |------|-----|--------|-----------|--------------------------|
-| **WiFi 6 Router / AP** | 1 | 🛒 TO BUY | **$80-150** | **ASUS RT-AX58U** or **GL.iNet GL-AXT1800** (travel router, OpenWrt)<br>5 GHz, 80 MHz channel, low latency |
+| **WiFi 5 Router / AP** | 1 | ✅ **ON HAND** | **$0** | Existing router (5 GHz capable, use for local network) |
 | **External Antenna (ESP32-S3)** | 1 | 🛒 TO BUY | $10-20 | 2.4/5 GHz dual-band PCB antenna or u.FL → SMA pigtail |
 | **Ground Station PC / Raspberry Pi 5** | 1 | 🛒 TO BUY | **$0 (PC) / $80 (Pi 5)** | PC preferred for WebXR; Pi 5 can run MediaMTX only |
-| **Meta Quest 2/3/Pro** | 1 | 🛒 TO BUY | **$300-500** | Quest 3 recommended (better passthrough, resolution) |
+| **Meta Quest 2** | 1 | ✅ **ON HAND** | **$0** | Used Quest 2 ($300 value) — WebXR capable |
 
 ---
 
@@ -133,16 +133,16 @@
 | Navigation Sensors | $200 | $305 |
 | ToF Array (12×) | $216 | $300 |
 | **Power & Actuation** | **$16** | **$30** |
-| Comms & Ground Station | $390 | $720 |
+| **Comms & Ground Station** | **$10** | **$100** |
 | **Mechanical (Printed Fittings)** | **$10** | **$25** |
 | Dev Tools | **$75** | **$210** |
 | **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$967** | **~$1,720** |
+| **TOTAL** | **~$587** | **~$1,100** |
 
 > **Notes:**
-> - **Min cost** assumes: Quest 2 used, Pi 5 ground station, AliExpress/Direct from China for sensors
-> - **Max cost** assumes: Quest 3 new, PC ground station, DigiKey/Mouser for all parts
-> - **Already owned saves ~$500-600**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**
+> - **Min cost** assumes: PC ground station, AliExpress/Direct from China for sensors
+> - **Max cost** assumes: PC ground station, DigiKey/Mouser for all parts
+> - **Already owned saves ~$800-900**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**, **Quest 2 ($300)**, **WiFi 5 router**
 > - **3D Printing saves ~$150-400** vs buying enclosures, gimbal, mounts, dampers, battery trays (only hardware/inserts to buy)
 
 ---

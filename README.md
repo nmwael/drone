@@ -425,9 +425,9 @@ paths:
 | **OV5640 Camera Module** | 1 | 720p/1080p @ 30fps | CSI/parallel; IR filter removed for night vision |
 | **MLX90640 Thermal** | 1 | Thermal overlay | 32x24 @ 32 Hz, I2C |
 | **u-blox ZED-F9P + GPS Antenna** | 1 | Precision timestamp + position | PPS output to ESP32-S3 GPIO for frame sync |
-| **WiFi 6 Router / AP** | 1 | Ground link | ASUS RT-AX58U or similar; 5 GHz, 80 MHz channel |
+| **WiFi 5 Router / AP** | 1 | Ground link | **ON HAND** — existing router (5 GHz capable) |
 | **Ground Station PC / Pi 5** | 1 | MediaMTX + WebXR host | Pi 5 can run MediaMTX; PC needed for WebXR browser |
-| **Meta Quest 2/3/Pro** | 1 | HMD + Controllers | Browser: Meta Quest Browser (WebXR) or Firefox Reality |
+| **Meta Quest 2** | 1 | HMD + Controllers | **ON HAND** — used Quest 2 ($300 value), WebXR capable |
 | **External Antenna (ESP32-S3)** | 1 | Range | 2.4/5 GHz dual-band PCB antenna or u.FL -> SMA |
 
 ---
