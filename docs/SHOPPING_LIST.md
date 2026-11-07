@@ -46,8 +46,8 @@
 | Item | Qty | Status | Est. Cost | Recommended Part / Links |
 |------|-----|--------|-----------|--------------------------|
 | **Servo (Camera Gimbal)** | 1 | 🔄 SALVAGED | $0 | 2nd CP2 servo (pan/tilt for gimbal) |
-| **3.3V Regulator (3A+)** | 1 | 🛒 TO BUY | $8-15 | **TPS5430** (3A buck) or **LM2596S-3.3** with heatsink |
-| **5V BEC (3A+)** | 1 | 🛒 TO BUY | $8-15 | **LM2596S-5.0** or UBEC 5V/3A |
+| **3.3V Regulator (3A+)** | 1 | ✅ **ON HAND** | $0 | Buck converter (3.3V 3A+) |
+| **5V BEC (3A+)** | 1 | ✅ **ON HAND** | $0 | Buck converter (5V 3A+) |
 | **Power Distribution Box** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printed enclosure with fused 5V/3.3V rails, XT60 in/out |
 | **Main Battery** | 1 | 🛒 TO BUY | $30-60 | **2S LiPo 5000-8000mAh 50C+** (7.4V) or **3S 5000mAh** (11.1V)<br>→ [Gens Ace](https://www.gensace.de/) / [HRB](https://www.hrb-battery.com/) |
 | **Battery Charger** | 1 | 🔄 SALVAGED | $0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
@@ -122,12 +122,12 @@
 |----------|----------------|----------------|
 | Vision Sensors | $60 | $90 |
 | Navigation Sensors | $200 | $305 |
-| **Power & Actuation** | **$16** | **$30** |
+| **Power & Actuation** | **$30** | **$60** |
 | **Comms & Ground Station** | **$10** | **$100** |
 | **Mechanical (Printed Fittings)** | **$5** | **$15** |
 | Dev Tools | **$0** | **$0** |
 | **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$291** | **~$580** |
+| **TOTAL** | **~$305** | **~$610** |
 
 > **Notes:**
 > - **Min cost** assumes: PC ground station, AliExpress/Direct from China for sensors
