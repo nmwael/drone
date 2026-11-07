@@ -14,7 +14,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 |--------|-----|------|--------------|
 | **ESP32-C3** | 1 | Sensor Hub / Comms | RISC-V, WiFi 4/BLE 5, low power, 400KB SRAM |
 | **ESP32-S3** | 1 | Vision Processing | Dual-core Xtensa LX7, WiFi/BLE, PSRAM support, AI acceleration |
-| **RP2040** | 3+ | Motor Control / I/O | Dual-core Cortex-M0+, PIO for precise timing, 264KB SRAM |
+| **RP2040** | 3+ | Motor Control / I/O | Dual-core Cortex-M0+, PIO for precise timing, 264KB SRAM, **16MB (128 Mbit) / 4MB (32 Mbit) Flash** |
 | **ESP8266MOD (AI Thinker)** | 1 | **Backup Comms / Telemetry Relay** | Xtensa L106, WiFi 4 (2.4 GHz only), 160KB SRAM, 4MB Flash |
 
 ### Sensors (to procure/integrate)
@@ -524,7 +524,7 @@ drone/
 | GPIO 5/6 | UART3 (to RP2040#3) | 115200 baud |
 | GPIO 10 | GPIO (Status LED) | Heartbeat |
 
-### RP2040 #1 (Motor Control + RC Input)
+### RP2040 #1 (Motor Control + RC Input) — **16MB (128 Mbit) Flash**
 
 | Pin | Function | Notes |
 |-----|----------|-------|
@@ -540,7 +540,7 @@ drone/
 | **GPIO 14** | **RC Ch3 (Mode)** | **CP2 Receiver PWM In** |
 | **GPIO 15** | **RC Ch4 (Aux)** | **CP2 Receiver PWM In** |
 
-### RP2040 #2 (Steering + Front ToF)
+### RP2040 #2 (Steering + Front ToF) — **4MB (32 Mbit) Flash**
 
 | Pin | Function | Notes |
 |-----|----------|-------|
@@ -550,7 +550,7 @@ drone/
 | GPIO 5/6 | I2C1 (ToF) | VL53L5CX @ 0x29 (left) |
 | GPIO 16 | GPIO (XSHUT) | VL53L5CX reset/selection |
 
-### RP2040 #3 (Rear ToF + Aux)
+### RP2040 #3 (Rear ToF + Aux) — **4MB (32 Mbit) Flash**
 
 | Pin | Function | Notes |
 |-----|----------|-------|

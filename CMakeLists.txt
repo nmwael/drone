@@ -1,5 +1,11 @@
 # Top-level CMakeLists.txt for RC Monster Truck Sensor Suite
 # Builds all firmware targets for ESP32-S3, ESP32-C3, and RP2040s
+# 
+# RP2040 Flash Configuration:
+#   - RP2040 #1 (Motor):     16MB (128 Mbit) Flash
+#   - RP2040 #2 (Steer+ToF): 4MB (32 Mbit) Flash  
+#   - RP2040 #3 (Rear ToF):  4MB (32 Mbit) Flash
+#   All have 264KB SRAM, dual-core Cortex-M0+, PIO
 
 cmake_minimum_required(VERSION 3.16)
 project(drone_rc_truck LANGUAGES C CXX ASM)
