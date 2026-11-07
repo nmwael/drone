@@ -1,0 +1,81 @@
+# MediaMTX Configuration for STANAG 4609 Video Ingest
+# Receives MPEG-TS over UDP from ESP32-S3, serves WebRTC to Oculus
+
+# Global settings
+logLevel: info
+logFormat: text
+logFile: ""
+api: true
+apiAddress: :9997
+
+# Paths
+paths:
+  # Main STANAG video stream from ESP32-S3
+  stanag:
+    # Ingest from ESP32-S3 via UDP (ESP-NOW bridge or direct WiFi)
+    source: udp://0.0.0.0:8888
+    sourceFormat: mpegts
+    sourceOnDemand: false
+    sourceRedirect: false
+
+    # WebRTC output for Oculus Quest browser
+    webrtc: true
+    webrtcTransport: udp
+    webrtcICEServers:
+      - urls: stun:stun.l.google.com:19302
+      - urls: stun:stun1.l.google.com:19302
+      - urls: stun:stun2.l.google.com:19302
+
+    # HLS output for debugging (optional)
+    hls: false
+
+    # Recording STANAG TS + KLV
+    record: true
+    recordPath: ./recordings/%path/%Y-%m-%d_%H-%M-%S.ts
+    recordFormat: mpegts
+    recordDeleteAfter: 24h
+
+    # KLV extraction hook (runs on stream start)
+    runOnInit: ./scripts/klv_extractor.sh %path
+    runOnInitRestart: true
+
+  # Telemetry downlink (MAVLink/JSON over UDP)
+  telemetry:
+    source: udp://0.0.0.0:8889
+    sourceFormat: raw
+    sourceOnDemand: false
+
+  # Control uplink WebSocket (from Oculus WebXR)
+  control:
+    source: rtsp://0.0.0.0:8554/control
+    sourceOnDemand: true
+
+# Authentication (disable for local dev)
+auth:
+  methods: [none]
+
+# RTSP server (for control uplink)
+rtsp:
+  enable: true
+  port: 8554
+
+# WebRTC settings
+webrtc:
+  enable: true
+  port: 8889
+  iceHostNAT1To1IPs: ""
+  iceHostNAT1To1Ports: ""
+  allowOrigin: "*"
+
+# HLS settings
+hls:
+  enable: false
+
+# SRT settings (backup for long range)
+srt:
+  enable: false
+
+# Metrics
+metrics:
+  enable: true
+  address: :9998
