@@ -34,9 +34,11 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 
 | Component | Specs | Notes |
 |-----------|-------|-------|
-| **Main Battery** | 2S/3S LiPo (7.4V/11.1V) | Power distribution board needed |
+| **Main Battery** | 2S/3S LiPo (7.4V/11.1V) | Power distribution box needed (printed) |
 | **BEC / 5V Reg** | 5V 3A+ | For MCUs and sensors |
 | **3.3V Reg** | 3.3V 1A+ | For ESP32-C3/S3, sensors |
+
+> **Note:** Truck drivetrain uses **existing brushed ESC** (driven directly by CP2 receiver). Steering uses **existing servo** (driven directly by CP2 receiver). No additional motor driver or servo controller needed.
 
 ### Salvaged Parts: Honeybee CP2 (Coaxial Helicopter)
 
@@ -435,12 +437,12 @@ paths:
 | OV5640 Camera | 180 | 3.3V | 594 |
 | MLX90640 | 25 | 3.3V | 83 |
 | ESP32-C3 (Sensor Hub) | 120 | 3.3V | 396 |
-| RP2040 x2 | 50 | 3.3V | 165 |
+| RP2040 x3 | 75 | 3.3V | 248 |
 | GPS (ZED-F9P) | 65 | 3.3V | 215 |
 | IMU + Mag + Baro + 12x ToF | 180 | 3.3V | 594 |
 | **BMP280** | **3.6** | **3.3V** | **12** |
 | **AHT20** | **2.0** | **3.3V** | **7** |
-| **Total (3.3V rail)** | **~1.18A** | | **~3.88W** |
+| **Total (3.3V rail)** | **~1.20A** | | **~3.96W** |
 
 > **3.3V Regulator:** Upgrade to **3A** (e.g., LM2596S-3.3 or TPS5430) with heatsink.
 
@@ -566,7 +568,7 @@ drone/
 | ESP32-S3 (active, WiFi off) | 180 | 3.3V | 594 |
 | ESP32-S3 (camera + PSRAM) | 350 | 3.3V | 1155 |
 | ESP32-C3 (active, BLE) | 120 | 3.3V | 396 |
-| RP2040 x2 (active) | 2x25 | 3.3V | 165 |
+| RP2040 x3 (active) | 3x25 | 3.3V | 248 |
 | MLX90640 | 25 | 3.3V | 83 |
 | OV5640 | 150 | 3.3V | 495 |
 | u-blox ZED-F9P | 65 | 3.3V | 215 |
@@ -575,7 +577,7 @@ drone/
 | **BMP280** | **3.6** | **3.3V** | **12** |
 | **AHT20** | **2.0** | **3.3V** | **7** |
 | VL53L5CX x12 | 12x20 | 3.3V | 792 |
-| **Total (3.3V rail)** | **~1.21A** | | **~4.0W** |
+| **Total (3.3V rail)** | **~1.24A** | | **~4.08W** |
 
 > **Note:** Use separate 5V BEC (3A+) and 3.3V LDO (2A+) from main LiPo. Existing truck ESC runs directly from LiPo.
 

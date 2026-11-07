@@ -1,5 +1,5 @@
-# RP2040 Rear ToF + Aux Firmware - CMakeLists.txt
-# VL53L5CX x2 (rear, right) + UART command
+# RP2040 #2 ToF Firmware - CMakeLists.txt
+# 4x VL53L5CX ToF Array (Front-Left, Left, Rear-Left, Aux) - 4MB Flash
 
 cmake_minimum_required(VERSION 3.13)
 
@@ -9,22 +9,23 @@ endif()
 
 include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
-project(rp2040-rear-tof C CXX ASM)
+project(rp2040-tof-2 C CXX ASM)
 
 pico_sdk_init()
 
 set(PICO_BOARD pico)
 
-pico_enable_stdio_uart(rp2040-rear-tof 1)
-pico_enable_stdio_usb(rp2040-rear-tof 0)
+pico_enable_stdio_uart(rp2040-tof-2 1)
+pico_enable_stdio_usb(rp2040-tof-2 0)
 
-add_executable(rp2040-rear-tof
-    src/vl53l5cx.c
+add_executable(rp2040-tof-2
+    src/vl53l5cx_4x.c
     src/uart_cmd.c
+    src/i2c_mux.c
     pio/i2c_pio.pio.c
 )
 
-target_link_libraries(rp2040-rear-tof PRIVATE
+target_link_libraries(rp2040-tof-2 PRIVATE
     pico_stdlib
     hardware_pio
     hardware_uart
@@ -33,9 +34,9 @@ target_link_libraries(rp2040-rear-tof PRIVATE
     hardware_dma
 )
 
-pico_add_extra_outputs(rp2040-rear-tof)
+pico_add_extra_outputs(rp2040-tof-2)
 
-target_compile_options(rp2040-rear-tof PRIVATE
+target_compile_options(rp2040-tof-2 PRIVATE
     -Wall
     -Wextra
     -Wpedantic

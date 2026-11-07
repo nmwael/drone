@@ -54,14 +54,14 @@
 
 | Item | Qty | Status | Est. Cost | Recommended Part / Links |
 |------|-----|--------|-----------|--------------------------|
-| **Motor Driver (Dual H-Bridge)** | 1 | 🛒 TO BUY | **$15-35** | **BTS7960** (43A peak, 5-28V) or **VNH5019** (30A, 5.5-24V)<br>→ [Amazon BTS7960](https://www.amazon.com/s?k=BTS7960) / [Pololu VNH5019](https://www.pololu.com/product/2807) |
-| **Servo (Steering)** | 1 | 🔄 SALVAGED | $0 | From Honeybee CP2 (2x main rotor servos, ~1.5kg-cm) |
-| **Servo (Camera Gimbal - Future)** | 1 | 🔄 SALVAGED | $0 | 2nd CP2 servo |
+| **Servo (Camera Gimbal)** | 1 | 🔄 SALVAGED | $0 | 2nd CP2 servo (pan/tilt for gimbal) |
 | **3.3V Regulator (3A+)** | 1 | 🛒 TO BUY | $8-15 | **TPS5430** (3A buck) or **LM2596S-3.3** with heatsink |
 | **5V BEC (3A+)** | 1 | 🛒 TO BUY | $8-15 | **LM2596S-5.0** or UBEC 5V/3A |
-| **Power Distribution Board** | 1 | 🛒 TO BUY | $10-20 | Custom PCB or perfboard with XT60/XT30 connectors |
+| **Power Distribution Box** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printed enclosure with fused 5V/3.3V rails, XT60 in/out |
 | **Main Battery** | 1 | 🛒 TO BUY | $30-60 | **2S LiPo 5000-8000mAh 50C+** (7.4V) or **3S 5000mAh** (11.1V)<br>→ [Gens Ace](https://www.gensace.de/) / [HRB](https://www.hrb-battery.com/) |
 | **Battery Charger** | 1 | 🔄 SALVAGED | $0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
+
+> **Note:** Truck drivetrain uses **existing brushed ESC** (driven directly by CP2 receiver). No additional motor driver needed. Steering uses **existing servo** (driven directly by CP2 receiver). 3.3V/5V regulators power MCUs and sensors only.
 
 ---
 
@@ -132,12 +132,12 @@
 | Vision Sensors | $60 | $90 |
 | Navigation Sensors | $200 | $305 |
 | ToF Array (12×) | $216 | $300 |
-| Power & Actuation | $71 | $145 |
+| **Power & Actuation** | **$16** | **$30** |
 | Comms & Ground Station | $390 | $720 |
 | **Mechanical (Printed Fittings)** | **$10** | **$25** |
 | Dev Tools | **$75** | **$210** |
 | **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$1,022** | **~$1,835** |
+| **TOTAL** | **~$967** | **~$1,720** |
 
 > **Notes:**
 > - **Min cost** assumes: Quest 2 used, Pi 5 ground station, AliExpress/Direct from China for sensors
@@ -152,7 +152,7 @@
 ### Phase 0: 3D Print Preparation (Week 0) 🖨️ **DO FIRST**
 1. **Slice & print test coupons** - calibrate flow, temperature, bed adhesion
 2. **Print vibration dampers (TPU)** - 4-8 pcs, 30min each, test Shore hardness
-3. **Print sensor enclosures (PETG)** - C3 hub, power distro, electronics tray (4-6h each)
+3. **Print sensor enclosures (PETG)** - C3 hub, power distro box, electronics tray (4-6h each)
 4. **Print VL53L5CX mounts (PETG)** - **12 pcs**, 1h each
 5. **Print camera gimbal (PETG + TPU)** - 6-8h, uses CP2 servos
 6. **Print GPS antenna mast, antenna mount, wire clips** - 2-3h total
@@ -168,21 +168,14 @@
 5. ESP32-C3 firmware: GPS + Mag + IMU + EKF
 6. **Install sensors in printed C3 hub enclosure**
 
-### Phase 2: Motor Control & RC Fallback (Week 2-3)
-1. BTS7960 / VNH5019 driver ($25)
-2. 3.3V/5V regulators ($20)
-3. **Printed power distribution box** (already printed)
-4. RP2040#1 firmware: PID + RC PWM input
-5. **Install motor driver in printed enclosure**
-
-### Phase 3: Obstacle Avoidance (Week 3-4)
+### Phase 2: Obstacle Avoidance (Week 2-3)
 1. **12× VL53L5CX** ($216-300)
 2. **3× TCA9548A I2C mux** ($15-30)
 3. **Printed VL53L5CX mounts** (already printed - 12 brackets)
 4. RP2040 #1, #2, #3 firmware: 4× ToF scanning each (12 total)
 5. **Mount ToF sensors on truck chassis** (front, rear, left, right, corners)
 
-### Phase 4: Vision & STANAG (Week 4-6)
+### Phase 3: Vision & STANAG (Week 3-5)
 1. MLX90640 thermal ($55)
 2. OV5640 camera ($20)
 3. ESP32-S3 with PSRAM ✅ ON HAND
@@ -190,18 +183,18 @@
 5. H.264 + KLV + TS firmware
 6. **Mount gimbal on truck, route cables**
 
-### Phase 5: Ground Station & Oculus (Week 6-8)
+### Phase 4: Ground Station & Oculus (Week 5-7)
 1. WiFi 6 router ($100)
 2. Meta Quest 3 ($500) or Quest 2 used ($300)
 3. MediaMTX + WebXR app development
 
-### Phase 6: Integration & Field Test (Week 8+)
+### Phase 5: Integration & Field Test (Week 7+)
 1. **Existing RC truck + CP2 remote** ✅ ON HAND
 2. **All printed parts ready** - enclosures, gimbal, mounts, dampers, battery tray, electronics tray
 3. Vibration isolation (printed TPU dampers installed between electronics tray and chassis)
-4. Full system integration - wire all sensors, MCUs, motor driver
-5. Configure RC fallback: CP2 receiver → RP2040 PWM input (4 channels)
-6. Field test & calibrate: compass, GPS RTK, thermal thresholds, ToF zones, PID tuning
+4. Full system integration - wire all sensors, MCUs
+5. Configure RC manual: CP2 receiver → ESC + steering servo (direct, no MCU)
+6. Field test & calibrate: compass, GPS RTK, thermal thresholds, ToF zones
 
 ---
 
