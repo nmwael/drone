@@ -41,15 +41,6 @@
 
 ---
 
-## Obstacle Avoidance (ToF Array)
-
-| Item | Qty | Status | Est. Cost | Recommended Part / Links |
-|------|-----|--------|-----------|--------------------------|
-| **VL53L5CX 8×8 Zone ToF** | **12** | 🛒 TO BUY | **$18-25 ea ($216-300 total)** | STMicroelectronics - 8×8 zones, 4m range, I2C @ 1MHz (4 per RP2040, 3 RP2040s)<br>→ [DigiKey](https://www.digikey.com/en/products/detail/stmicroelectronics/VL53L5CXV0DH/1/12849648) / [Mouser](https://www.mouser.com/ProductDetail/STMicroelectronics/VL53L5CXV0DH) |
-| **TCA9548A I2C Mux** | **3** | 🛒 TO BUY | **$5-10 ea ($15-30 total)** | 8-channel I2C mux per RP2040 (4 ToF per mux)<br>→ [Amazon](https://www.amazon.com/s?k=TCA9548A) / [DigiKey](https://www.digikey.com/en/products/detail/texas-instruments/TCA9548APWR/2963793) |
-
----
-
 ## Power & Actuation
 
 | Item | Qty | Status | Est. Cost | Recommended Part / Links |
@@ -94,7 +85,7 @@
 
 | **Electronics Tray** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - mount ESP32-S3, C3, RP2040s to chassis |
 | Wiring / Connectors | 1 | 🛒 TO BUY | $20-40 | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving |
-| Heat-set Inserts (M3/M4) | 50+ | 🛒 TO BUY | $10-15 | For strong bolt-on printed parts |
+| Heat-set Inserts (M3/M4) | 50+ | ✅ **ON HAND** | $0 | For strong bolt-on printed parts |
 | M3/M4 Hardware (screws, nuts, standoffs) | 1 kit | 🛒 TO BUY | $15-25 | Brass standoffs, nylon lock nuts, button-head screws |
 
 > **Design Approach:** Measure your truck's chassis hole patterns, body mount points, and servo spline type. Design printed parts in Fusion 360 / FreeCAD to bolt directly to existing mounting points. Use **TPU dampers** between electronics tray and chassis for vibration isolation.
@@ -134,16 +125,16 @@
 | ToF Array (12×) | $216 | $300 |
 | **Power & Actuation** | **$16** | **$30** |
 | **Comms & Ground Station** | **$10** | **$100** |
-| **Mechanical (Printed Fittings)** | **$10** | **$25** |
+| **Mechanical (Printed Fittings)** | **$5** | **$15** |
 | Dev Tools | **$75** | **$210** |
 | **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$587** | **~$1,100** |
+| **TOTAL** | **~$582** | **~$1,090** |
 
 > **Notes:**
 > - **Min cost** assumes: PC ground station, AliExpress/Direct from China for sensors
 > - **Max cost** assumes: PC ground station, DigiKey/Mouser for all parts
-> - **Already owned saves ~$800-900**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**, **Quest 2 ($300)**, **WiFi 5 router**
-> - **3D Printing saves ~$150-400** vs buying enclosures, gimbal, mounts, dampers, battery trays (only hardware/inserts to buy)
+> - **Already owned saves ~$800-900**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**, **Quest 2 ($300)**, **WiFi 5 router**, **heat-set inserts (M3/M4)**
+> - **3D Printing saves ~$150-400** vs buying enclosures, gimbal, mounts, dampers, battery trays (only hardware to buy)
 
 ---
 
@@ -156,7 +147,7 @@
 4. **Print VL53L5CX mounts (PETG)** - **12 pcs**, 1h each
 5. **Print camera gimbal (PETG + TPU)** - 6-8h, uses CP2 servos
 6. **Print GPS antenna mast, antenna mount, wire clips** - 2-3h total
-7. **Order heat-set inserts (M3/M4)** - install in printed parts
+7. **Install heat-set inserts (M3/M4)** - already on hand, install in printed parts
 
 > **Why Phase 0?** Parts take 20-30h total print time. Start printing while waiting for Phase 1 sensors to arrive.
 

@@ -14,15 +14,14 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 |--------|-----|------|--------------|
 | **ESP32-C3** | 1 | Sensor Hub / Comms | RISC-V, WiFi 4/BLE 5, low power, 400KB SRAM |
 | **ESP32-S3** | 1 | Vision Processing | Dual-core Xtensa LX7, WiFi/BLE, PSRAM support, AI acceleration |
-| **RP2040** | 3 | Sensor Processing | Dual-core Cortex-M0+, PIO for precise timing, 264KB SRAM, **16MB (128 Mbit) / 4MB (32 Mbit) Flash** |
 | **ESP8266MOD (AI Thinker)** | 1 | **Backup Comms / Telemetry Relay** | Xtensa L106, WiFi 4 (2.4 GHz only), 160KB SRAM, 4MB Flash |
+| **RP2040** | 3 | **Available / Spare** | Dual-core Cortex-M0+, PIO, 264KB SRAM, 16MB/4MB Flash |
 
 ### Sensors (to procure/integrate)
 
 | Sensor | Interface | Purpose | Candidate Parts |
 |--------|-----------|---------|-----------------|
 | **Thermal Camera** | I2C/SPI | Heat detection (8x8 to 32x32) | MLX90640 (32x24), AMG8833 (8x8), MLX90641 (16x12) |
-| **IR Distance/Proximity** | I2C/UART | Obstacle avoidance | VL53L1X (ToF, 4m), VL53L5CX (8x8 zone), TF-Luna (LiDAR) |
 | **IR Camera (Night Vision)** | CSI/Parallel | Low-light imaging | OV2640/OV5640 with IR filter removed, ESP32-S3 CSI |
 | **GNSS/GPS** | UART/I2C | Positioning | u-blox ZED-F9P (RTK), BN-880, SAM-M10Q |
 | **Magnetometer (Compass)** | I2C | Heading | QMC5883L, HMC5883L, RM3100, LIS3MDL |
@@ -196,9 +195,6 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | Link | Protocol | Rate | Purpose |
 |------|----------|------|---------|
 | ESP32-S3 <-> ESP32-C3 | ESP-NOW / UART | 1-2 Mbps | Vision <-> Sensor fusion, telemetry |
-| ESP32-C3 -> RP2040s | UART | 1 Mbps | ToF sensor commands / config |
-| RP2040s -> ESP32-C3 | UART | 1 Mbps | ToF point clouds (4x VL53L5CX each) |
-| RP2040 <-> VL53L5CX | I2C (mux) | 1 MHz | 8x8 zone ToF scanning @ 30 Hz |
 | ESP32-C3 -> ESP8266MOD | UART | 115200 baud | Backup telemetry, watchdog, OTA |
 | ESP8266MOD -> Ground | WiFi UDP/TCP | ~1 Mbps | Backup telemetry, config portal |
 | CP2 Receiver -> ESC/Servo | PWM / SBUS | 50 Hz / 100 kbps | **Direct drive** (no MCU in loop) |
@@ -207,7 +203,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 
 | Mode | Source | Path | Use Case |
 |------|--------|------|----------|
-| **Autonomous** | ESP32-S3/C3 | Sensor fusion -> ToF obstacle map -> Waypoint planner | Full autonomy |
+| **Autonomous** | ESP32-S3/C3 | Sensor fusion -> Waypoint planner | Full autonomy (vision-based) |
 | **Teleop (WiFi)** | Phone/PC / Quest | WiFi -> ESP32-S3 -> ESP-NOW -> C3 -> Sensor streams | FPV + sensor overlay |
 | **RC Manual** | CP2 Transmitter | **PWM/SBUS -> ESC + Steering Servo** | **Direct, no MCU latency** |
 
