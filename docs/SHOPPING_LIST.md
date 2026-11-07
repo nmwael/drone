@@ -122,13 +122,12 @@
 |----------|----------------|----------------|
 | Vision Sensors | $60 | $90 |
 | Navigation Sensors | $200 | $305 |
-| ToF Array (12×) | $216 | $300 |
 | **Power & Actuation** | **$16** | **$30** |
 | **Comms & Ground Station** | **$10** | **$100** |
 | **Mechanical (Printed Fittings)** | **$5** | **$15** |
 | Dev Tools | **$75** | **$210** |
 | **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$582** | **~$1,090** |
+| **TOTAL** | **~$366** | **~$790** |
 
 > **Notes:**
 > - **Min cost** assumes: PC ground station, AliExpress/Direct from China for sensors
@@ -144,12 +143,11 @@
 1. **Slice & print test coupons** - calibrate flow, temperature, bed adhesion
 2. **Print vibration dampers (TPU)** - 4-8 pcs, 30min each, test Shore hardness
 3. **Print sensor enclosures (PETG)** - C3 hub, power distro box, electronics tray (4-6h each)
-4. **Print VL53L5CX mounts (PETG)** - **12 pcs**, 1h each
-5. **Print camera gimbal (PETG + TPU)** - 6-8h, uses CP2 servos
-6. **Print GPS antenna mast, antenna mount, wire clips** - 2-3h total
-7. **Install heat-set inserts (M3/M4)** - already on hand, install in printed parts
+4. **Print camera gimbal (PETG + TPU)** - 6-8h, uses CP2 servos
+5. **Print GPS antenna mast, antenna mount, wire clips** - 2-3h total
+6. **Install heat-set inserts (M3/M4)** - already on hand, install in printed parts
 
-> **Why Phase 0?** Parts take 20-30h total print time. Start printing while waiting for Phase 1 sensors to arrive.
+> **Why Phase 0?** Parts take 15-20h total print time. Start printing while waiting for Phase 1 sensors to arrive.
 
 ### Phase 1: Core Navigation (Week 1-2) 🚨 **START HERE**
 1. u-blox ZED-F9P + antenna ($180)
@@ -159,14 +157,7 @@
 5. ESP32-C3 firmware: GPS + Mag + IMU + EKF
 6. **Install sensors in printed C3 hub enclosure**
 
-### Phase 2: Obstacle Avoidance (Week 2-3)
-1. **12× VL53L5CX** ($216-300)
-2. **3× TCA9548A I2C mux** ($15-30)
-3. **Printed VL53L5CX mounts** (already printed - 12 brackets)
-4. RP2040 #1, #2, #3 firmware: 4× ToF scanning each (12 total)
-5. **Mount ToF sensors on truck chassis** (front, rear, left, right, corners)
-
-### Phase 3: Vision & STANAG (Week 3-5)
+### Phase 2: Vision & STANAG (Week 2-4)
 1. MLX90640 thermal ($55)
 2. OV5640 camera ($20)
 3. ESP32-S3 with PSRAM ✅ ON HAND
@@ -174,18 +165,18 @@
 5. H.264 + KLV + TS firmware
 6. **Mount gimbal on truck, route cables**
 
-### Phase 4: Ground Station & Oculus (Week 5-7)
-1. WiFi 6 router ($100)
-2. Meta Quest 3 ($500) or Quest 2 used ($300)
+### Phase 3: Ground Station & Oculus (Week 4-6)
+1. WiFi 5 router ✅ ON HAND
+2. Meta Quest 2 ✅ ON HAND
 3. MediaMTX + WebXR app development
 
-### Phase 5: Integration & Field Test (Week 7+)
+### Phase 4: Integration & Field Test (Week 6+)
 1. **Existing RC truck + CP2 remote** ✅ ON HAND
 2. **All printed parts ready** - enclosures, gimbal, mounts, dampers, battery tray, electronics tray
 3. Vibration isolation (printed TPU dampers installed between electronics tray and chassis)
 4. Full system integration - wire all sensors, MCUs
 5. Configure RC manual: CP2 receiver → ESC + steering servo (direct, no MCU)
-6. Field test & calibrate: compass, GPS RTK, thermal thresholds, ToF zones
+6. Field test & calibrate: compass, GPS RTK, thermal thresholds
 
 ---
 
