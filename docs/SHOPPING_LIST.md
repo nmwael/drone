@@ -110,8 +110,8 @@
 | Item | Qty | Status | Est. Cost | Notes |
 |------|-----|--------|-----------|-------|
 | **USB-UART Adapter** | 0 | ❌ **NOT NEEDED** | $0 | All boards have onboard USB (ESP32-S3, C3, RP2040, ESP8266) |
-| JTAG Debugger (ESP-Prog / J-Link) | 1 | 🛒 TO BUY | $25-60 | ESP-Prog ($25) for ESP32 debugging |
-| Logic Analyzer (Saleae / DSLogic) | 1 | 🛒 TO BUY | $50-150 | I2C/SPI/UART debugging |
+| **JTAG Debugger (ESP-Prog / J-Link)** | 0 | ❌ **NOT NEEDED** | $0 | ESP32 has onboard USB JTAG; printf debugging sufficient |
+| **Logic Analyzer (Saleae / DSLogic)** | 0 | ❌ **NOT NEEDED** | $0 | I2C/SPI/UART debugging via ESP32 built-in tools + printf |
 | Multimeter / Oscilloscope | 1 | ✅ ON HAND | $0 | Basic bench tools |
 
 ---
@@ -125,9 +125,9 @@
 | **Power & Actuation** | **$16** | **$30** |
 | **Comms & Ground Station** | **$10** | **$100** |
 | **Mechanical (Printed Fittings)** | **$5** | **$15** |
-| Dev Tools | **$75** | **$210** |
+| Dev Tools | **$0** | **$0** |
 | **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$366** | **~$790** |
+| **TOTAL** | **~$291** | **~$580** |
 
 > **Notes:**
 > - **Min cost** assumes: PC ground station, AliExpress/Direct from China for sensors
