@@ -118,7 +118,7 @@
 
 | Item | Qty | Status | Est. Cost | Notes |
 |------|-----|--------|-----------|-------|
-| USB-UART Adapter (CP2102/CH340) | 2-3 | 🛒 TO BUY | $5-10 ea | For flashing ESP32-C3/S3 and RP2040s |
+| **USB-UART Adapter** | 0 | ❌ **NOT NEEDED** | $0 | All boards have onboard USB (ESP32-S3, C3, RP2040, ESP8266) |
 | JTAG Debugger (ESP-Prog / J-Link) | 1 | 🛒 TO BUY | $25-60 | ESP-Prog ($25) for ESP32 debugging |
 | Logic Analyzer (Saleae / DSLogic) | 1 | 🛒 TO BUY | $50-150 | I2C/SPI/UART debugging |
 | Multimeter / Oscilloscope | 1 | ✅ ON HAND | $0 | Basic bench tools |
@@ -135,9 +135,9 @@
 | Power & Actuation | $71 | $145 |
 | Comms & Ground Station | $390 | $720 |
 | **Mechanical (Printed Fittings)** | **$10** | **$25** |
-| Dev Tools | $80 | $220 |
+| Dev Tools | **$75** | **$210** |
 | **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$1,027** | **~$1,845** |
+| **TOTAL** | **~$1,022** | **~$1,835** |
 
 > **Notes:**
 > - **Min cost** assumes: Quest 2 used, Pi 5 ground station, AliExpress/Direct from China for sensors
