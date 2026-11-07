@@ -76,14 +76,41 @@
 
 ---
 
-## Mechanical / Chassis
+## Mechanical / Chassis — **Using Existing RC Monster Truck + CP2 Remote**
 
 | Item | Qty | Status | Est. Cost | Notes |
 |------|-----|--------|-----------|-------|
-| RC Monster Truck Chassis | 1 | 🛒 TO BUY | **$100-300** | 1/10 scale, 4WD, brushless preferred (e.g., Arrma, Traxxas, HSP) |
-| Camera Mount / Gimbal | 1 | 🛒 TO BUY | $20-50 | 2-axis (pan/tilt) for OV5640 + MLX90640 |
-| Vibration Dampening | 1 | 🛒 TO BUY | $10-20 | Silicone grommets, foam tape for IMU/camera isolation |
+| **RC Monster Truck** | 1 | ✅ **ON HAND** | **$0** | Using as-is with existing drivetrain, steering servo, ESC |
+| **CP2 2.4GHz Remote** | 1 | ✅ **ON HAND** | **$0** | PWM/SBUS → RP2040 for RC fallback (already working) |
+| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 + MLX90640) |
+| **Sensor Enclosures** | 3-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - C3 hub, motor driver, power distro, battery tray |
+| **VL53L5CX Mounts** | 4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - front, rear, left, right brackets (truck-specific) |
+| **Vibration Dampers** | 4-8 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation |
+| **GPS Antenna Mast** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - elevates ZED-F9P antenna above truck body |
+| **Antenna Mount (ESP32-S3)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - u.FL/SMA external antenna bracket |
+| **Wire Routing Clips** | 10+ | 🖨️ **PRINT** | **$0 (filament)** | Printable - cable management along chassis |
+| **Servo Adapters / Horns** | 2-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - adapt CP2 servos to steering/gimbal |
+| **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis |
+| **ESC / Motor Driver Mount** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - mount BTS7960/VNH5019 to chassis |
+| **Electronics Tray** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - mount ESP32-S3, C3, RP2040s to chassis |
 | Wiring / Connectors | 1 | 🛒 TO BUY | $20-40 | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving |
+| Heat-set Inserts (M3/M4) | 50+ | 🛒 TO BUY | $10-15 | For strong bolt-on printed parts |
+| M3/M4 Hardware (screws, nuts, standoffs) | 1 kit | 🛒 TO BUY | $15-25 | Brass standoffs, nylon lock nuts, button-head screws |
+
+> **Design Approach:** Measure your truck's chassis hole patterns, body mount points, and servo spline type. Design printed parts in Fusion 360 / FreeCAD to bolt directly to existing mounting points. Use **TPU dampers** between electronics tray and chassis for vibration isolation.
+
+---
+
+## 3D Printing Filament (FDM Printer ✅ ON HAND)
+
+| Material | Qty | Est. Cost | Use Case |
+|----------|-----|-----------|----------|
+| **PETG** (1kg) | 2-3 rolls | $20-30/roll | Functional parts: enclosures, mounts, brackets (UV/heat resistant) |
+| **TPU** (500g-1kg) | 1 roll | $25-35/roll | Vibration dampers, battery straps, flexible mounts (Shore 60-80A) |
+| **ASA** (1kg) | 1 roll | $30-40/roll | **Optional** - outdoor/UV parts: GPS mast, antenna mounts |
+| **PLA** (1kg) | 1 roll | $15-20/roll | Prototypes, wire clips, non-structural test prints |
+
+> **Print Settings for Functional Parts:** 0.2mm layer, 3-4 walls, 25-30% gyroid infill, 220-240°C nozzle (PETG), 70-80°C bed. Dry filament 4h @ 65°C before printing PETG/TPU.
 
 ---
 
@@ -107,18 +134,31 @@
 | ToF Array (4×) | $72 | $100 |
 | Power & Actuation | $71 | $145 |
 | Comms & Ground Station | $390 | $720 |
-| Mechanical | $130 | $410 |
+| **Mechanical (Printed Fittings)** | **$45** | **$80** |
 | Dev Tools | $80 | $220 |
-| **TOTAL** | **~$1,003** | **~$1,990** |
+| **Filament (PETG/TPU/ASA)** | **$60** | **$100** |
+| **TOTAL** | **~$978** | **~$1,760** |
 
 > **Notes:**
-> - **Min cost** assumes: Quest 2 used, Pi 5 ground station, basic truck chassis, AliExpress/Direct from China for sensors
-> - **Max cost** assumes: Quest 3 new, PC ground station, quality chassis, DigiKey/Mouser for all parts
-> - **Already owned** saves ~$100-150 (MCUs, BMP280, AHT20, CP2 servos/motors/charger, basic tools)
+> - **Min cost** assumes: Quest 2 used, Pi 5 ground station, AliExpress/Direct from China for sensors
+> - **Max cost** assumes: Quest 3 new, PC ground station, DigiKey/Mouser for all parts
+> - **Already owned saves ~$400-500**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer**
+> - **3D Printing saves ~$100-300** vs buying enclosures, gimbal, mounts, dampers, battery trays
 
 ---
 
 ## Priority Order (Build Phases)
+
+### Phase 0: 3D Print Preparation (Week 0) 🖨️ **DO FIRST**
+1. **Slice & print test coupons** - calibrate flow, temperature, bed adhesion
+2. **Print vibration dampers (TPU)** - 4-8 pcs, 30min each, test Shore hardness
+3. **Print sensor enclosures (PETG)** - C3 hub, motor driver, power distro (4-6h each)
+4. **Print VL53L5CX mounts (PETG)** - 4 pcs, 1h each
+5. **Print camera gimbal (PETG + TPU)** - 6-8h, uses CP2 servos
+6. **Print GPS antenna mast, antenna mount, wire clips** - 2-3h total
+7. **Order heat-set inserts (M3/M4)** - install in printed parts
+
+> **Why Phase 0?** Parts take 20-30h total print time. Start printing while waiting for Phase 1 sensors to arrive.
 
 ### Phase 1: Core Navigation (Week 1-2) 🚨 **START HERE**
 1. u-blox ZED-F9P + antenna ($180)
@@ -126,23 +166,29 @@
 3. ICM-20948 ($15)
 4. BMP280 + AHT20 ✅ ON HAND
 5. ESP32-C3 firmware: GPS + Mag + IMU + EKF
+6. **Install sensors in printed C3 hub enclosure**
 
 ### Phase 2: Motor Control & RC Fallback (Week 2-3)
 1. BTS7960 / VNH5019 driver ($25)
 2. 3.3V/5V regulators ($20)
-3. Power distribution board ($15)
+3. **Printed power distribution box** (already printed)
 4. RP2040#1 firmware: PID + RC PWM input
+5. **Install motor driver in printed enclosure**
 
 ### Phase 3: Obstacle Avoidance (Week 3-4)
 1. 4× VL53L5CX ($80-100)
 2. TCA9548A I2C mux ($5)
-3. RP2040#2 & #3 firmware: ToF scanning
+3. **Printed VL53L5CX mounts** (already printed)
+4. RP2040#2 & #3 firmware: ToF scanning
+5. **Mount ToF sensors on truck chassis**
 
 ### Phase 4: Vision & STANAG (Week 4-6)
 1. MLX90640 thermal ($55)
 2. OV5640 camera ($20)
 3. ESP32-S3 with PSRAM ✅ ON HAND
-4. H.264 + KLV + TS firmware
+4. **Printed camera gimbal + OV5640/MLX90640 mount** (already printed)
+5. H.264 + KLV + TS firmware
+6. **Mount gimbal on truck, route cables**
 
 ### Phase 5: Ground Station & Oculus (Week 6-8)
 1. WiFi 6 router ($100)
@@ -150,10 +196,12 @@
 3. MediaMTX + WebXR app development
 
 ### Phase 6: Integration & Field Test (Week 8+)
-1. Truck chassis ($150-300)
-2. Camera gimbal mount ($30)
-3. Vibration isolation ($15)
-4. Full system integration
+1. **Existing RC truck + CP2 remote** ✅ ON HAND
+2. **All printed parts ready** - enclosures, gimbal, mounts, dampers, battery tray, electronics tray
+3. Vibration isolation (printed TPU dampers installed between electronics tray and chassis)
+4. Full system integration - wire all sensors, MCUs, motor driver
+5. Configure RC fallback: CP2 receiver → RP2040 PWM input (4 channels)
+6. Field test & calibrate: compass, GPS RTK, thermal thresholds, ToF zones, PID tuning
 
 ---
 
