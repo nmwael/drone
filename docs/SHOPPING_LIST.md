@@ -18,52 +18,52 @@
 
 ---
 
-## Vision Sensors
+## Vision Sensors — **Buy from EU/DK Stores**
 
-| Item | Qty | Status | Est. Cost | Recommended Part / Links |
-|------|-----|--------|-----------|--------------------------|
-| **Thermal Camera** | 1 | 🛒 TO BUY | **$45-65** | **MLX90640 32×24** (Melexis) - I2C, 32Hz, -40°C to 300°C<br>→ [DigiKey](https://www.digikey.com/en/products/detail/melexis/MLX90640ESF-BAA-000-TU/11775055) / [Mouser](https://www.mouser.com/ProductDetail/Melexis/MLX90640ESF-BAA-000-TU) |
-| **IR Camera (Night Vision)** | 1 | 🛒 TO BUY | **$15-25** | **OV5640 5MP Camera Module** (CSI/Parallel, IR filter removed)<br>→ [Arducam OV5640](https://www.arducam.com/product/ov5640-5mp-camera-module/) / [Amazon](https://www.amazon.com/s?k=OV5640+camera+module) |
-| **Thermal Camera Alt (lower res)** | - | - | $25-35 | AMG8833 8×8 (Panasonic) - cheaper but low res |
-
----
-
-## Navigation Sensors
-
-| Item | Qty | Status | Est. Cost | Recommended Part / Links |
-|------|-----|--------|-----------|--------------------------|
-| **GNSS/GPS (RTK)** | 1 | 🛒 TO BUY | **$150-250** | **u-blox ZED-F9P** (RTK, dual-band, 1cm accuracy)<br>→ [SparkFun](https://www.sparkfun.com/products/16481) / [DigiKey](https://www.digikey.com/en/products/detail/u-blox/ZED-F9P-00B/11677343) |
-| GPS Antenna (Survey grade) | 1 | 🛒 TO BUY | $30-50 | u-blox ANN-MB-00 or Taoglas AA.161 |
-| **Magnetometer** | 1 | 🛒 TO BUY | **$8-15** | **QMC5883L** (cheap, I2C, 16-bit)<br>→ [Amazon](https://www.amazon.com/s?k=QMC5883L) / [AliExpress](https://www.aliexpress.com/wholesale?SearchText=QMC5883L) |
-| **IMU (Accel + Gyro)** | 1 | 🛒 TO BUY | **$12-20** | **ICM-20948** (9-DoF, DMP, I2C/SPI)<br>→ [SparkFun](https://www.sparkfun.com/products/16485) / [DigiKey](https://www.digikey.com/en/products/detail/tdk-invensense/ICM-20948/8708445) |
-| **Barometer / Pressure** | 1 | ✅ ON HAND | $0 | **BMP280** (I2C, 0x76/0x77) |
-| **Temperature / Humidity** | 1 | ✅ ON HAND | $0 | **AHT20** (I2C, 0x38) |
+| Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
+|------|-----|--------|-----------------|-------------------|
+| **Thermal Camera** | 1 | 🛒 TO BUY | **€50-70** | **MLX90640 32×24** (Melexis) - I2C, 32Hz, -40°C to 300°C<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/Melexis/MLX90640ESF-BAA-000-TU) / [DigiKey DK](https://www.digikey.dk/en/products/detail/melexis/MLX90640ESF-BAA-000-TU/11775055) / [RS Components DK](https://dk.rs-online.com/web/p/thermal-imaging-sensors) / [Conrad DK](https://www.conrad.dk/p/melexis-mlx90640esf-baa-000-tu-infrarot-array-sensor-2226579) |
+| **IR Camera (Night Vision)** | 1 | 🛒 TO BUY | **€15-25** | **OV5640 5MP Camera Module** (CSI/Parallel, IR filter removed)<br>→ [Arducam EU](https://eu.arducam.com/product/ov5640-5mp-camera-module/) / [BerryBase DE](https://www.berrybase.de/kameras/arducam) / [Exp-Tech DE](https://www.exp-tech.de/kameras/arducam) / [Watterott DE](https://www.watterott.com/de/Kameras/Arducam) / [Amazon.de](https://www.amazon.de/s?k=OV5640+Camera+Modul) |
+| **Thermal Camera Alt (lower res)** | - | - | €25-35 | AMG8833 8×8 (Panasonic) - cheaper but low res<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/Panasonic/AMG8833) / [DigiKey DK](https://www.digikey.dk/en/products/detail/panasonic-electronic-components/AMG8833/5907444) |
 
 ---
 
-## Power & Actuation
+## Navigation Sensors — **Buy from EU/DK Stores**
 
-| Item | Qty | Status | Est. Cost | Recommended Part / Links |
-|------|-----|--------|-----------|--------------------------|
-| **Servo (Camera Gimbal)** | 1 | 🔄 SALVAGED | $0 | 2nd CP2 servo (pan/tilt for gimbal) |
-| **3.3V Regulator (3A+)** | 1 | ✅ **ON HAND** | $0 | Buck converter (3.3V 3A+) |
-| **5V BEC (3A+)** | 1 | ✅ **ON HAND** | $0 | Buck converter (5V 3A+) |
-| **Power Distribution Box** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printed enclosure with fused 5V/3.3V rails, XT60 in/out |
-| **Main Battery** | 1 | 🛒 TO BUY | $30-60 | **2S LiPo 5000-8000mAh 50C+** (7.4V) or **3S 5000mAh** (11.1V)<br>→ [Gens Ace](https://www.gensace.de/) / [HRB](https://www.hrb-battery.com/) |
-| **Battery Charger** | 1 | 🔄 SALVAGED | $0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
+| Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
+|------|-----|--------|-----------------|-------------------|
+| **GNSS/GPS (RTK)** | 1 | 🛒 TO BUY | **€180-250** | **u-blox ZED-F9P** (RTK, dual-band, 1cm accuracy)<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/u-blox/ZED-F9P-00B) / [DigiKey DK](https://www.digikey.dk/products/detail/u-blox/ZED-F9P-00B/11677343) / [RS Components DK](https://dk.rs-online.com/web/p/gps-gnss-modules/1856144) / [Conrad DK](https://www.conrad.dk/p/u-blox-zed-f9p-00b-gnss-modul-2226579) |
+| GPS Antenna (Survey grade) | 1 | 🛒 TO BUY | €30-50 | u-blox ANN-MB-00 or Taoglas AA.161<br>→ [Mouser DK](https://www.mouser.dk/c/rf-if-and-rfid/gps-antennas) / [DigiKey DK](https://www.digikey.dk/en/products/filter/rf-antennas/232) / [RS Components DK](https://dk.rs-online.com/web/p/gps-antennas) |
+| **Magnetometer** | 1 | 🛒 TO BUY | **€8-15** | **QMC5883L** (I2C, 16-bit)<br>→ [Mouser DK](https://www.mouser.dk/c/sensors/magnetic-sensors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/magnetic-sensors/659) / [BerryBase DE](https://www.berrybase.de/sensoren/magnetfeldsensoren) / [Exp-Tech DE](https://www.exp-tech.de/sensoren/magnetfeldsensoren) / [Amazon.de](https://www.amazon.de/s?k=QMC5883L) |
+| **IMU (Accel + Gyro)** | 1 | 🛒 TO BUY | **€12-20** | **ICM-20948** (9-DoF, DMP, I2C/SPI)<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/TDK-InvenSense/ICM-20948) / [DigiKey DK](https://www.digikey.dk/en/products/detail/tdk-invensense/ICM-20948/8708445) / [RS Components DK](https://dk.rs-online.com/web/p/imu-sensors) / [Watterott DE](https://www.watterott.com/de/Sensoren/IMU) |
+| **Barometer / Pressure** | 1 | ✅ ON HAND | €0 | **BMP280** (I2C, 0x76/0x77) |
+| **Temperature / Humidity** | 1 | ✅ ON HAND | €0 | **AHT20** (I2C, 0x38) |
+
+---
+
+## Power & Actuation — **Buy from EU/DK Stores**
+
+| Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
+|------|-----|--------|-----------------|-------------------|
+| **Servo (Camera Gimbal)** | 1 | 🔄 SALVAGED | €0 | 2nd CP2 servo (pan/tilt for gimbal) |
+| **3.3V Regulator (3A+)** | 1 | ✅ **ON HAND** | €0 | Buck converter (3.3V 3A+) |
+| **5V BEC (3A+)** | 1 | ✅ **ON HAND** | €0 | Buck converter (5V 3A+) |
+| **Power Distribution Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printed enclosure with fused 5V/3.3V rails, XT60 in/out |
+| **Main Battery** | 1 | 🛒 TO BUY | **€30-60** | **2S LiPo 5000-8000mAh 50C+** (7.4V) or **3S 5000mAh** (11.1V)<br>→ [HobbyKing EU](https://hobbyking.com/en_us/lipo-batteries.html) / [Banggood EU](https://eu.banggood.com/Lipo-Batteries-c-100000001.html) / [RC-Tech DK](https://www.rc-tech.dk/lipo-batterier) / [HobbyStore DK](https://www.hobbystore.dk/lipo-batterier) / [Amazon.de](https://www.amazon.de/s?k=2S+LiPo+5000mAh) |
+| **Battery Charger** | 1 | 🔄 SALVAGED | €0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
 
 > **Note:** Truck is **100% driving functional** — CP2 remote → ESC + steering servo works perfectly. No motor driver, no servo controller, no MCU in the control loop. 3.3V/5V regulators power **MCUs and sensors only**. This project adds sensor suite (vision, thermal, GPS, IMU, ToF) for autonomy/teleop on top of a working truck.
 
 ---
 
-## Communications & Ground Station
+## Communications & Ground Station — **Buy from EU/DK Stores**
 
-| Item | Qty | Status | Est. Cost | Recommended Part / Links |
-|------|-----|--------|-----------|--------------------------|
-| **WiFi 5 Router / AP** | 1 | ✅ **ON HAND** | **$0** | Existing router (5 GHz capable, use for local network) |
-| **External Antenna (ESP32-S3)** | 1 | 🛒 TO BUY | $10-20 | 2.4/5 GHz dual-band PCB antenna or u.FL → SMA pigtail |
-| **Ground Station PC / Raspberry Pi 5** | 1 | 🛒 TO BUY | **$0 (PC) / $80 (Pi 5)** | PC preferred for WebXR; Pi 5 can run MediaMTX only |
-| **Meta Quest 2** | 1 | ✅ **ON HAND** | **$0** | Used Quest 2 ($300 value) — WebXR capable |
+| Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
+|------|-----|--------|-----------------|-------------------|
+| **WiFi 5 Router / AP** | 1 | ✅ **ON HAND** | **€0** | Existing router (5 GHz capable, use for local network) |
+| **External Antenna (ESP32-S3)** | 1 | 🛒 TO BUY | **€10-20** | 2.4/5 GHz dual-band PCB antenna or u.FL → SMA pigtail<br>→ [Mouser DK](https://www.mouser.dk/c/rf-antennas) / [DigiKey DK](https://www.digikey.dk/en/products/filter/rf-antennas/232) / [RS Components DK](https://dk.rs-online.com/web/p/rf-antennas) / [Conrad DK](https://www.conrad.dk/p/wlan-antennen) / [Amazon.de](https://www.amazon.de/s?k=u.fl+antenna+2.4ghz+5ghz) |
+| **Ground Station PC / Raspberry Pi 5** | 1 | 🛒 TO BUY | **€0 (PC) / €80 (Pi 5)** | PC preferred for WebXR; Pi 5 can run MediaMTX only<br>→ [Raspberry Pi DK](https://www.raspberrypi.dk/) / [Mouser DK](https://www.mouser.dk/c/single-board-computers/raspberry-pi) / [RS Components DK](https://dk.rs-online.com/web/p/raspberry-pi) / [BerryBase DE](https://www.berrybase.de/raspberry-pi/raspberry-pi-5) |
+| **Meta Quest 2** | 1 | ✅ **ON HAND** | **€0** | Used Quest 2 (€300 value) — WebXR capable |
 
 ---
 
@@ -83,23 +83,23 @@
 | **Servo Adapters / Horns** | 2-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - adapt CP2 servos to steering/gimbal |
 | **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis |
 
-| **Electronics Tray** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - mount ESP32-S3, C3, RP2040s to chassis |
-| Wiring / Connectors | 1 | 🛒 TO BUY | $20-40 | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving |
-| Heat-set Inserts (M3/M4) | 50+ | ✅ **ON HAND** | $0 | For strong bolt-on printed parts |
-| M3/M4 Hardware (screws, nuts, standoffs) | 1 kit | 🛒 TO BUY | $15-25 | Brass standoffs, nylon lock nuts, button-head screws |
+| **Electronics Tray** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - mount ESP32-S3, C3, RP2040s to chassis |
+| Wiring / Connectors | 1 | 🛒 TO BUY | **€20-40** | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving<br>→ [Mouser DK](https://www.mouser.dk/c/connectors/wire-to-board-connectors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/connectors-interconnects/211) / [RS Components DK](https://dk.rs-online.com/web/p/connectors) / [Conrad DK](https://www.conrad.dk/p/steckverbinder) / [BerryBase DE](https://www.berrybase.de/steckverbinder-kabel) / [Amazon.de](https://www.amazon.de/s?k=JST+SH+Stecker+XT60) |
+| Heat-set Inserts (M3/M4) | 50+ | ✅ **ON HAND** | €0 | For strong bolt-on printed parts |
+| M3/M4 Hardware (screws, nuts, standoffs) | 1 kit | 🛒 TO BUY | **€15-25** | Brass standoffs, nylon lock nuts, button-head screws<br>→ [Mouser DK](https://www.mouser.dk/c/hardware-fasteners-accessories) / [RS Components DK](https://dk.rs-online.com/web/p/fasteners-fixings) / [Conrad DK](https://www.conrad.dk/p/schrauben-muttern) / [BerryBase DE](https://www.berrybase.de/mechanik/befestigungstechnik) / [Watterott DE](https://www.watterott.com/de/Mechanik/Befestigung) / [Amazon.de](https://www.amazon.de/s?k=M3+Messing+H%C3%BClse+Gewindeeinsatz) |
 
 > **Design Approach:** Measure your truck's chassis hole patterns, body mount points, and servo spline type. Design printed parts in Fusion 360 / FreeCAD to bolt directly to existing mounting points. Use **TPU dampers** between electronics tray and chassis for vibration isolation.
 
 ---
 
-## 3D Printing Filament (FDM Printer ✅ ON HAND)
+## 3D Printing Filament (FDM Printer ✅ ON HAND) — **Buy from EU/DK Stores**
 
-| Material | Qty | Status | Use Case |
-|----------|-----|--------|----------|
-| **PETG** | On hand | ✅ **ON HAND** | Functional parts: enclosures, mounts, brackets (UV/heat resistant) |
-| **TPU** | On hand | ✅ **ON HAND** | Vibration dampers, battery straps, flexible mounts (Shore 60-80A) |
-| **PLA** | On hand | ✅ **ON HAND** | Prototypes, wire clips, non-structural test prints |
-| **ASA** | 1 roll | 🛒 **OPTIONAL** | Outdoor/UV parts: GPS mast, antenna mounts ($30-40 if needed) |
+| Material | Qty | Status | Use Case | EU/DK Store Links |
+|----------|-----|--------|----------|-------------------|
+| **PETG** | On hand | ✅ **ON HAND** | Functional parts: enclosures, mounts, brackets (UV/heat resistant) | |
+| **TPU** | On hand | ✅ **ON HAND** | Vibration dampers, battery straps, flexible mounts (Shore 60-80A) | |
+| **PLA** | On hand | ✅ **ON HAND** | Prototypes, wire clips, non-structural test prints | |
+| **ASA** | 1 roll | 🛒 **OPTIONAL** | Outdoor/UV parts: GPS mast, antenna mounts (€30-40 if needed) | [BerryBase DE](https://www.berrybase.de/3d-druck/filament/asa-filament) / [Watterott DE](https://www.watterott.com/de/3D-Druck/Filament/ASA) / [Exp-Tech DE](https://www.exp-tech.de/3d-druck/filament/asa) / [Filamentz DE](https://www.filamentz.de/asa-filament) / [Amazon.de](https://www.amazon.de/s?k=ASA+Filament+1.75mm) |
 
 > **Print Settings for Functional Parts:** 0.2mm layer, 3-4 walls, 25-30% gyroid infill, 220-240°C nozzle (PETG), 70-80°C bed. Dry filament 4h @ 65°C before printing PETG/TPU.
 
@@ -116,24 +116,24 @@
 
 ---
 
-## Cost Summary
+## Cost Summary (EUR)
 
 | Category | Est. Cost (Min) | Est. Cost (Max) |
 |----------|----------------|----------------|
-| Vision Sensors | $60 | $90 |
-| Navigation Sensors | $200 | $305 |
-| **Power & Actuation** | **$30** | **$60** |
-| **Comms & Ground Station** | **$10** | **$100** |
-| **Mechanical (Printed Fittings)** | **$5** | **$15** |
-| Dev Tools | **$0** | **$0** |
-| **ASA Filament (optional)** | **$0** | **$40** |
-| **TOTAL** | **~$305** | **~$610** |
+| Vision Sensors | €65 | €95 |
+| Navigation Sensors | €220 | €285 |
+| Power & Actuation | €30 | €60 |
+| Comms & Ground Station | €10 | €100 |
+| Mechanical (Printed Fittings) | €5 | €15 |
+| Dev Tools | €0 | €0 |
+| **ASA Filament (optional)** | **€0** | **€40** |
+| **TOTAL** | **~€330** | **~€595** |
 
 > **Notes:**
-> - **Min cost** assumes: PC ground station, AliExpress/Direct from China for sensors
-> - **Max cost** assumes: PC ground station, DigiKey/Mouser for all parts
-> - **Already owned saves ~$800-900**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**, **Quest 2 ($300)**, **WiFi 5 router**, **heat-set inserts (M3/M4)**
-> - **3D Printing saves ~$150-400** vs buying enclosures, gimbal, mounts, dampers, battery trays (only hardware to buy)
+> - **Min cost** assumes: PC ground station, AliExpress/BerryBase/Exp-Tech for sensors
+> - **Max cost** assumes: PC ground station, Mouser/DigiKey/RS Components for all parts
+> - **Already owned saves ~€750-850**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**, **Quest 2 (€300)**, **WiFi 5 router**, **heat-set inserts (M3/M4)**, **buck converters (3.3V/5V)**
+> - **3D Printing saves ~€150-400** vs buying enclosures, gimbal, mounts, dampers, battery trays (only hardware to buy)
 
 ---
 
@@ -150,16 +150,16 @@
 > **Why Phase 0?** Parts take 15-20h total print time. Start printing while waiting for Phase 1 sensors to arrive.
 
 ### Phase 1: Core Navigation (Week 1-2) 🚨 **START HERE**
-1. u-blox ZED-F9P + antenna ($180)
-2. QMC5883L ($10)
-3. ICM-20948 ($15)
+1. u-blox ZED-F9P + antenna (€180-250)
+2. QMC5883L (€8-15)
+3. ICM-20948 (€12-20)
 4. BMP280 + AHT20 ✅ ON HAND
 5. ESP32-C3 firmware: GPS + Mag + IMU + EKF
 6. **Install sensors in printed C3 hub enclosure**
 
 ### Phase 2: Vision & STANAG (Week 2-4)
-1. MLX90640 thermal ($55)
-2. OV5640 camera ($20)
+1. MLX90640 thermal (€50-70)
+2. OV5640 camera (€15-25)
 3. ESP32-S3 with PSRAM ✅ ON HAND
 4. **Printed camera gimbal + OV5640/MLX90640 mount** (already printed)
 5. H.264 + KLV + TS firmware
@@ -180,23 +180,27 @@
 
 ---
 
-## Supplier Quick Links
+## Supplier Quick Links — **EU/DK Focus**
 
-| Supplier | Regions | Notes |
-|----------|---------|-------|
-| **DigiKey** | Global | Fast shipping, genuine parts, higher price |
-| **Mouser** | Global | Good stock, genuine parts |
-| **SparkFun** | US/Global | Breakout boards, good docs |
-| **Adafruit** | US/Global | Breakout boards, tutorials |
-| **AliExpress** | Global | Cheapest, 2-4 week shipping, verify seller |
-| **Amazon** | Global | Fast, but markup on components |
-| **Pololu** | US/Global | Robotics-focused, good motor drivers |
-| **Banggood** | Global | RC trucks, batteries, cheap modules |
-| **HobbyKing** | Global | LiPo batteries, RC gear |
+| Supplier | Website | Region | Notes |
+|----------|---------|--------|-------|
+| **Mouser DK** | [mouser.dk](https://www.mouser.dk) | DK/EU | Fast shipping, huge stock, genuine parts, DKK pricing |
+| **DigiKey DK** | [digikey.dk](https://www.digikey.dk) | DK/EU | Huge selection, fast shipping, genuine parts |
+| **RS Components DK** | [dk.rs-online.com](https://dk.rs-online.com) | DK/EU | Good stock, next-day delivery, trade account discounts |
+| **Conrad DK** | [conrad.dk](https://www.conrad.dk) | DK/EU | Local Danish store, good for hardware/connectors |
+| **BerryBase DE** | [berrybase.de](https://www.berrybase.de) | DE/EU | Maker-focused, good for Pi/Arduino/sensors, ships to DK |
+| **Exp-Tech DE** | [exp-tech.de](https://www.exp-tech.de) | DE/EU | Maker electronics, sensors, displays, ships to DK |
+| **Watterott DE** | [watterott.com](https://www.watterott.com) | DE/EU | Robotics/maker focus, good for sensors/IMUs |
+| **Filamentz DE** | [filamentz.de](https://www.filamentz.de) | DE/EU | Quality filament (PETG/TPU/ASA), ships to DK |
+| **HobbyKing EU** | [hobbyking.com](https://hobbyking.com/en_us/warehouse/eu.html) | EU | LiPo batteries, RC gear, EU warehouse |
+| **Banggood EU** | [banggood.com](https://eu.banggood.com) | EU | Cheap modules, batteries, EU warehouse option |
+| **RC-Tech DK** | [rc-tech.dk](https://www.rc-tech.dk) | DK | Danish RC store, LiPo, chargers, parts |
+| **HobbyStore DK** | [hobbystore.dk](https://www.hobbystore.dk) | DK | Danish hobby store, RC, batteries, tools |
+| **Amazon.de** | [amazon.de](https://www.amazon.de) | DE/EU | Fast Prime shipping, wide selection |
 
 ---
 
-## Part Numbers for Quick Search
+## Part Numbers for Quick Search (EU/DK Stores)
 
 ```
 MLX90640ESF-BAA-000-TU     (Thermal 32x24)
@@ -207,13 +211,17 @@ QMC5883L                   (Magnetometer)
 ICM-20948                  (9-DoF IMU)
 BMP280                     (Pressure - HAVE)
 AHT20                      (Temp/Humidity - HAVE)
-VL53L5CXV0DH               (8x8 ToF x4)
-BTS7960                    (43A Motor Driver)
-TPS5430                    (3A Buck Reg)
-LM2596S-3.3 / LM2596S-5.0  (LDO/Buck)
-TCA9548A                   (I2C Mux)
-RT-AX58U                   (WiFi 6 Router)
+TPS5430                    (3A Buck Reg 3.3V - HAVE)
+LM2596S-5.0                (5V Buck Reg - HAVE)
+TCA9548A                   (I2C Mux - if adding ToF later)
 ```
+
+> **Search tips for DK/EU stores:**
+> - Mouser DK: Search by manufacturer part number (e.g., "MLX90640ESF-BAA-000-TU")
+> - DigiKey DK: Use "Product Index" → search by keyword
+> - RS Components DK: Search by "Order Code" or keyword
+> - Conrad DK: Search by "Artikelnummer" or keyword
+> - For LiPo: Search "2S LiPo 5000mAh 50C" on HobbyKing EU / RC-Tech DK
 
 ---
 
