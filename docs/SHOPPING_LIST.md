@@ -61,7 +61,7 @@
 | **Main Battery** | 1 | 🛒 TO BUY | $30-60 | **2S LiPo 5000-8000mAh 50C+** (7.4V) or **3S 5000mAh** (11.1V)<br>→ [Gens Ace](https://www.gensace.de/) / [HRB](https://www.hrb-battery.com/) |
 | **Battery Charger** | 1 | 🔄 SALVAGED | $0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
 
-> **Note:** Truck drivetrain uses **existing brushed ESC** (driven directly by CP2 receiver). No additional motor driver needed. Steering uses **existing servo** (driven directly by CP2 receiver). 3.3V/5V regulators power MCUs and sensors only.
+> **Note:** Truck is **100% driving functional** — CP2 remote → ESC + steering servo works perfectly. No motor driver, no servo controller, no MCU in the control loop. 3.3V/5V regulators power **MCUs and sensors only**. This project adds sensor suite (vision, thermal, GPS, IMU, ToF) for autonomy/teleop on top of a working truck.
 
 ---
 
@@ -80,8 +80,8 @@
 
 | Item | Qty | Status | Est. Cost | Notes |
 |------|-----|--------|-----------|-------|
-| **RC Monster Truck** | 1 | ✅ **ON HAND** | **$0** | Using as-is with existing drivetrain, steering servo, ESC |
-| **CP2 2.4GHz Remote** | 1 | ✅ **ON HAND** | **$0** | PWM/SBUS → RP2040 for RC fallback (already working) |
+| **RC Monster Truck** | 1 | ✅ **ON HAND** | **$0** | **100% functional** — drives perfectly with CP2 remote, no mods needed |
+| **CP2 2.4GHz Remote** | 1 | ✅ **ON HAND** | **$0** | **Direct to ESC + steering servo** — primary control, always works |
 | **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 + MLX90640) |
 | **Sensor Enclosures** | 3-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - C3 hub, motor driver, power distro, battery tray |
 | **VL53L5CX Mounts** | 4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - front, rear, left, right brackets (truck-specific) |
@@ -91,7 +91,7 @@
 | **Wire Routing Clips** | 10+ | 🖨️ **PRINT** | **$0 (filament)** | Printable - cable management along chassis |
 | **Servo Adapters / Horns** | 2-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - adapt CP2 servos to steering/gimbal |
 | **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis |
-| **ESC / Motor Driver Mount** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - mount BTS7960/VNH5019 to chassis |
+
 | **Electronics Tray** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - mount ESP32-S3, C3, RP2040s to chassis |
 | Wiring / Connectors | 1 | 🛒 TO BUY | $20-40 | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving |
 | Heat-set Inserts (M3/M4) | 50+ | 🛒 TO BUY | $10-15 | For strong bolt-on printed parts |

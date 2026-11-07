@@ -68,15 +68,18 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 
 > **Limitation:** ESP8266 is **single-core, no BLE, no hardware crypto, 2.4 GHz only, limited RAM**. Not suitable for video, STANAG encoding, or real-time control. Use as **auxiliary/backup only**.
 
-### Existing RC Monster Truck ON HAND
+### Existing RC Monster Truck ON HAND — **100% DRIVING FUNCTIONAL**
 
 | Aspect | Details |
 |--------|---------|
-| **Chassis** | Using as-is — no new truck purchase needed |
-| **Remote** | Honeybee CP2 2.4GHz transmitter + receiver (working) |
-| **Drivetrain** | Existing motor + ESC (brushed) — **CP2 receiver directly drives ESC** |
-| **Steering** | Existing servo — **CP2 receiver directly drives steering servo** |
+| **Chassis** | Using as-is — no modifications needed |
+| **Remote** | Honeybee CP2 2.4GHz transmitter + receiver (working perfectly) |
+| **Drivetrain** | Existing brushed motor + ESC — **CP2 receiver → ESC (direct, works)** |
+| **Steering** | Existing servo — **CP2 receiver → steering servo (direct, works)** |
 | **Body** | Existing shell — design printed mounts to use existing body clips/mounting points |
+| **Battery** | Uses existing battery compartment (2S/3S LiPo upgrade optional) |
+
+> **IMPORTANT:** The truck drives **perfectly right now** with the CP2 remote. Zero modifications to drivetrain, steering, ESC, or control system. This project **only adds sensors + compute** (vision, thermal, GPS, IMU, ToF) for autonomous/teleop capability. The CP2 remote remains the primary/fallback control — always functional regardless of MCU state.
 
 ### Printed Fittings for Existing Truck (FDM Printer ON HAND)
 
