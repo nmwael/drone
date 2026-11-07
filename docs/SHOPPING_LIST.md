@@ -45,8 +45,8 @@
 
 | Item | Qty | Status | Est. Cost | Recommended Part / Links |
 |------|-----|--------|-----------|--------------------------|
-| **VL53L5CX 8×8 Zone ToF** | 4 | 🛒 TO BUY | **$18-25 ea ($72-100 total)** | STMicroelectronics - 8×8 zones, 4m range, I2C @ 1MHz<br>→ [DigiKey](https://www.digikey.com/en/products/detail/stmicroelectronics/VL53L5CXV0DH/1/12849648) / [Mouser](https://www.mouser.com/ProductDetail/STMicroelectronics/VL53L5CXV0DH) |
-| XSHUT Level Shifter / Mux | 1 | 🛒 TO BUY | $5-10 | 4-channel I2C mux (TCA9548A) or GPIO XSHUT control |
+| **VL53L5CX 8×8 Zone ToF** | **12** | 🛒 TO BUY | **$18-25 ea ($216-300 total)** | STMicroelectronics - 8×8 zones, 4m range, I2C @ 1MHz (4 per RP2040, 3 RP2040s)<br>→ [DigiKey](https://www.digikey.com/en/products/detail/stmicroelectronics/VL53L5CXV0DH/1/12849648) / [Mouser](https://www.mouser.com/ProductDetail/STMicroelectronics/VL53L5CXV0DH) |
+| **TCA9548A I2C Mux** | **3** | 🛒 TO BUY | **$5-10 ea ($15-30 total)** | 8-channel I2C mux per RP2040 (4 ToF per mux)<br>→ [Amazon](https://www.amazon.com/s?k=TCA9548A) / [DigiKey](https://www.digikey.com/en/products/detail/texas-instruments/TCA9548APWR/2963793) |
 
 ---
 
@@ -103,12 +103,12 @@
 
 ## 3D Printing Filament (FDM Printer ✅ ON HAND)
 
-| Material | Qty | Est. Cost | Use Case |
-|----------|-----|-----------|----------|
-| **PETG** (1kg) | 2-3 rolls | $20-30/roll | Functional parts: enclosures, mounts, brackets (UV/heat resistant) |
-| **TPU** (500g-1kg) | 1 roll | $25-35/roll | Vibration dampers, battery straps, flexible mounts (Shore 60-80A) |
-| **ASA** (1kg) | 1 roll | $30-40/roll | **Optional** - outdoor/UV parts: GPS mast, antenna mounts |
-| **PLA** (1kg) | 1 roll | $15-20/roll | Prototypes, wire clips, non-structural test prints |
+| Material | Qty | Status | Use Case |
+|----------|-----|--------|----------|
+| **PETG** | On hand | ✅ **ON HAND** | Functional parts: enclosures, mounts, brackets (UV/heat resistant) |
+| **TPU** | On hand | ✅ **ON HAND** | Vibration dampers, battery straps, flexible mounts (Shore 60-80A) |
+| **PLA** | On hand | ✅ **ON HAND** | Prototypes, wire clips, non-structural test prints |
+| **ASA** | 1 roll | 🛒 **OPTIONAL** | Outdoor/UV parts: GPS mast, antenna mounts ($30-40 if needed) |
 
 > **Print Settings for Functional Parts:** 0.2mm layer, 3-4 walls, 25-30% gyroid infill, 220-240°C nozzle (PETG), 70-80°C bed. Dry filament 4h @ 65°C before printing PETG/TPU.
 
@@ -131,19 +131,19 @@
 |----------|----------------|----------------|
 | Vision Sensors | $60 | $90 |
 | Navigation Sensors | $200 | $305 |
-| ToF Array (4×) | $72 | $100 |
+| ToF Array (12×) | $216 | $300 |
 | Power & Actuation | $71 | $145 |
 | Comms & Ground Station | $390 | $720 |
-| **Mechanical (Printed Fittings)** | **$45** | **$80** |
+| **Mechanical (Printed Fittings)** | **$10** | **$25** |
 | Dev Tools | $80 | $220 |
-| **Filament (PETG/TPU/ASA)** | **$60** | **$100** |
-| **TOTAL** | **~$978** | **~$1,760** |
+| **ASA Filament (optional)** | **$0** | **$40** |
+| **TOTAL** | **~$1,027** | **~$1,845** |
 
 > **Notes:**
 > - **Min cost** assumes: Quest 2 used, Pi 5 ground station, AliExpress/Direct from China for sensors
 > - **Max cost** assumes: Quest 3 new, PC ground station, DigiKey/Mouser for all parts
-> - **Already owned saves ~$400-500**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer**
-> - **3D Printing saves ~$100-300** vs buying enclosures, gimbal, mounts, dampers, battery trays
+> - **Already owned saves ~$500-600**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**
+> - **3D Printing saves ~$150-400** vs buying enclosures, gimbal, mounts, dampers, battery trays (only hardware/inserts to buy)
 
 ---
 
@@ -152,8 +152,8 @@
 ### Phase 0: 3D Print Preparation (Week 0) 🖨️ **DO FIRST**
 1. **Slice & print test coupons** - calibrate flow, temperature, bed adhesion
 2. **Print vibration dampers (TPU)** - 4-8 pcs, 30min each, test Shore hardness
-3. **Print sensor enclosures (PETG)** - C3 hub, motor driver, power distro (4-6h each)
-4. **Print VL53L5CX mounts (PETG)** - 4 pcs, 1h each
+3. **Print sensor enclosures (PETG)** - C3 hub, power distro, electronics tray (4-6h each)
+4. **Print VL53L5CX mounts (PETG)** - **12 pcs**, 1h each
 5. **Print camera gimbal (PETG + TPU)** - 6-8h, uses CP2 servos
 6. **Print GPS antenna mast, antenna mount, wire clips** - 2-3h total
 7. **Order heat-set inserts (M3/M4)** - install in printed parts
@@ -176,11 +176,11 @@
 5. **Install motor driver in printed enclosure**
 
 ### Phase 3: Obstacle Avoidance (Week 3-4)
-1. 4× VL53L5CX ($80-100)
-2. TCA9548A I2C mux ($5)
-3. **Printed VL53L5CX mounts** (already printed)
-4. RP2040#2 & #3 firmware: ToF scanning
-5. **Mount ToF sensors on truck chassis**
+1. **12× VL53L5CX** ($216-300)
+2. **3× TCA9548A I2C mux** ($15-30)
+3. **Printed VL53L5CX mounts** (already printed - 12 brackets)
+4. RP2040 #1, #2, #3 firmware: 4× ToF scanning each (12 total)
+5. **Mount ToF sensors on truck chassis** (front, rear, left, right, corners)
 
 ### Phase 4: Vision & STANAG (Week 4-6)
 1. MLX90640 thermal ($55)

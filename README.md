@@ -14,15 +14,15 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 |--------|-----|------|--------------|
 | **ESP32-C3** | 1 | Sensor Hub / Comms | RISC-V, WiFi 4/BLE 5, low power, 400KB SRAM |
 | **ESP32-S3** | 1 | Vision Processing | Dual-core Xtensa LX7, WiFi/BLE, PSRAM support, AI acceleration |
-| **RP2040** | 3+ | Motor Control / I/O | Dual-core Cortex-M0+, PIO for precise timing, 264KB SRAM, **16MB (128 Mbit) / 4MB (32 Mbit) Flash** |
+| **RP2040** | 3 | Sensor Processing | Dual-core Cortex-M0+, PIO for precise timing, 264KB SRAM, **16MB (128 Mbit) / 4MB (32 Mbit) Flash** |
 | **ESP8266MOD (AI Thinker)** | 1 | **Backup Comms / Telemetry Relay** | Xtensa L106, WiFi 4 (2.4 GHz only), 160KB SRAM, 4MB Flash |
 
 ### Sensors (to procure/integrate)
 
 | Sensor | Interface | Purpose | Candidate Parts |
 |--------|-----------|---------|-----------------|
-| **Thermal Camera** | I2C/SPI | Heat detection (8×8 to 32×32) | MLX90640 (32×24), AMG8833 (8×8), MLX90641 (16×12) |
-| **IR Distance/Proximity** | I2C/UART | Obstacle avoidance | VL53L1X (ToF, 4m), VL53L5CX (8×8 zone), TF-Luna (LiDAR) |
+| **Thermal Camera** | I2C/SPI | Heat detection (8x8 to 32x32) | MLX90640 (32x24), AMG8833 (8x8), MLX90641 (16x12) |
+| **IR Distance/Proximity** | I2C/UART | Obstacle avoidance | VL53L1X (ToF, 4m), VL53L5CX (8x8 zone), TF-Luna (LiDAR) |
 | **IR Camera (Night Vision)** | CSI/Parallel | Low-light imaging | OV2640/OV5640 with IR filter removed, ESP32-S3 CSI |
 | **GNSS/GPS** | UART/I2C | Positioning | u-blox ZED-F9P (RTK), BN-880, SAM-M10Q |
 | **Magnetometer (Compass)** | I2C | Heading | QMC5883L, HMC5883L, RM3100, LIS3MDL |
@@ -37,61 +37,71 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | **Main Battery** | 2S/3S LiPo (7.4V/11.1V) | Power distribution board needed |
 | **BEC / 5V Reg** | 5V 3A+ | For MCUs and sensors |
 | **3.3V Reg** | 3.3V 1A+ | For ESP32-C3/S3, sensors |
-| **Motor Driver** | Dual H-bridge, 10A+ | TB6612FNG, BTS7960, or VNH5019 |
-| **Servo (Steering)** | Standard 180° | MG996R or similar |
 
 ### Salvaged Parts: Honeybee CP2 (Coaxial Helicopter)
 
 | Part | Qty | Condition | Reuse Potential |
 |------|-----|-----------|-----------------|
-| **2.4GHz Receiver** | 1 | Working | Direct PWM/SBUS output → RP2040 for manual override |
+| **2.4GHz Receiver** | 1 | Working | Direct PWM/SBUS output to ESC + steering servo |
 | **Main Motor (Brushed)** | 1 | Working | Low-voltage test loads, winch |
 | **Tail Motor (Brushed)** | 1 | Working | Auxiliary actuator |
-| **Main Rotor Servos** | 2 | Working | Steering, camera gimbal (small, ~1.5kg-cm) |
-| **Gyro (Piezo/MEMS)** | 1 | Working | Rate damping for truck (if analog/PWM) |
+| **Main Rotor Servos** | 2 | Working | Camera gimbal pan/tilt (small, ~1.5kg-cm) |
+| **Gyro (Piezo/MEMS)** | 1 | Working | Rate damping reference (if analog/PWM) |
 | **ESC (Brushed, built-in)** | 1 | Working | Motor driver reference / low-power loads |
 | **LiPo 1S/2S Pack** | 1 | Unknown | Test power source |
 | **Charger** | 1 | Working | 1S/2S LiPo charging |
 | **Propellers** | 0 | **Broken** | Replace if flying again |
 
-> **Note:** The CP2 receiver outputs standard PWM (1-2ms) or SBUS. Connect to RP2040 GPIO for RC fallback control. The coaxial mechanics (swashplate, linkages) are not directly reusable for a truck but servos are.
+> **Note:** The CP2 receiver outputs standard PWM (1-2ms) or SBUS. It connects **directly to the truck's ESC and steering servo** — no MCU in the control loop. MCUs are purely for sensing and streaming.
 
-### Existing RC Monster Truck ✅ ON HAND
+### ESP8266MOD (AI Thinker) — Secondary Roles
+
+| Role | Description | Interface |
+|------|-------------|-----------|
+| **Telemetry Relay** | Independent low-rate telemetry uplink (MAVLink/JSON) via WiFi to ground station | UART from C3 @ 115200 -> ESP8266 -> UDP/TCP |
+| **Watchdog / Heartbeat** | Monitors ESP32-C3/S3 health; triggers hardware reset via GPIO if stalled | GPIO -> C3/S3 EN/RST pins |
+| **OTA Bootstrap** | Serves firmware images for ESP32-C3/S3 OTA updates over local WiFi | SPIFFS/LittleFS + HTTP server |
+| **WiFi Range Extender** | ESP-NOW -> WiFi bridge for longer-range telemetry (2.4 GHz only) | ESP-NOW from C3 -> ESP8266 -> WiFi AP |
+| **Config / Debug Portal** | Captive portal for WiFi credentials, sensor calibration, log download | Web server on ESP8266 |
+
+> **Limitation:** ESP8266 is **single-core, no BLE, no hardware crypto, 2.4 GHz only, limited RAM**. Not suitable for video, STANAG encoding, or real-time control. Use as **auxiliary/backup only**.
+
+### Existing RC Monster Truck ON HAND
 
 | Aspect | Details |
 |--------|---------|
 | **Chassis** | Using as-is — no new truck purchase needed |
 | **Remote** | Honeybee CP2 2.4GHz transmitter + receiver (working) |
-| **Drivetrain** | Existing motor + ESC (brushed) — will add BTS7960/VNH5019 for brushless upgrade or keep brushed with new driver |
-| **Steering** | Existing servo — will interface via RP2040 (RC fallback) + add printed servo horn adapter |
+| **Drivetrain** | Existing motor + ESC (brushed) — **CP2 receiver directly drives ESC** |
+| **Steering** | Existing servo — **CP2 receiver directly drives steering servo** |
 | **Body** | Existing shell — design printed mounts to use existing body clips/mounting points |
 
-### Printed Fittings for Existing Truck (FDM Printer ✅ ON HAND)
+### Printed Fittings for Existing Truck (FDM Printer ON HAND)
 
 | Part | Qty | Material | Purpose | Mounting Strategy |
 |------|-----|----------|---------|-------------------|
-| **Electronics Tray** | 1 | PETG | Mount ESP32-S3, C3, 3× RP2040 | Bolt to existing chassis holes / body mount posts |
+| **Electronics Tray** | 1 | PETG | Mount ESP32-S3, C3, 2x RP2040 | Bolt to existing chassis holes / body mount posts |
 | **C3 Sensor Hub Enclosure** | 1 | PETG | Weatherproof GPS/IMU/Mag/Baro/Temp | Mount on tray or elevated mast |
-| **Motor Driver Enclosure** | 1 | PETG | BTS7960/VNH5019 protection | Bolt to tray near motor |
 | **Power Distribution Box** | 1 | PETG | Fused 5V/3.3V rails, XT60 in/out | Integrated into electronics tray |
 | **Battery Tray / Strap** | 1 | TPU | Secure 2S/3S LiPo | Uses existing battery compartment or straps |
 | **Camera Gimbal (2-axis)** | 1 | PETG + TPU | Pan/tilt for OV5640 + MLX90640 | Mount on front bumper or roof; uses CP2 servos |
 | **OV5640 + MLX90640 Mount** | 1 | PETG | Align thermal + IR cameras | Integrated into gimbal |
-| **VL53L5CX Mounts** | 4 | PETG | Front, rear, left, right ToF | Bumper/body mounts, 45° down angle |
+| **VL53L5CX Mounts** | **12** | PETG | 3 per corner (front, rear, left, right) + 4 sides | Bumper/body mounts, 45 deg down angle |
 | **GPS Antenna Mast** | 1 | PETG/ASA | Elevate ZED-F9P antenna | Vertical on electronics tray rear |
 | **ESP32-S3 Antenna Mount** | 1 | PETG | External u.FL/SMA antenna | Side of electronics tray |
-| **Vibration Dampers** | 4-8 | TPU (60-80A) | Isolate IMU/cameras from chassis | Between tray ↔ chassis, gimbal ↔ mount |
+| **Vibration Dampers** | 4-8 | TPU (60-80A) | Isolate IMU/cameras from chassis | Between tray <-> chassis, gimbal <-> mount |
 | **Wire Routing Clips** | 10+ | PLA/PETG | Cable management | Along chassis rails, body clips |
-| **Servo Horn Adapters** | 2-4 | PETG | CP2 servo → steering/gimbal | Match existing servo spline (measure!) |
+| **Servo Horn Adapters** | 2 | PETG | CP2 servo -> gimbal (pan/tilt) | Match existing servo spline (measure!) |
 
 > **Design Workflow:** 1) Measure truck chassis hole pattern, body mount locations, servo spline. 2) Model in Fusion 360/FreeCAD. 3) Print test fits in PLA. 4) Final prints in PETG/TPU/ASA. 5) Install heat-set inserts (M3/M4) for bolts.
 
-### Manufacturing Capability: FDM 3D Printer ✅ ON HAND
+### Manufacturing Capability: FDM 3D Printer ON HAND
 
 | Capability | Use Cases for This Project |
 |------------|---------------------------|
-| **Print Volume** | Assumed ≥ 220×220×250mm (Ender 3 class or larger) |
-| **Materials** | PLA (prototypes), PETG (functional), ASA/ABS (heat resistant), TPU (vibration dampening) |
+| **Print Volume** | Assumed >= 220x220x250mm (Ender 3 class or larger) |
+| **Materials ON HAND** | ✅ **PLA** (prototypes), ✅ **PETG** (functional), ✅ **TPU** (vibration dampening) |
+| **Materials OPTIONAL** | ASA/ABS (heat resistant, outdoor/UV) |
 | **Resolution** | 0.1-0.3mm layer height, 0.4mm nozzle standard |
 
 #### Printable Parts (replaces purchased items)
@@ -101,7 +111,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | **Sensor Enclosure (C3 Hub)** | 1 | PETG | 4-6h | Weatherproof box for GPS/IMU/Mag/Baro/Temp |
 | **ESP32-S3 Camera Mount** | 1 | PETG/ASA | 2-3h | OV5640 + MLX90640 aligned mount |
 | **2-Axis Camera Gimbal** | 1 | PETG + TPU | 6-8h | Pan/tilt for vision sensors (uses CP2 servos) |
-| **VL53L5CX Mounts (×4)** | 4 | PETG | 1h each | Front, rear, left, right ToF brackets |
+| **VL53L5CX Mounts (x4)** | 4 | PETG | 1h each | Front, rear, left, right ToF brackets |
 | **Motor Driver Enclosure** | 1 | PETG | 3-4h | BTS7960/VNH5019 protection |
 | **Power Distribution Box** | 1 | PETG | 4-5h | Fused 5V/3.3V rails, XT60 in/out |
 | **Battery Tray / Strap** | 1 | TPU | 1-2h | 2S/3S LiPo secure mount |
@@ -112,79 +122,91 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | **Servo Savers / Horns** | 2 | PETG | 30min each | Steering + gimbal servo output |
 | **Wheel Encoder Mounts** | 2 | PETG | 1h each | If adding quadrature encoders |
 
-> **Design Tip:** Use **heat-set inserts (M3/M4)** for bolt-on strength. Print with **3-4 walls, 20-30% infill, 0.2mm layers** for functional parts. Anneal PETG at 80°C for 30min if heat resistance needed.
-
-| Role | Description | Interface |
-|------|-------------|-----------|
-| **Telemetry Relay** | Independent low-rate telemetry uplink (MAVLink/JSON) via WiFi to ground station | UART from C3 @ 115200 → ESP8266 → UDP/TCP |
-| **Watchdog / Heartbeat** | Monitors ESP32-C3/S3 health; triggers hardware reset via GPIO if stalled | GPIO → C3/S3 EN/RST pins |
-| **OTA Bootstrap** | Serves firmware images for ESP32-C3/S3 OTA updates over local WiFi | SPIFFS/LittleFS + HTTP server |
-| **WiFi Range Extender** | ESP-NOW → WiFi bridge for longer-range telemetry (2.4 GHz only) | ESP-NOW from C3 → ESP8266 → WiFi AP |
-| **Config / Debug Portal** | Captive portal for WiFi credentials, sensor calibration, log download | Web server on ESP8266 |
-
-> **Limitation:** ESP8266 is **single-core, no BLE, no hardware crypto, 2.4 GHz only, limited RAM**. Not suitable for video, STANAG encoding, or real-time control. Use as **auxiliary/backup only**.
+> **Design Tip:** Use **heat-set inserts (M3/M4)** for bolt-on strength. Print with **3-4 walls, 20-30% infill, 0.2mm layers** for functional parts. Anneal PETG at 80C for 30min if heat resistance needed.
 
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      ESP32-S3 (Vision)                       │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │ Thermal Cam │  │  IR Camera  │  │   Vision Processing │  │
-│  │  (MLX90640) │  │  (OV5640)   │  │   (TensorFlow Lite) │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-└─────────│────────────────│─────────────────────│────────────┘
-          │                │                     │
-          ▼                ▼                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    ESP32-C3 (Sensor Hub)                     │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   GPS/GNSS  │  │ Magnetometer│  │      IMU + Baro     │  │
-│  │  (u-blox)   │  │  (QMC5883)  │  │    (ICM-20948)      │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-└─────────│────────────────│─────────────────────│────────────┘
-          │                │                     │
-          ▼                ▼                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      RP2040 ×3 (I/O)                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │ Motor Driver│  │   Servo     │  │  IR ToF Array       │  │
-│  │  (2× H-br)  │  │  Steering   │  │  (VL53L5CX ×4)      │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              ▲
-                              │ UART (telemetry, watchdog)
-                              │
-                    ┌─────────┴─────────┐
-                    │  ESP8266MOD       │
-                    │  (AI Thinker)     │
-                    │  - Telemetry UDP  │
-                    │  - Watchdog RST   │
-                    │  - OTA Server     │
-                    └───────────────────┘
++-----------------------------------------------------------------+
+|                      ESP32-S3 (Vision)                          |
+|  +-----------------+  +-----------------+  +-----------------+  |
+|  | Thermal Cam     |  |  IR Camera      |  | Vision Process  |  |
+|  |  (MLX90640)     |  |  (OV5640)       |  |  (TensorFlow)   |  |
+|  +--------+--------+  +--------+--------+  +--------+--------+  |
++----------|----------------|----------------|----------------|----+
+           |                |                |                |
+           v                v                v                v
++-----------------------------------------------------------------+
+|                    ESP32-C3 (Sensor Hub)                        |
+|  +-----------------+  +-----------------+  +-----------------+  |
+|  |   GPS/GNSS      |  | Magnetometer    |  |    IMU + Baro   |  |
+|  |  (u-blox)       |  |  (QMC5883)      |  |   (ICM-20948)   |  |
+|  +--------+--------+  +--------+--------+  +--------+--------+  |
+|           |                |                |                |
+|           v                v                v                v
+|  +-----------------------------------------------------------------+  |
+|  |              Sensor Fusion EKF                                  |  |
+|  |         + AHT20 (Temp/RH) + BMP280 (Press)                     |  |
+|  +-----------------------------------------------------------------+  |
++--------------------------|--------------------------------------------+
+                           |
+           +---------------+---------------+
+           v               v               v
++------------------+ +------------------+ +------------------+
+|  RP2040 #1       | |  RP2040 #2       | |  RP2040 #3       |
+|  (16MB Flash)    | |  (4MB Flash)     | |  (4MB Flash)     |
+|  +-------------+ | |  +-------------+ | |  +-------------+ |
+|  | 4x VL53L5CX | | |  | 4x VL53L5CX | | |  | 4x VL53L5CX | |
+|  | ToF Array   | | |  | ToF Array   | | |  | ToF Array   | |
+|  | Front/      | | |  | Left/       | | |  | Rear/       | |
+|  | Rear/       | | |  | Right/      | | |  | Aux         | |
+|  | Sides       | | |  | Aux         | | |  |             | |
+|  +-------------+ | |  +-------------+ | |  +-------------+ |
++--------|---------+ +--------|---------+ +--------|---------+
+         |                       |                       |
+         +-----------------------+-----------------------+
+                                 v
+                +----------------------------------+
+                |     ESP32-C3 (Aggregation)       |
+                |  Sensor Fusion + ToF Data        |
+                |  -> ESP-NOW -> ESP32-S3          |
+                |  -> UART -> ESP8266 (Backup)     |
+                +----------------------------------+
+                                 ^
+                                 | UART (telemetry, watchdog)
+                                 |
+                    +------------+------------+
+                    |  ESP8266MOD             |
+                    |  (AI Thinker)           |
+                    |  - Telemetry UDP        |
+                    |  - Watchdog RST         |
+                    |  - OTA Server           |
+                    +-------------------------+
 ```
+
+**Note:** Truck drivetrain & steering are driven **directly by CP2 receiver** -> existing ESC & servo. No MCU in the control loop.
 
 ### Communication Bus
 
 | Link | Protocol | Rate | Purpose |
 |------|----------|------|---------|
-| ESP32-S3 ↔ ESP32-C3 | ESP-NOW / UART | 1-2 Mbps | Sensor fusion, command/telemetry |
-| ESP32-C3 ↔ RP2040s | UART / I2C | 1 Mbps / 400 kHz | Motor commands, sensor reads |
-| RP2040 ↔ Motor Driver | PWM + GPIO | 20 kHz PWM | Motor speed/direction |
-| RP2040 ↔ VL53L5CX | I2C (mux) | 1 MHz | 8×8 zone ToF scanning |
-| **CP2 Receiver → RP2040** | **PWM / SBUS** | **50 Hz / 100 kbps** | **Manual RC fallback / override** |
-| **ESP32-C3 → ESP8266MOD** | **UART** | **115200 baud** | **Telemetry relay, watchdog, OTA** |
-| **ESP8266MOD → Ground** | **WiFi UDP/TCP** | **~1 Mbps** | **Backup telemetry, config portal** |
+| ESP32-S3 <-> ESP32-C3 | ESP-NOW / UART | 1-2 Mbps | Vision <-> Sensor fusion, telemetry |
+| ESP32-C3 -> RP2040s | UART | 1 Mbps | ToF sensor commands / config |
+| RP2040s -> ESP32-C3 | UART | 1 Mbps | ToF point clouds (4x VL53L5CX each) |
+| RP2040 <-> VL53L5CX | I2C (mux) | 1 MHz | 8x8 zone ToF scanning @ 30 Hz |
+| ESP32-C3 -> ESP8266MOD | UART | 115200 baud | Backup telemetry, watchdog, OTA |
+| ESP8266MOD -> Ground | WiFi UDP/TCP | ~1 Mbps | Backup telemetry, config portal |
+| CP2 Receiver -> ESC/Servo | PWM / SBUS | 50 Hz / 100 kbps | **Direct drive** (no MCU in loop) |
 
 ### Control Modes
 
 | Mode | Source | Path | Use Case |
 |------|--------|------|----------|
-| **Autonomous** | ESP32-S3/C3 | ESP-NOW → UART → RP2040 | Waypoint nav, obstacle avoidance |
-| **Teleop (WiFi)** | Phone/PC | WiFi → ESP32-S3 → ESP-NOW → UART → RP2040 | FPV driving, sensor streaming |
-| **RC Fallback** | CP2 Transmitter | **PWM/SBUS → RP2040** | **Safety override, testing, no-WiFi zones** |
+| **Autonomous** | ESP32-S3/C3 | Sensor fusion -> ToF obstacle map -> Waypoint planner | Full autonomy |
+| **Teleop (WiFi)** | Phone/PC / Quest | WiFi -> ESP32-S3 -> ESP-NOW -> C3 -> Sensor streams | FPV + sensor overlay |
+| **RC Manual** | CP2 Transmitter | **PWM/SBUS -> ESC + Steering Servo** | **Direct, no MCU latency** |
 
-> **Safety:** RP2040 firmware implements priority: RC PWM > Autonomous > Teleop. Loss of RC signal auto-switches to autonomous hold/return.
+> **Safety:** CP2 receiver has **direct electrical connection** to ESC and steering servo. MCU failure = full manual control retained. Autonomous/Teleop modes send **advisory commands** (speed limit, heading hold) via ESP32-C3 GPIO to CP2 receiver's trainer port if available, else purely sensor streaming.
 
 ---
 
@@ -195,7 +217,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | Requirement | Specification | Implementation |
 |-------------|---------------|----------------|
 | **Video Codec** | H.264 (AVC) High Profile @ Level 4.1 / MPEG-2 | ESP32-S3 hardware H.264 encoder (max 1080p@30fps) |
-| **Container** | MPEG-TS (Transport Stream) | `libavformat` / custom TS muxer on S3 |
+| **Container** | MPEG-TS (Transport Stream) | libavformat / custom TS muxer on S3 |
 | **Metadata** | KLV (Key-Length-Value) per MISB ST 0601 | UAS Local Set, Platform Motion Imagery |
 | **Coordinate System** | WGS-84, UTM, MGRS | GPS + IMU fusion from C3 hub |
 | **Frame Rate** | 30 fps (NTSC) / 25 fps (PAL) | OV5640 @ 720p30 / 1080p30 |
@@ -234,55 +256,58 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | **0x4D** | **Platform Pressure** | **BMP280 (C3)** | **Per frame** |
 | **0x4E** | **Platform Pressure Altitude** | **BMP280 (C3)** | **Per frame** |
 
-> **Note:** ESP32-S3 has **hardware H.264 encoder** (max 1920×1080 @ 30fps). For STANAG compliance, use 1280×720 @ 30fps @ 4-6 Mbps CBR. KLV injection requires TS packet manipulation — do this in ESP-IDF on S3 before WiFi transmit.
+> **Note:** ESP32-S3 has **hardware H.264 encoder** (max 1920x1080 @ 30fps). For STANAG compliance, use 1280x720 @ 30fps @ 4-6 Mbps CBR. KLV injection requires TS packet manipulation — do this in ESP-IDF on S3 before WiFi transmit.
 
 ---
 
 ### Oculus Rift (Meta Quest) Teleop Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           OCULUS QUEST 2/3/Pro                                │
-│  ┌────────────────────────────────────────────────────────────────────────┐  │
-│  │                    WebXR / OpenXR Runtime (Browser/App)                │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │  │
-│  │  │ Left Eye    │  │ Right Eye   │  │ Head Tracking│  │ Controllers │   │  │
-│  │  │ (1280×1280) │  │ (1280×1280) │  │ (6DoF, 90Hz) │  │ (6DoF each) │   │  │
-│  │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │  │
-│  └─────────│────────────────│─────────────────│────────────────│──────────┘  │
-└────────────│────────────────│─────────────────│────────────────│────────────┘
-             │                │                 │                │
-             ▼                ▼                 ▼                ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                      GROUND STATION (PC / Raspberry Pi 5)                    │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  │
-│  │ WebRTC / WHIP Server│  │ STANAG TS Demux +   │  │ WebXR Teleop App    │  │
-│  │ (MediaMTX / GStreamer)  │  KLV Parser         │  │ (Three.js + WebXR)  │  │
-│  │  - Ingest: UDP/TCP  │  │  - Extract KLV      │  │  - Stereo render    │  │
-│  │  - Transcode: H.264 │  │  - Overlay UI       │  │  - Head tracking    │  │
-│  │  - Relay: WebRTC    │  │  - Record .ts/.klv  │  │  - Controller input │  │
-│  └──────────┬──────────┘  └──────────┬──────────┘  └──────────┬──────────┘  │
-└─────────────│────────────────────────│─────────────────────────│─────────────┘
-              │                        │                         │
-              ▼                        ▼                         ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                         NETWORK (WiFi 5/6 / 4G/5G)                            │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  │
-│  │ Video Stream        │  │ Telemetry Downlink  │  │ Control Uplink      │  │
-│  │ H.264 TS @ 4-6 Mbps │  │ KLV + MAVLink @     │  │ WebRTC DataChannel  │  │
-│  │ UDP / RTP           │  │ 10-50 Hz            │  │ / MQTT / ROS2       │  │
-│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────┘
-              │                        │                         │
-              ▼                        ▼                         ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                            ESP32-S3 (Onboard)                                 │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  │
-│  │ Camera Capture      │  │ H.264 Encoder       │  │ WiFi TX             │  │
-│  │ OV5640 @ 720p30     │  │ HW Enc @ 4-6 Mbps   │  │ ESP-NOW / WiFi      │  │
-│  │ Thermal Overlay     │  │ KLV Injection       │  │ UDP to Ground       │  │
-│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘  │
-└──────────────────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------+
+|                           OCULUS QUEST 2/3/Pro                  |
+|  +-----------------------------------------------------------+  |
+|  |              WebXR / OpenXR Runtime (Browser/App)         |  |
+|  |  +-------------+  +-------------+  +-------------+        |  |
+|  |  | Left Eye    |  | Right Eye   |  | Head Tracking|        |  |
+|  |  | (1280x1280) |  | (1280x1280) |  | (6DoF, 90Hz) |        |  |
+|  |  +------+------+  +------+------+  +------+------+        |  |
+|  +---------|----------------|----------------|---------------+  |
++-----------|----------------|----------------|------------------+
+            |                |                |
+            v                v                v
++-----------------------------------------------------------------+
+|                      GROUND STATION (PC / Raspberry Pi 5)       |
+|  +---------------------+  +---------------------+  +----------+ |
+|  | WebRTC / WHIP Server|  | STANAG TS Demux +   |  | WebXR    | |
+|  | (MediaMTX /         |  | KLV Parser          |  | Teleop   | |
+|  |  GStreamer)         |  |  - Extract KLV      |  | App      | |
+|  |  - Ingest: UDP/TCP  |  |  - Overlay UI       |  | (Three.js| |
+|  |  - Transcode: H.264 |  |  - Record .ts/.klv  |  |  + WebXR)| |
+|  |  - Relay: WebRTC    |  |                     |  |          | |
+|  +----------+----------+  +----------+----------+  +----+-----+ |
++-------------|-------------------------|--------------------|------+
+              |                         |                    |
+              v                         v                    v
++-----------------------------------------------------------------+
+|                         NETWORK (WiFi 5/6 / 4G/5G)              |
+|  +---------------------+  +---------------------+  +----------+ |
+|  | Video Stream        |  | Telemetry Downlink  |  | Control  | |
+|  | H.264 TS @ 4-6 Mbps |  | KLV + MAVLink @     |  | Uplink   | |
+|  | UDP / RTP           |  | 10-50 Hz            |  | WebRTC   | |
+|  +---------------------+  +---------------------+  | DataChan | |
+|                                                     +----------+ |
++-----------------------------------------------------------------+
+              |                         |                    |
+              v                         v                    v
++-----------------------------------------------------------------+
+|                            ESP32-S3 (Onboard)                   |
+|  +---------------------+  +---------------------+  +----------+ |
+|  | Camera Capture      |  | H.264 Encoder       |  | WiFi TX  | |
+|  | OV5640 @ 720p30     |  | HW Enc @ 4-6 Mbps   |  | ESP-NOW  | |
+|  | Thermal Overlay     |  | KLV Injection       |  | / WiFi   | |
+|  |                     |  |                     |  | UDP      | |
+|  +---------------------+  +---------------------+  +----------+ |
++-----------------------------------------------------------------+
 ```
 
 #### Latency Budget (Target: < 200 ms glass-to-glass)
@@ -295,46 +320,46 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | WiFi TX (ESP-NOW/UDP) | 5-10 ms | 5 ms | ESP-NOW preferred for low latency |
 | Network (WiFi 6 / 5G) | 20-50 ms | 20 ms | Local AP < 5 ms; 4G ~30-50 ms |
 | Ground station receive | 5 ms | 5 ms | UDP socket buffer |
-| WebRTC decode + jitter | 30-50 ms | 20 ms | `MediaMTX` + `webrtc-unidirectional` |
+| WebRTC decode + jitter | 30-50 ms | 20 ms | MediaMTX + webrtc-unidirectional |
 | Browser decode + render | 15-20 ms | 15 ms | WebCodecs API preferred |
 | **Total** | **123-188 ms** | **~111 ms** | With optimizations |
 
-> **Critical:** Use **ESP-NOW** (not WiFi TCP) for video uplink. Ground station runs MediaMTX (Go) or GStreamer to ingest UDP → WebRTC → Browser WebXR.
+> **Critical:** Use **ESP-NOW** (not WiFi TCP) for video uplink. Ground station runs MediaMTX (Go) or GStreamer to ingest UDP -> WebRTC -> Browser WebXR.
 
 ---
 
-### Video Streaming Pipeline (ESP32-S3 → Oculus)
+### Video Streaming Pipeline (ESP32-S3 -> Oculus)
 
 ```
 ESP32-S3 Firmware (ESP-IDF):
-┌─────────────────────────────────────────────────────────────────┐
-│  OV5640 (CSI/Parallel)                                          │
-│       │                                                         │
-│       ▼                                                         │
-│  ISP / DMA → YUV420 buffers (double-buffered)                   │
-│       │                                                         │
-│       ▼                                                         │
-│  Thermal Overlay (MLX90640 → alpha blend)                       │
-│       │                                                         │
-│       ▼                                                         │
-│  H.264 Hardware Encoder (ESP32-S3 ENC)                          │
-│       │  - Profile: High @ Level 4.1                            │
-│       │  - Resolution: 1280×720 @ 30fps                         │
-│       │  - Bitrate: 4 Mbps CBR                                  │
-│       │  - GOP: 30 (I-frame every 1s)                           │
-│       ▼                                                         │
-│  KLV Builder (MISB ST 0601)                                     │
-│       │  - GPS/IMU from C3 via UART (10 Hz)                     │
-│       │  - Timestamp from GPS PPS + RTC                         │
-│       ▼                                                         │
-│  MPEG-TS Muxer (188-byte packets, PID 0x100 video, 0x101 KLV)   │
-│       │                                                         │
-│       ▼                                                         │
-│  ESP-NOW / UDP Socket → Ground Station IP:Port                  │
-└─────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------+
+|  OV5640 (CSI/Parallel)                                          |
+|       |                                                         |
+|       v                                                         |
+|  ISP / DMA -> YUV420 buffers (double-buffered)                  |
+|       |                                                         |
+|       v                                                         |
+|  Thermal Overlay (MLX90640 -> alpha blend)                      |
+|       |                                                         |
+|       v                                                         |
+|  H.264 Hardware Encoder (ESP32-S3 ENC)                          |
+|       |  - Profile: High @ Level 4.1                            |
+|       |  - Resolution: 1280x720 @ 30fps                         |
+|       |  - Bitrate: 4 Mbps CBR                                  |
+|       |  - GOP: 30 (I-frame every 1s)                           |
+|       v                                                         |
+|  KLV Builder (MISB ST 0601)                                     |
+|       |  - GPS/IMU from C3 via UART (10 Hz)                     |
+|       |  - Timestamp from GPS PPS + RTC                         |
+|       v                                                         |
+|  MPEG-TS Muxer (188-byte packets, PID 0x100 video, 0x101 KLV)   |
+|       |                                                         |
+|       v                                                         |
+|  ESP-NOW / UDP Socket -> Ground Station IP:Port                 |
++-----------------------------------------------------------------+
 ```
 
-#### Ground Station: MediaMTX Config (`mediamtx.yml`)
+#### Ground Station: MediaMTX Config (mediamtx.yml)
 
 ```yaml
 paths:
@@ -342,16 +367,13 @@ paths:
     source: udp://0.0.0.0:8888
     sourceFormat: mpegts
     sourceOnDemand: false
-    # WebRTC output for browser
     webrtc: true
     webrtcTransport: udp
     webrtcICEServers:
       - urls: stun:stun.l.google.com:19302
-    # Record STANAG TS + KLV
     record: true
     recordPath: ./recordings/%path/%Y-%m-%d_%H-%M-%S.ts
     recordFormat: mpegts
-    # KLV extraction hook (custom)
     runOnInit: ./scripts/klv_extractor.sh %path
 ```
 
@@ -364,10 +386,10 @@ paths:
 | **Rendering** | Three.js (WebGL2) + WebXR Layers | `ground-station/webxr-app/` |
 | **Video Decode** | WebCodecs API (hardware H.264 decode) | `ground-station/webxr-app/src/video/` |
 | **Stereo** | Side-by-side / Top-bottom from single stream | Shader-based split |
-| **Head Tracking** | `xrFrame.getViewerPose()` → yaw/pitch/roll | Maps to camera gimbal (future) |
+| **Head Tracking** | `xrFrame.getViewerPose()` -> yaw/pitch/roll | Maps to camera gimbal (future) |
 | **Controller Input** | `xrFrame.getPose(controller.gripSpace)` | Throttle/steering/mode |
 | **Data Channel** | WebRTC DataChannel (reliable, ordered) | Commands @ 50 Hz |
-| **Telemetry Overlay** | KLV parse → HUD (lat/lon/alt/heading/thermal) | Three.js CSS2DRenderer |
+| **Telemetry Overlay** | KLV parse -> HUD (lat/lon/alt/heading/thermal) | Three.js CSS2DRenderer |
 
 #### Control Mapping (Quest 2/3 Controllers)
 
@@ -379,14 +401,14 @@ paths:
 | **Left Trigger** | Axis [0, 1] | Brake / reverse |
 | **A Button** | Press | Mode: Autonomous |
 | **B Button** | Press | Mode: Teleop |
-| **X Button** | Press | Mode: RC Fallback |
+| **X Button** | Press | Mode: RC Manual |
 | **Y Button** | Press | Thermal overlay toggle |
 | **Left Grip** | Squeeze | Gimbal pitch down (future) |
 | **Right Grip** | Squeeze | Gimbal pitch up (future) |
 | **Head Yaw** | 6DoF pose | Camera pan (future gimbal) |
 | **Head Pitch** | 6DoF pose | Camera tilt (future gimbal) |
 
-> **Safety:** WebXR app sends `HEARTBEAT` @ 10 Hz. Loss > 500 ms → truck enters **RC Fallback** (if PWM present) or **Autonomous Hold**.
+> **Safety:** WebXR app sends `HEARTBEAT` @ 10 Hz. Loss > 500 ms -> truck enters **RC Manual** (direct CP2 control).
 
 ---
 
@@ -396,12 +418,12 @@ paths:
 |------|-----|---------|-------|
 | **ESP32-S3 with PSRAM** | 1 | **Required** | H.264 encoder needs PSRAM for frame buffers (min 2MB, 8MB preferred) |
 | **OV5640 Camera Module** | 1 | 720p/1080p @ 30fps | CSI/parallel; IR filter removed for night vision |
-| **MLX90640 Thermal** | 1 | Thermal overlay | 32×24 @ 32 Hz, I2C |
+| **MLX90640 Thermal** | 1 | Thermal overlay | 32x24 @ 32 Hz, I2C |
 | **u-blox ZED-F9P + GPS Antenna** | 1 | Precision timestamp + position | PPS output to ESP32-S3 GPIO for frame sync |
 | **WiFi 6 Router / AP** | 1 | Ground link | ASUS RT-AX58U or similar; 5 GHz, 80 MHz channel |
 | **Ground Station PC / Pi 5** | 1 | MediaMTX + WebXR host | Pi 5 can run MediaMTX; PC needed for WebXR browser |
 | **Meta Quest 2/3/Pro** | 1 | HMD + Controllers | Browser: Meta Quest Browser (WebXR) or Firefox Reality |
-| **External Antenna (ESP32-S3)** | 1 | Range | 2.4/5 GHz dual-band PCB antenna or u.FL → SMA |
+| **External Antenna (ESP32-S3)** | 1 | Range | 2.4/5 GHz dual-band PCB antenna or u.FL -> SMA |
 
 ---
 
@@ -413,13 +435,12 @@ paths:
 | OV5640 Camera | 180 | 3.3V | 594 |
 | MLX90640 | 25 | 3.3V | 83 |
 | ESP32-C3 (Sensor Hub) | 120 | 3.3V | 396 |
-| RP2040 ×3 | 75 | 3.3V | 248 |
+| RP2040 x2 | 50 | 3.3V | 165 |
 | GPS (ZED-F9P) | 65 | 3.3V | 215 |
-| IMU + Mag + Baro + 4×ToF | 120 | 3.3V | 396 |
+| IMU + Mag + Baro + 12x ToF | 180 | 3.3V | 594 |
 | **BMP280** | **3.6** | **3.3V** | **12** |
 | **AHT20** | **2.0** | **3.3V** | **7** |
-| **Total (3.3V rail)** | **~1.13A** | | **~3.77W** |
-| Motor Driver + Servo (peak) | 10A+ | 7.4V | **~74W** |
+| **Total (3.3V rail)** | **~1.18A** | | **~3.88W** |
 
 > **3.3V Regulator:** Upgrade to **3A** (e.g., LM2596S-3.3 or TPS5430) with heatsink.
 
@@ -455,16 +476,34 @@ drone/
 │   │   │   ├── gps_gnss.c
 │   │   │   ├── magnetometer.c
 │   │   │   ├── imu_baro.c
-│   │   │   ├── **aht20.c**               # NEW: Temp/Humidity sensor
-│   │   │   ├── **bmp280.c**              # NEW: Pressure/Temp sensor
+│   │   │   ├── aht20.c                 # NEW: Temp/Humidity sensor
+│   │   │   ├── bmp280.c                # NEW: Pressure/Temp sensor
 │   │   │   ├── sensor_fusion_ekf.c
 │   │   │   ├── comms_espnow.c
 │   │   │   ├── comms_uart_rp2040.c
 │   │   │   └── telemetry_provider.c    # NEW: KLV data source for S3
 │   │   └── components/
-│   ├── rp2040-motor/...
-│   ├── rp2040-steering-tof/...
-│   └── rp2040-rear-tof/...
+│   ├── rp2040-tof-1/                   # RP2040 #1 - 16MB Flash
+│   │   ├── CMakeLists.txt
+│   │   ├── src/
+│   │   │   ├── vl53l5cx_4x.c
+│   │   │   ├── uart_cmd.c
+│   │   │   └── i2c_mux.c
+│   │   └── pio/
+│   ├── rp2040-tof-2/                   # RP2040 #2 - 4MB Flash
+│   │   ├── CMakeLists.txt
+│   │   ├── src/
+│   │   │   ├── vl53l5cx_4x.c
+│   │   │   ├── uart_cmd.c
+│   │   │   └── i2c_mux.c
+│   │   └── pio/
+│   └── rp2040-tof-3/                   # RP2040 #3 - 4MB Flash
+│       ├── CMakeLists.txt
+│       ├── src/
+│       │   ├── vl53l5cx_4x.c
+│       │   │   ├── uart_cmd.c
+│       │   └── i2c_mux.c
+│       └── pio/
 ├── ground-station/
 │   ├── mediamtx/
 │   │   ├── mediamtx.yml
@@ -490,138 +529,6 @@ drone/
 │   │   │       └── DataChannel.ts
 │   │   └── vite.config.ts
 │   └── ros2-bridge/ (optional)
-├── simulation/...
-├── tests/...
-├── tools/...
-├── .github/workflows/
-├── CMakeLists.txt
-├── README.md
-└── LICENSE
-```
-
-## Pin Assignments
-
-### ESP32-S3 (Vision)
-
-| Pin | Function | Notes |
-|-----|----------|-------|
-| GPIO 10/11 | I2C0 (Thermal) | MLX90640 @ 0x33 |
-| GPIO 12/13 | I2C1 (Reserved) | Future expansion |
-| CSI_D0-D7 | Camera Parallel | OV5640 8-bit data |
-| CSI_PCLK/VSYNC/HREF | Camera Control | OV5640 timing |
-| GPIO 45/46 | UART0 (to C3) | 921600 baud, ESP-NOW backup |
-| GPIO 3/4 | SPI (PSRAM) | If using external PSRAM |
-
-### ESP32-C3 (Sensor Hub)
-
-| Pin | Function | Notes |
-|-----|----------|-------|
-| GPIO 6/7 | I2C0 (Sensors) | GPS, Mag, IMU, **BMP280 (0x76), AHT20 (0x38), Baro** |
-| GPIO 8/9 | I2C1 (Reserved) | |
-| GPIO 20/21 | UART0 (to S3) | 921600 baud |
-| GPIO 18/19 | UART1 (to RP2040#1) | 115200 baud |
-| GPIO 3/4 | UART2 (to RP2040#2) | 115200 baud |
-| GPIO 5/6 | UART3 (to RP2040#3) | 115200 baud |
-| GPIO 10 | GPIO (Status LED) | Heartbeat |
-
-### RP2040 #1 (Motor Control + RC Input) — **16MB (128 Mbit) Flash**
-
-| Pin | Function | Notes |
-|-----|----------|-------|
-| GPIO 0/1 | UART0 (from C3) | Command interface |
-| GPIO 2/3 | PWM Left Motor | TB6612FNG AIN1/AIN2 |
-| GPIO 4/5 | PWM Right Motor | TB6612FNG BIN1/BIN2 |
-| GPIO 6 | Enable Left | TB6612FNG PWMA |
-| GPIO 7 | Enable Right | TB6612FNG PWMB |
-| GPIO 8/9 | Encoder Left | Quadrature (if fitted) |
-| GPIO 10/11 | Encoder Right | Quadrature (if fitted) |
-| **GPIO 12** | **RC Ch1 (Throttle)** | **CP2 Receiver PWM In** |
-| **GPIO 13** | **RC Ch2 (Steering)** | **CP2 Receiver PWM In** |
-| **GPIO 14** | **RC Ch3 (Mode)** | **CP2 Receiver PWM In** |
-| **GPIO 15** | **RC Ch4 (Aux)** | **CP2 Receiver PWM In** |
-
-### RP2040 #2 (Steering + Front ToF) — **4MB (32 Mbit) Flash**
-
-| Pin | Function | Notes |
-|-----|----------|-------|
-| GPIO 0/1 | UART0 (from C3) | Command interface |
-| GPIO 2 | Servo PWM | 50 Hz, 1-2ms pulse |
-| GPIO 3/4 | I2C0 (ToF) | VL53L5CX @ 0x29 (front) |
-| GPIO 5/6 | I2C1 (ToF) | VL53L5CX @ 0x29 (left) |
-| GPIO 16 | GPIO (XSHUT) | VL53L5CX reset/selection |
-
-### RP2040 #3 (Rear ToF + Aux) — **4MB (32 Mbit) Flash**
-
-| Pin | Function | Notes |
-|-----|----------|-------|
-| GPIO 0/1 | UART0 (from C3) | Command interface |
-| GPIO 3/4 | I2C0 (ToF) | VL53L5CX @ 0x29 (rear) |
-| GPIO 5/6 | I2C1 (ToF) | VL53L5CX @ 0x29 (right) |
-| GPIO 16 | GPIO (XSHUT) | VL53L5CX reset/selection |
-
----
-
-## Software Stack
-
-| Layer | ESP32-S3 | ESP32-C3 | RP2040s |
-|-------|----------|----------|---------|
-| **Framework** | ESP-IDF / Arduino | ESP-IDF / Arduino | pico-sdk / Arduino |
-| **RTOS** | FreeRTOS | FreeRTOS | FreeRTOS (pico-sdk) |
-| **Comms** | ESP-NOW, UART | ESP-NOW, UART | UART |
-| **Vision** | TFLite Micro, ESP-DL | — | — |
-| **Sensor Fusion** | — | Custom (EKF) | — |
-| **Motor Control** | — | — | PID + PIO PWM |
-
----
-
-## Project Structure
-
-```
-drone/
-├── docs/
-│   ├── hardware-inventory.md
-│   ├── wiring-diagrams/
-│   ├── sensor-datasheets/
-│   └── power-budget.md
-├── firmware/
-│   ├── esp32-s3-vision/
-│   │   ├── CMakeLists.txt
-│   │   ├── main/
-│   │   │   ├── thermal_camera.c
-│   │   │   ├── ir_camera.c
-│   │   │   ├── vision_inference.c
-│   │   │   └── comms_uart.c
-│   │   └── components/
-│   ├── esp32-c3-hub/
-│   │   ├── CMakeLists.txt
-│   │   ├── main/
-│   │   │   ├── gps_gnss.c
-│   │   │   ├── magnetometer.c
-│   │   │   ├── imu_baro.c
-│   │   │   ├── sensor_fusion_ekf.c
-│   │   │   ├── comms_espnow.c
-│   │   │   └── comms_uart_rp2040.c
-│   │   └── components/
-│   ├── rp2040-motor/
-│   │   ├── CMakeLists.txt
-│   │   ├── src/
-│   │   │   ├── motor_pid.c
-│   │   │   ├── encoder.c
-│   │   │   └── uart_cmd.c
-│   │   └── pio/
-│   ├── rp2040-steering-tof/
-│   │   ├── CMakeLists.txt
-│   │   ├── src/
-│   │   │   ├── servo.c
-│   │   │   ├── vl53l5cx.c
-│   │   │   └── uart_cmd.c
-│   │   └── pio/
-│   └── rp2040-rear-tof/
-│       ├── CMakeLists.txt
-│       ├── src/
-│       │   ├── vl53l5cx.c
-│       │   └── uart_cmd.c
-│       └── pio/
 ├── simulation/
 │   ├── gazebo/
 │   └── ros2/
@@ -642,13 +549,13 @@ drone/
 
 ## Next Steps
 
-1. **Finalize sensor selection** - Order thermal camera (MLX90640), GPS (u-blox), Mag (QMC5883L), ToF (VL53L5CX×4)
+1. **Finalize sensor selection** - Order thermal camera (MLX90640), GPS (u-blox), Mag (QMC5883L), ToF (12x VL53L5CX)
 2. **Design PCB / perfboard layout** - Power distribution, level shifting, connector pinouts
-3. **Implement ESP32-C3 sensor hub firmware** - GPS + Mag + IMU fusion (priority for navigation)
-4. **Implement RP2040 motor control** - PID velocity control with encoder feedback
-5. **Implement ESP32-S3 vision pipeline** - Thermal overlay + IR night vision + TFLite obstacle detection
-6. **Integrate comms** - ESP-NOW S3↔C3, UART C3↔RP2040s
-7. **Field test & calibrate** - Compass hard/soft iron, GPS RTK, thermal thresholds
+3. **Implement ESP32-C3 sensor hub firmware** - GPS + Mag + IMU + AHT20 + BMP280 fusion (priority for navigation)
+4. **Implement RP2040 ToF firmware** - 4x VL53L5CX per RP2040, I2C mux, UART streaming
+5. **Implement ESP32-S3 vision pipeline** - Thermal overlay + IR night vision + TFLite obstacle detection + H.264 + KLV + TS
+6. **Integrate comms** - ESP-NOW S3<->C3, UART C3<->RP2040s, UART C3->ESP8266
+7. **Field test & calibrate** - Compass hard/soft iron, GPS RTK, thermal thresholds, ToF zones
 
 ---
 
@@ -659,7 +566,7 @@ drone/
 | ESP32-S3 (active, WiFi off) | 180 | 3.3V | 594 |
 | ESP32-S3 (camera + PSRAM) | 350 | 3.3V | 1155 |
 | ESP32-C3 (active, BLE) | 120 | 3.3V | 396 |
-| RP2040 ×3 (active) | 3×25 | 3.3V | 248 |
+| RP2040 x2 (active) | 2x25 | 3.3V | 165 |
 | MLX90640 | 25 | 3.3V | 83 |
 | OV5640 | 150 | 3.3V | 495 |
 | u-blox ZED-F9P | 65 | 3.3V | 215 |
@@ -667,14 +574,10 @@ drone/
 | ICM-20948 | 3.5 | 3.3V | 12 |
 | **BMP280** | **3.6** | **3.3V** | **12** |
 | **AHT20** | **2.0** | **3.3V** | **7** |
-| VL53L5CX ×4 | 4×20 | 3.3V | 264 |
-| Motor Driver (idle) | 50 | 5V | 250 |
-| Servo (moving) | 500 | 5V | 2500 |
-| **Total (3.3V rail)** | ~1.21A | | **~4.02W** |
-| **Total (5V rail, motors idle)** | ~0.55A | | **~2.75W** |
-| **Peak (motors + servo)** | 10A+ | 7.4V | **~74W** |
+| VL53L5CX x12 | 12x20 | 3.3V | 792 |
+| **Total (3.3V rail)** | **~1.21A** | | **~4.0W** |
 
-> **Note:** Use separate 5V BEC (3A+) and 3.3V LDO (2A+) from main LiPo. Motor driver directly from LiPo.
+> **Note:** Use separate 5V BEC (3A+) and 3.3V LDO (2A+) from main LiPo. Existing truck ESC runs directly from LiPo.
 
 ---
 
