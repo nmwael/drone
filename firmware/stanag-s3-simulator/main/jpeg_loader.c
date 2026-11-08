@@ -11,7 +11,7 @@
 
 static const char *TAG = "JPEG_LOAD";
 
-#define NUM_FRAMES 5
+#define NUM_FRAMES 10
 #define FRAME_WIDTH 1280
 #define FRAME_HEIGHT 720
 #define YUV420_SIZE (FRAME_WIDTH * FRAME_HEIGHT * 3 / 2)

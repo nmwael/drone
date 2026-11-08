@@ -56,12 +56,17 @@ stanag-s3-simulator/
 
 ## Data Preparation
 
-Place 5 JPEG frames (1280×720, ~85% quality) in `data/`:
-- `frame_0.jpg` — Day scene
-- `frame_1.jpg` — Thermal overlay
-- `frame_2.jpg` — Night/IR
-- `frame_3.jpg` — Obstacle close
-- `frame_4.jpg` — Panorama
+Place 10 JPEG frames (1280×720, ~85% quality, all day scenes) in `data/`:
+- `frame_0.jpg` — Day scene 0 (straight road)
+- `frame_1.jpg` — Day scene 1 (gentle left curve)
+- `frame_2.jpg` — Day scene 2 (gentle right curve)
+- `frame_3.jpg` — Day scene 3 (straight with distant trees)
+- `frame_4.jpg` — Day scene 4 (intersection approach)
+- `frame_5.jpg` — Day scene 5 (open road, horizon)
+- `frame_6.jpg` — Day scene 6 (bridge approach)
+- `frame_7.jpg` — Day scene 7 (urban street)
+- `frame_8.jpg` — Day scene 8 (roundabout approach)
+- `frame_9.jpg` — Day scene 9 (highway merge)
 
 Run `idf.py build` — SPIFFS image auto-generated from `data/`.
 
