@@ -88,8 +88,17 @@ Per-frame tags: 0x01-0x0F (UAS Local Set) + 0x4B-0x4E (Temp/RH/Pressure/Alt)
 
 ## Ground Station
 
+See **[MediaMTX Ground Station Documentation](MEDIAMTX.md)** for complete setup including:
+- MediaMTX installation (binary/Docker)
+- Complete `mediamtx.yml` configuration for STANAG 4609
+- WebRTC setup for Meta Quest 2/3
+- KLV extraction hook
+- Port reference, testing, troubleshooting
+
+### Quick Config
+
 ```bash
-# MediaMTX config
+# MediaMTX config (see mediamtx.yml for full config)
 paths:
   stanag:
     source: udp://0.0.0.0:8888
@@ -97,6 +106,11 @@ paths:
 ```
 
 Open `http://<ground-ip>:8889` in browser or Meta Quest 2 browser.
+
+### Files
+- `mediamtx.yml` — Ready-to-use MediaMTX config
+- `scripts/klv_extractor.sh` — KLV extraction hook
+- `MEDIAMTX.md` — Full documentation
 
 ## License
 
