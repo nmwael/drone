@@ -82,24 +82,33 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 
 > **IMPORTANT:** The truck drives **perfectly right now** with the CP2 remote. Zero modifications to drivetrain, steering, ESC, or control system. This project **only adds sensors + compute** (vision, thermal, GPS, IMU, ToF) for autonomous/teleop capability. The CP2 remote remains the primary/fallback control — always functional regardless of MCU state.
 
-### Printed Fittings for Existing Truck (FDM Printer ON HAND)
+### Universal Electronics Box — Single Modular Enclosure (FDM Printer ON HAND)
+
+**Concept:** One weatherproof box containing ALL electronics — mount on ANY vehicle via universal bolt pattern.
 
 | Part | Qty | Material | Purpose | Mounting Strategy |
 |------|-----|----------|---------|-------------------|
-| **Electronics Tray** | 1 | PETG | Mount ESP32-S3, C3, 2x RP2040 | Bolt to existing chassis holes / body mount posts |
-| **C3 Sensor Hub Enclosure** | 1 | PETG | Weatherproof GPS/IMU/Mag/Baro/Temp | Mount on tray or elevated mast |
-| **Power Distribution Box** | 1 | PETG | Fused 5V/3.3V rails, XT60 in/out | Integrated into electronics tray |
-| **Battery Tray / Strap** | 1 | TPU | Secure 2S/3S LiPo | Uses existing battery compartment or straps |
-| **Camera Gimbal (2-axis)** | 1 | PETG + TPU | Pan/tilt for OV5640 + MLX90640 | Mount on front bumper or roof; uses CP2 servos |
+| **Universal Electronics Box** | 1 | PETG + TPU gasket | **All-in-one:** ESP32-S3, ESP32-C3, ESP8266, power distro (2× buck converters), BMS for spare cells, sensor hub (GPS/IMU/Mag/Baro/AHT20), all internal wiring | **Universal mount:** 4× M6 slots (50-100mm spacing) + 4× M8 slots (100-150mm) — fits most vehicle frames, roof racks, roll cages. 4× M5 camera gimbal mount on front face. |
+| **Camera Gimbal (2-axis)** | 1 | PETG + TPU | Pan/tilt for OV5640 + MLX90640 | Mounts to Universal Box front face (4× M5) |
 | **OV5640 + MLX90640 Mount** | 1 | PETG | Align thermal + IR cameras | Integrated into gimbal |
-| **VL53L5CX Mounts** | **12** | PETG | 3 per corner (front, rear, left, right) + 4 sides | Bumper/body mounts, 45 deg down angle |
-| **GPS Antenna Mast** | 1 | PETG/ASA | Elevate ZED-F9P antenna | Vertical on electronics tray rear |
-| **ESP32-S3 Antenna Mount** | 1 | PETG | External u.FL/SMA antenna | Side of electronics tray |
-| **Vibration Dampers** | 4-8 | TPU (60-80A) | Isolate IMU/cameras from chassis | Between tray <-> chassis, gimbal <-> mount |
-| **Wire Routing Clips** | 10+ | PLA/PETG | Cable management | Along chassis rails, body clips |
+| **Battery Tray / Strap** | 1 | TPU | Secure 2S/3S LiPo (main vehicle battery) | Separate — uses existing battery compartment |
+| **GPS Antenna Mast** | 1 | PETG/ASA | Elevate ZED-F9P antenna | Mounts to Universal Box top rear |
+| **ESP32-S3 Antenna Mount** | 1 | PETG | External u.FL/SMA antenna | Mounts to Universal Box side |
+| **Vibration Dampers** | 4 | TPU (60-80A) | Isolate Universal Box from vehicle | 4× corner mounts between box and vehicle frame |
+| **Wire Routing (Internal)** | — | PETG | Cable management inside box | Printed channels + clips |
 | **Servo Horn Adapters** | 2 | PETG | CP2 servo -> gimbal (pan/tilt) | Match existing servo spline (measure!) |
 
-> **Design Workflow:** 1) Measure truck chassis hole pattern, body mount locations, servo spline. 2) Model in Fusion 360/FreeCAD. 3) Print test fits in PLA. 4) Final prints in PETG/TPU/ASA. 5) Install heat-set inserts (M3/M4) for bolts.
+> **Universal Box Internal Layout:**
+> - **Top:** GPS antenna mast, ESP32-S3 antenna, ventilation slots (TPU mesh)
+> - **Front:** Camera gimbal mount (4× M5), OV5640 + MLX90640
+> - **Inside Left:** ESP32-S3 (vision), ESP8266 (backup comms)
+> - **Inside Center:** ESP32-C3 (sensor hub), sensor hub PCB (GPS/IMU/Mag/Baro/AHT20)
+> - **Inside Right:** Power distribution — 2× buck converters (3.3V/5V), BMS for spare cells, XT60 input, fused outputs
+> - **Bottom:** 4× M6/M8 mounting slots (universal), 4× TPU damper mounts
+> - **Sealing:** TPU gasket groove, IP66 target
+> - **Connectors (external):** XT60 power in, SMA GPS, SMA WiFi, M12 sensor bus (optional)
+
+> **Design Workflow:** 1) Model in Fusion 360/FreeCAD. 2) Print test fits in PLA. 3) Final prints: Box in PETG, gaskets/dampers in TPU. 4) Install heat-set inserts (M3/M4/M5/M6) for bolts. 5) Assemble, wire, test. 6) Mount on any vehicle in <10 min.
 
 ### Manufacturing Capability: FDM 3D Printer ON HAND
 
@@ -114,21 +123,16 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 
 | Part | Qty | Material | Est. Print Time | Replaces |
 |------|-----|----------|-----------------|----------|
-| **Sensor Enclosure (C3 Hub)** | 1 | PETG | 4-6h | Weatherproof box for GPS/IMU/Mag/Baro/Temp |
-| **ESP32-S3 Camera Mount** | 1 | PETG/ASA | 2-3h | OV5640 + MLX90640 aligned mount |
-| **2-Axis Camera Gimbal** | 1 | PETG + TPU | 6-8h | Pan/tilt for vision sensors (uses CP2 servos) |
-| **VL53L5CX Mounts (x4)** | 4 | PETG | 1h each | Front, rear, left, right ToF brackets |
-| **Motor Driver Enclosure** | 1 | PETG | 3-4h | BTS7960/VNH5019 protection |
-| **Power Distribution Box** | 1 | PETG | 4-5h | Fused 5V/3.3V rails, XT60 in/out |
-| **Battery Tray / Strap** | 1 | TPU | 1-2h | 2S/3S LiPo secure mount |
-| **Antenna Mount (ESP32-S3)** | 1 | PETG | 1h | u.FL/SMA external antenna |
-| **GPS Antenna Mast** | 1 | PETG/ASA | 2h | Elevate ZED-F9P antenna above chassis |
-| **Vibration Dampers** | 4-8 | TPU (Shore 60-80A) | 30min each | IMU/camera isolation |
-| **Wire Routing Clips** | 10+ | PLA | 10min each | Cable management |
-| **Servo Savers / Horns** | 2 | PETG | 30min each | Steering + gimbal servo output |
-| **Wheel Encoder Mounts** | 2 | PETG | 1h each | If adding quadrature encoders |
+| **Universal Electronics Box** | 1 | PETG + TPU | 12-18h | All separate enclosures (electronics tray, C3 hub, power distro) |
+| **Camera Gimbal (2-axis)** | 1 | PETG + TPU | 6-8h | Pan/tilt for vision sensors (uses CP2 servos) |
+| **OV5640 + MLX90640 Mount** | 1 | PETG | 2-3h | Camera alignment bracket |
+| **GPS Antenna Mast** | 1 | PETG/ASA | 2h | Elevate ZED-F9P antenna |
+| **ESP32-S3 Antenna Mount** | 1 | PETG | 1h | External u.FL/SMA antenna |
+| **Vibration Dampers** | 4 | TPU (60-80A) | 30min each | Universal Box isolation |
+| **Wire Routing (Internal)** | — | PETG | 1-2h | Cable management |
+| **Servo Horn Adapters** | 2 | PETG | 30min each | CP2 servo -> gimbal |
 
-> **Design Tip:** Use **heat-set inserts (M3/M4)** for bolt-on strength. Print with **3-4 walls, 20-30% infill, 0.2mm layers** for functional parts. Anneal PETG at 80C for 30min if heat resistance needed.
+> **Design Tip:** Use **heat-set inserts (M3/M4/M5/M6)** for bolt-on strength. Print box with **4-5 walls, 30-40% gyroid infill, 0.2mm layers**. Print gaskets/dampers in TPU (Shore 60-80A). Anneal PETG at 80°C for 30min if heat resistance needed.
 
 ## System Architecture
 

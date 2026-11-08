@@ -85,8 +85,19 @@
 | **Servo Adapters / Horns** | 2-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - adapt CP2 servos to steering/gimbal |
 | **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis |
 
-| **Electronics Tray** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - mount ESP32-S3, C3, RP2040s to chassis |
-| Wiring / Connectors | 1 | 🛒 TO BUY | **€20-40** | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving<br>→ [Mouser DK](https://www.mouser.dk/c/connectors/wire-to-board-connectors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/connectors-interconnects/211) / [RS Components DK](https://dk.rs-online.com/web/p/connectors) / [Conrad DK](https://www.conrad.dk/p/steckverbinder) / [BerryBase DE](https://www.berrybase.de/steckverbinder-kabel) / [Amazon.de](https://www.amazon.de/s?k=JST+SH+Stecker+XT60) |
+| **Universal Electronics Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | **Single modular enclosure** — contains ESP32-S3, ESP32-C3, 3×RP2040, ESP8266, power distro (buck converters), BMS, sensor hub (GPS/IMU/Mag/Baro/AHT20), all wiring. Mounts on ANY vehicle via universal bolt pattern (M6/M8 slots). Replaces: separate electronics tray, C3 hub enclosure, power distro box. |
+| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 + MLX90640) — mounts to Universal Box front |
+| **Sensor Enclosures** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
+| **Power Distribution Box** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
+| **Electronics Tray** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
+| **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **€0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis (separate from electronics box) |
+| **VL53L5CX Mounts** | 0 | ❌ **NOT NEEDED** | **€0** | ToF array removed from project |
+| **Vibration Dampers** | 4-8 | 🖨️ **PRINT (TPU)** | **€0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation (between Universal Box and vehicle) |
+| **GPS Antenna Mast** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - elevates ZED-F9P antenna above vehicle body (mounts to Universal Box) |
+| **Antenna Mount (ESP32-S3)** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - u.FL/SMA external antenna bracket (on Universal Box) |
+| **Wire Routing Clips** | 10+ | 🖨️ **PRINT** | **€0 (filament)** | Printable - cable management inside Universal Box |
+| **Servo Adapters / Horns** | 2-4 | 🖨️ **PRINT** | **€0 (filament)** | Printable - adapt CP2 servos to gimbal |
+| Wiring / Connectors | 1 | 🛒 TO BUY | **€20-40** | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving (internal wiring for Universal Box)<br>→ [Mouser DK](https://www.mouser.dk/c/connectors/wire-to-board-connectors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/connectors-interconnects/211) / [RS Components DK](https://dk.rs-online.com/web/p/connectors) / [Conrad DK](https://www.conrad.dk/p/steckverbinder) / [BerryBase DE](https://www.berrybase.de/steckverbinder-kabel) / [Amazon.de](https://www.amazon.de/s?k=JST+SH+Stecker+XT60) |
 | Heat-set Inserts (M3/M4) | 50+ | ✅ **ON HAND** | €0 | For strong bolt-on printed parts |
 | M3/M4 Hardware (screws, nuts, standoffs) | 1 kit | 🛒 TO BUY | **€15-25** | Brass standoffs, nylon lock nuts, button-head screws<br>→ [Mouser DK](https://www.mouser.dk/c/hardware-fasteners-accessories) / [RS Components DK](https://dk.rs-online.com/web/p/fasteners-fixings) / [Conrad DK](https://www.conrad.dk/p/schrauben-muttern) / [BerryBase DE](https://www.berrybase.de/mechanik/befestigungstechnik) / [Watterott DE](https://www.watterott.com/de/Mechanik/Befestigung) / [Amazon.de](https://www.amazon.de/s?k=M3+Messing+H%C3%BClse+Gewindeeinsatz) |
 
