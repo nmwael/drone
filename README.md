@@ -37,6 +37,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | **BEC / 5V Reg** | 5V 3A+ | For MCUs and sensors |
 | **3.3V Reg** | 3.3V 1A+ | For ESP32-C3/S3, sensors |
 | **Nokia BP-4L Cells** | Multiple × 3.7V ~1500mAh | **ON HAND** — Backup/aux power for electronics, gimbal servos, testing |
+| **libr160 Li-ion Cells** | 2 × 3.7V 1050mAh | **ON HAND** — Electronics backup, sensor power, ESP32 testing |
 
 > **Note:** Truck drivetrain uses **existing brushed ESC** (driven directly by CP2 receiver). Steering uses **existing servo** (driven directly by CP2 receiver). No additional motor driver or servo controller needed.
 
