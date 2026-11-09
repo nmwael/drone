@@ -32,8 +32,8 @@
 
 | Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
 |------|-----|--------|-----------------|-------------------|
-| **GNSS/GPS** | 1 | 🛒 TO BUY | **€15-25** | **u-blox NEO-M8N** (multi-constellation, 1.5-3m accuracy)<br>→ **[BerryBase DE](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)** (u-blox NEO-M8N module with patch antenna) / [Mouser DK](https://www.mouser.dk/c/gps-gnss-modules) / [DigiKey DK](https://www.digikey.dk/en/products/filter/gps-gnss-modules/224) / [Holybro EU](https://holybro.com/collections/gps/products/m8n-gps-module) / [AliExpress](https://www.aliexpress.com/wholesale?SearchText=NEO-M8N+GPS) / [Banggood EU](https://eu.banggood.com/search/gps.html?keyword=NEO-M8N) |
-| **GPS Antenna** | 1 | 🛒 TO BUY | €5-15 | u-blox ANN-MB-00 (patch) or Taoglas AA.161<br>→ [Mouser DK](https://www.mouser.dk/c/rf-if-and-rfid/gps-antennas) / [DigiKey DK](https://www.digikey.dk/en/products/filter/rf-antennas/232) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-antennen) / [Amazon.de](https://www.amazon.de/s?k=GPS+patch+antenna) |
+| **GNSS/GPS** | 1 | 🛒 TO BUY | **€6.90** | **u-blox NEO-6M GPS TTL receiver incl. antenna** (2-5m accuracy)<br>→ **[BerryBase DE](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)** (u-blox NEO-6M module with patch antenna, 5V TTL) / [Mouser DK](https://www.mouser.dk/c/gps-gnss-modules) / [DigiKey DK](https://www.digikey.dk/en/products/filter/gps-gnss-modules/224) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-gnss) / [Holybro EU](https://holybro.com/collections/gps/products/m8n-gps-module) / [AliExpress](https://www.aliexpress.com/wholesale?SearchText=NEO-6M+GPS) / [Banggood EU](https://eu.banggood.com/search/gps.html?keyword=NEO-6M) |
+| **GPS Antenna** | 1 | ✅ **INCLUDED** | €0 | **Built into NEO-6M module** (patch antenna on module)<br>→ Optional upgrade: u-blox ANN-MB-00 or Taoglas AA.161<br>→ [Mouser DK](https://www.mouser.dk/c/rf-if-and-rfid/gps-antennas) / [DigiKey DK](https://www.digikey.dk/en/products/filter/rf-antennas/232) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-antennen) / [Amazon.de](https://www.amazon.de/s?k=GPS+patch+antenna) |
 | **Magnetometer** | 1 | 🛒 TO BUY | **€8-15** | **QMC5883L** (I2C, 16-bit)<br>→ [Mouser DK](https://www.mouser.dk/c/sensors/magnetic-sensors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/magnetic-sensors/659) / [BerryBase DE](https://www.berrybase.de/sensoren/magnetfeldsensoren) / [Exp-Tech DE](https://www.exp-tech.de/sensoren/magnetfeldsensoren) / [Amazon.de](https://www.amazon.de/s?k=QMC5883L) |
 | **IMU (Accel + Gyro)** | 1 | 🛒 TO BUY | **€12-20** | **ICM-20948** (9-DoF, DMP, I2C/SPI)<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/TDK-InvenSense/ICM-20948) / [DigiKey DK](https://www.digikey.dk/en/products/detail/tdk-invensense/ICM-20948/8708445) / [RS Components DK](https://dk.rs-online.com/web/p/imu-sensors) / [Watterott DE](https://www.watterott.com/de/Sensoren/IMU) |
 | **Barometer / Pressure** | 1 | ✅ ON HAND | €0 | **BMP280** (I2C, 0x76/0x77) |
@@ -134,13 +134,13 @@
 | Category | Est. Cost (Min) | Est. Cost (Max) |
 |----------|----------------|----------------|
 | Vision Sensors (OV5640) | €15 | €25 |
-| **Navigation Sensors (GPS + IMU + Mag)** | **€50** | **€75** |
+| **Navigation Sensors (GPS + IMU + Mag)** | **€30** | **€55** |
 | Power & Actuation (battery, regs, box) | €30 | €60 |
 | Comms & Ground Station (router, Quest) | €10 | €100 |
 | Mechanical (Printed Box + Gimbal) | €5 | €15 |
 | Dev Tools | €0 | €0 |
 | **ASA Filament (optional)** | **€0** | **€40** |
-| **TOTAL** | **~€105** | **~€330** |
+| **TOTAL** | **~€85** | **~€310** |
 
 > **Notes:**
 > - **Min cost** assumes: PC ground station, AliExpress/BerryBase/Exp-Tech for sensors
@@ -153,7 +153,7 @@
 >   - ❌ USB-UART adapter removed (onboard USB)
 >   - ❌ JTAG debugger removed (onboard USB JTAG)
 >   - ❌ Logic Analyzer removed (built-in tools)
->   - ❌ **ZED-F9P RTK GPS replaced with NEO-M8N (-€155-225)**
+>   - ❌ **ZED-F9P RTK GPS replaced with NEO-6M (-€173-243)**
 >   - ✅ OV5640 only (day camera, €15-25)
 >   - ✅ All enclosures 3D printed (PETG/TPU on hand)
 >   - ✅ RC truck + remote already owned
@@ -183,7 +183,7 @@
 > **Why Phase 0?** Parts take 15-20h total print time. Start printing while waiting for Phase 1 sensors to arrive.
 
 ### Phase 1: Core Navigation (Week 1-2) 🚨 **START HERE**
-1. u-blox NEO-M8N + antenna (€15-25)
+1. u-blox NEO-6M GPS + antenna (€6.90)
 2. QMC5883L (€8-15)
 3. ICM-20948 (€12-20)
 4. BMP280 + AHT20 ✅ ON HAND
@@ -236,8 +236,8 @@
 
 ```
 OV5640-CAM                 (5MP Day Camera)
-NEO-M8N-0-01               (u-blox NEO-M8N GPS) — [BerryBase](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)
-ANN-MB-00                  (GPS Patch Antenna)
+NEO-6M-GPS                 (u-blox NEO-6M GPS TTL + antenna) — [BerryBase](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)
+ANN-MB-00                  (GPS Patch Antenna - optional upgrade)
 QMC5883L                   (Magnetometer)
 ICM-20948                  (9-DoF IMU)
 BMP280                     (Pressure - HAVE)
@@ -248,7 +248,7 @@ TCA9548A                   (I2C Mux - if adding ToF later)
 ```
 
 > **Search tips for DK/EU stores:**
-> - Mouser DK: Search by manufacturer part number (e.g., "NEO-M8N-0-01")
+> - Mouser DK: Search by manufacturer part number (e.g., "NEO-6M-GPS")
 > - DigiKey DK: Use "Product Index" → search by keyword
 > - RS Components DK: Search by "Order Code" or keyword
 > - Conrad DK: Search by "Artikelnummer" or keyword
