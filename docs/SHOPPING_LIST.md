@@ -45,12 +45,12 @@
 
 | Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
 |------|-----|--------|-----------------|-------------------|
-| **Servo (Camera Gimbal)** | 1 | 🔄 SALVAGED | €0 | 2nd CP2 servo (pan/tilt for gimbal) |
+| **Camera Mount (Fixed)** | 1 | 🖨️ **PRINT** | €0 | Fixed mount for OV5640 day camera (printed bracket) |
 | **3.3V Regulator (3A+)** | 1 | ✅ **ON HAND** | €0 | Buck converter (3.3V 3A+) |
 | **5V BEC (3A+)** | 1 | ✅ **ON HAND** | €0 | Buck converter (5V 3A+) |
 | **Power Distribution Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printed enclosure with fused 5V/3.3V rails, XT60 in/out |
 | **Main Battery** | 1 | 🛒 TO BUY | **€30-60** | **2S LiPo 5000-8000mAh 50C+** (7.4V) or **3S 5000mAh** (11.1V)<br>→ [HobbyKing EU](https://hobbyking.com/en_us/lipo-batteries.html) / [Banggood EU](https://eu.banggood.com/Lipo-Batteries-c-100000001.html) / [RC-Tech DK](https://www.rc-tech.dk/lipo-batterier) / [HobbyStore DK](https://www.hobbystore.dk/lipo-batterier) / [Amazon.de](https://www.amazon.de/s?k=2S+LiPo+5000mAh) |
-| **Nokia BP-4L Batteries** | Multiple | ✅ **ON HAND** | **€0** | **3.7V ~1500mAh Li-ion** (Nokia phone batteries)<br>→ Use for: **Electronics/sensor power backup**, camera gimbal servo power, ESP32/ESP8266 standalone testing<br>→ Can wire 2S (7.4V) or parallel for capacity<br>→ **BMS ✅ ON HAND**, Need: JST connectors, charging solution |
+| **Nokia BP-4L Batteries** | Multiple | ✅ **ON HAND** | **€0** | **3.7V ~1500mAh Li-ion** (Nokia phone batteries)<br>→ Use for: **Electronics/sensor power backup**, ESP32/ESP8266 standalone testing<br>→ Can wire 2S (7.4V) or parallel for capacity<br>→ **BMS ✅ ON HAND**, Need: JST connectors, charging solution |
 | **libr160 Li-ion Cells** | 2 | ✅ **ON HAND** | **€0** | **3.7V 1050mAh Li-ion** (model: libr160)<br>→ Use for: **Electronics backup**, sensor power, ESP32 testing<br>→ Can wire in parallel (2100mAh @ 3.7V) or 2S series (7.4V)<br>→ **BMS ✅ ON HAND**, Need: JST connectors |
 | **Battery Charger** | 1 | 🔄 SALVAGED | €0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
 
@@ -75,18 +75,16 @@
 |------|-----|--------|-----------|-------|
 | **RC Monster Truck** | 1 | ✅ **ON HAND** | **$0** | **100% functional** — drives perfectly with CP2 remote, no mods needed |
 | **CP2 2.4GHz Remote** | 1 | ✅ **ON HAND** | **$0** | **Direct to ESC + steering servo** — primary control, always works |
-| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 day camera) |
+| **Camera Mount (Fixed)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printed bracket for OV5640 day camera (mounts to Universal Box front) |
 | **Sensor Enclosures** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - C3 hub (GPS/IMU/Mag/Baro/AHT20) inside Universal Box |
 | **VL53L5CX Mounts** | 4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - front, rear, left, right brackets (truck-specific) |
 | **Vibration Dampers** | 4-8 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation |
 | **GPS Antenna Mast** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - elevates ZED-F9P antenna above truck body |
 | **Antenna Mount (ESP32-S3)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - u.FL/SMA external antenna bracket |
 | **Wire Routing Clips** | 10+ | 🖨️ **PRINT** | **$0 (filament)** | Printable - cable management along chassis |
-| **Servo Adapters / Horns** | 2-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - adapt CP2 servos to steering/gimbal |
 | **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis |
 
 | **Universal Electronics Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | **Single modular enclosure** — contains ESP32-S3, ESP32-C3, 3×RP2040, ESP8266, power distro (buck converters), BMS, sensor hub (GPS/IMU/Mag/Baro/AHT20), all wiring. Mounts on ANY vehicle via universal bolt pattern (M6/M8 slots). Replaces: separate electronics tray, C3 hub enclosure, power distro box. |
-| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 day camera) — mounts to Universal Box front |
 | **Sensor Enclosures** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
 | **Power Distribution Box** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
 | **Electronics Tray** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
