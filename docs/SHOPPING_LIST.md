@@ -32,7 +32,7 @@
 
 | Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
 |------|-----|--------|-----------------|-------------------|
-| **GNSS/GPS** | 1 | 🛒 TO BUY | **€15-25** | **u-blox NEO-M8N** (multi-constellation, 1.5-3m accuracy)<br>→ [Mouser DK](https://www.mouser.dk/c/gps-gnss-modules) / [DigiKey DK](https://www.digikey.dk/en/products/filter/gps-gnss-modules/224) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-gnss) / [Holybro EU](https://holybro.com/collections/gps/products/m8n-gps-module) / [AliExpress](https://www.aliexpress.com/wholesale?SearchText=NEO-M8N+GPS) / [Banggood EU](https://eu.banggood.com/search/gps.html?keyword=NEO-M8N) |
+| **GNSS/GPS** | 1 | 🛒 TO BUY | **€15-25** | **u-blox NEO-M8N** (multi-constellation, 1.5-3m accuracy)<br>→ **[BerryBase DE](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)** (u-blox NEO-M8N module with patch antenna) / [Mouser DK](https://www.mouser.dk/c/gps-gnss-modules) / [DigiKey DK](https://www.digikey.dk/en/products/filter/gps-gnss-modules/224) / [Holybro EU](https://holybro.com/collections/gps/products/m8n-gps-module) / [AliExpress](https://www.aliexpress.com/wholesale?SearchText=NEO-M8N+GPS) / [Banggood EU](https://eu.banggood.com/search/gps.html?keyword=NEO-M8N) |
 | **GPS Antenna** | 1 | 🛒 TO BUY | €5-15 | u-blox ANN-MB-00 (patch) or Taoglas AA.161<br>→ [Mouser DK](https://www.mouser.dk/c/rf-if-and-rfid/gps-antennas) / [DigiKey DK](https://www.digikey.dk/en/products/filter/rf-antennas/232) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-antennen) / [Amazon.de](https://www.amazon.de/s?k=GPS+patch+antenna) |
 | **Magnetometer** | 1 | 🛒 TO BUY | **€8-15** | **QMC5883L** (I2C, 16-bit)<br>→ [Mouser DK](https://www.mouser.dk/c/sensors/magnetic-sensors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/magnetic-sensors/659) / [BerryBase DE](https://www.berrybase.de/sensoren/magnetfeldsensoren) / [Exp-Tech DE](https://www.exp-tech.de/sensoren/magnetfeldsensoren) / [Amazon.de](https://www.amazon.de/s?k=QMC5883L) |
 | **IMU (Accel + Gyro)** | 1 | 🛒 TO BUY | **€12-20** | **ICM-20948** (9-DoF, DMP, I2C/SPI)<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/TDK-InvenSense/ICM-20948) / [DigiKey DK](https://www.digikey.dk/en/products/detail/tdk-invensense/ICM-20948/8708445) / [RS Components DK](https://dk.rs-online.com/web/p/imu-sensors) / [Watterott DE](https://www.watterott.com/de/Sensoren/IMU) |
@@ -236,7 +236,7 @@
 
 ```
 OV5640-CAM                 (5MP Day Camera)
-NEO-M8N-0-01               (u-blox NEO-M8N GPS)
+NEO-M8N-0-01               (u-blox NEO-M8N GPS) — [BerryBase](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)
 ANN-MB-00                  (GPS Patch Antenna)
 QMC5883L                   (Magnetometer)
 ICM-20948                  (9-DoF IMU)
