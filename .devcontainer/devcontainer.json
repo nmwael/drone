@@ -73,7 +73,7 @@
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "remoteEnv": {
-    "CLOUD_MODE": "${localEnv:CLOUD_MODE:-false}",
+    "CLOUD_MODE": "${localEnv:CLOUD_MODE:-true}",
     "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}",
     "NVIDIA_NIM_ENDPOINT": "https://integrate.api.nvidia.com/v1",
     "OPENCODE_CONFIG": "/workspace/.devcontainer/opencode.json",
