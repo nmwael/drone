@@ -25,13 +25,9 @@
       "modelsDir": "/workspace/models"
     },
     "ghcr.io/nmwael/agentic-devcontainer-feature/opencode-agents:1": {
-      "port": 4096,
-      "passwordFile": "/workspace/.opencode-password",
-      "configFile": ".devcontainer/opencode.json",
-      "cloudMode": "${localEnv:CLOUD_MODE}",
-      "cloudProvider": "opencode",
-      "cloudBaseUrl": "https://integrate.api.nvidia.com/v1",
-      "cloudApiKey": "${localEnv:NVIDIA_API_KEY}"
+      "INSTALL_DIR": "/workspace/.opencode",
+      "WITH_LIBRARY": "true",
+      "OVERWRITE": "true"
     },
     "ghcr.io/nmwael/agentic-devcontainer-feature/bifrost-gateway:1": {
       "configStoreEnabled": "true",
