@@ -1,0 +1,168 @@
+{
+  "version": "1.0",
+  "activeProfile": "cloud",
+  "profiles": {
+    "cloud": {
+      "name": "NVIDIA NIM Cloud Models",
+      "roles": {
+        "architect": {
+          "model": "nemotron-3-ultra-550b-a55b",
+          "slot": 0,
+          "provider": "nvidia",
+          "temperature": 0.1,
+          "maxTokens": 32768,
+          "reasoning": {
+            "effort": "high",
+            "maxTokens": 4096
+          },
+          "systemPrompt": "You are the Architect Agent. Design system architecture, make high-level technical decisions, create specifications, and break down complex problems into implementable components. Think deeply before responding.",
+          "steps": 12,
+          "allowedTools": ["read", "write", "edit", "grep", "glob", "bash", "web_search", "web_fetch"]
+        },
+        "coder": {
+          "model": "nemotron-3.5-super-vl-120b-a12b",
+          "slot": 1,
+          "provider": "nvidia",
+          "temperature": 0.2,
+          "maxTokens": 16384,
+          "reasoning": {
+            "effort": "medium",
+            "maxTokens": 2048
+          },
+          "systemPrompt": "You are the Coder Agent. Implement features, write clean code, fix bugs, refactor, and create tests. Follow best practices and project conventions.",
+          "steps": 10,
+          "allowedTools": ["read", "write", "edit", "grep", "glob", "bash", "web_search"]
+        },
+        "reviewer": {
+          "model": "llama-3.1-405b",
+          "slot": 2,
+          "provider": "nvidia",
+          "temperature": 0.1,
+          "maxTokens": 8192,
+          "reasoning": {
+            "effort": "high",
+            "maxTokens": 4096
+          },
+          "systemPrompt": "You are the Reviewer Agent. Review code for correctness, security, performance, and maintainability. Provide constructive feedback.",
+          "steps": 8,
+          "allowedTools": ["read", "grep", "glob", "bash", "web_fetch"]
+        },
+        "build": {
+          "model": "nemotron-3.5-super-vl-free",
+          "slot": 3,
+          "provider": "opencode",
+          "temperature": 0.2,
+          "maxTokens": 16384,
+          "systemPrompt": "You are the Build Agent. Manage builds, CI/CD pipelines, dependencies, and deployment configurations.",
+          "steps": 8,
+          "allowedTools": ["read", "write", "edit", "bash", "web_search"]
+        },
+        "ui": {
+          "model": "nemotron-3.5-super-vl-120b-a12b",
+          "slot": 4,
+          "provider": "nvidia",
+          "temperature": 0.3,
+          "maxTokens": 16384,
+          "systemPrompt": "You are the UI Agent. Design and implement user interfaces, ensure accessibility, responsiveness, and good UX.",
+          "steps": 8,
+          "allowedTools": ["read", "write", "edit", "grep", "glob", "bash"]
+        },
+        "artist": {
+          "model": "nemotron-3.5-super-vl-120b-a12b",
+          "slot": 5,
+          "provider": "nvidia",
+          "temperature": 0.5,
+          "maxTokens": 16384,
+          "systemPrompt": "You are the Artist Agent. Create visual assets, diagrams, illustrations, and UI mockups.",
+          "steps": 6,
+          "allowedTools": ["read", "write", "edit", "bash", "web_search", "web_fetch"]
+        },
+        "researcher": {
+          "model": "llama-3.1-405b",
+          "slot": 6,
+          "provider": "nvidia",
+          "temperature": 0.2,
+          "maxTokens": 8192,
+          "reasoning": {
+            "effort": "high",
+            "maxTokens": 4096
+          },
+          "systemPrompt": "You are the Researcher Agent. Investigate topics, gather information, analyze data, and synthesize findings.",
+          "steps": 10,
+          "allowedTools": ["web_search", "web_fetch", "read", "write", "bash"]
+        },
+        "fact-checker": {
+          "model": "nemotron-3-ultra-free",
+          "slot": 7,
+          "provider": "opencode",
+          "temperature": 0.1,
+          "maxTokens": 32768,
+          "reasoning": {
+            "effort": "high",
+            "maxTokens": 4096
+          },
+          "systemPrompt": "You are the Fact-Checker Agent. Verify claims, validate sources, check accuracy, and identify misinformation.",
+          "steps": 8,
+          "allowedTools": ["web_search", "web_fetch", "read", "bash"]
+        }
+      }
+    },
+    "local": {
+      "name": "Local Models",
+      "roles": {
+        "architect": {
+          "model": "gemma-4-12b",
+          "slot": 0,
+          "provider": "local",
+          "temperature": 0.1,
+          "maxTokens": 8192,
+          "reasoning": {
+            "effort": "high",
+            "maxTokens": 4096
+          },
+          "systemPrompt": "You are the Architect Agent. Design system architecture, make high-level technical decisions, create specifications.",
+          "steps": 12,
+          "allowedTools": ["read", "write", "edit", "grep", "glob", "bash", "web_search", "web_fetch"]
+        },
+        "coder": {
+          "model": "qwen2.5-coder-7b",
+          "slot": 1,
+          "provider": "local",
+          "temperature": 0.2,
+          "maxTokens": 8192,
+          "reasoning": {
+            "effort": "medium",
+            "maxTokens": 2048
+          },
+          "systemPrompt": "You are the Coder Agent. Implement features, write clean code, fix bugs, refactor, and create tests.",
+          "steps": 10,
+          "allowedTools": ["read", "write", "edit", "grep", "glob", "bash", "web_search"]
+        },
+        "reviewer": {
+          "model": "gemma-4-12b",
+          "slot": 2,
+          "provider": "local",
+          "temperature": 0.1,
+          "maxTokens": 8192,
+          "reasoning": {
+            "effort": "high",
+            "maxTokens": 4096
+          },
+          "systemPrompt": "You are the Reviewer Agent. Review code for correctness, security, performance, and maintainability.",
+          "steps": 8,
+          "allowedTools": ["read", "grep", "glob", "bash", "web_fetch"]
+        },
+        "coder-fast": {
+          "model": "qwen2.5-coder-3b",
+          "slot": 1,
+          "provider": "local",
+          "temperature": 0.2,
+          "maxTokens": 8192,
+          "systemPrompt": "You are the Fast Coder Agent. Quick edits, small fixes, and rapid prototyping.",
+          "steps": 6,
+          "allowedTools": ["read", "write", "edit", "bash", "web_search"]
+        }
+      }
+    }
+  }
+}

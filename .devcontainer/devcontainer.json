@@ -1,0 +1,132 @@
+{
+  "name": "drone-sensor-suite",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/nmwael/agentic-devcontainer-feature/models:1": {
+      "modelsConfig": ".devcontainer/llm-lab-models.json",
+      "rolesConfig": ".devcontainer/llm-lab-roles.json",
+      "profilesDir": "profiles",
+      "defaultProfile": "cloud",
+      "cacheDir": "/workspace/.cache/llm-lab",
+      "modelsDir": "/workspace/models"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/bifrost-gateway:1": {
+      "configStoreEnabled": "true",
+      "configStoreType": "sqlite",
+      "configStorePath": "/workspace/.config/bifrost/config.db",
+      "port": 8082
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/llama-server:1": {
+      "portOrchestrator": 8089,
+      "portCoder": 8090,
+      "gpuLayers": -1,
+      "ctxSize": 16384,
+      "parallelOrchestrator": 3,
+      "parallelCoder": 1,
+      "kvCacheQuant": "q8_0"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/opencode-agents:1": {
+      "port": 4096,
+      "passwordFile": "/workspace/.opencode-password",
+      "configFile": ".devcontainer/opencode.json",
+      "cloudMode": "${localEnv:CLOUD_MODE}",
+      "cloudProvider": "opencode",
+      "cloudBaseUrl": "https://integrate.api.nvidia.com/v1",
+      "cloudApiKey": "${localEnv:NVIDIA_API_KEY}"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/apt-packages:1": {
+      "packages": "curl,git,jq,build-essential,cmake,ninja-bash,ffmpeg,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/gpu-bridge:1": {
+      "enabled": "true",
+      "nvidiaDriverVersion": "560",
+      "cudaVersion": "12.6",
+      "cudnnVersion": "9.5",
+      "nvidiaContainerToolkit": "true"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/llm-lab:1": {
+      "enabled": "true",
+      "port": 8089,
+      "modelsDir": "/workspace/models",
+      "cacheDir": "/workspace/.cache/llm-lab"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode-remote.remote-containers",
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-vscode.cpptools",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "ms-vscode.cmake-tools",
+        "timonwong.shellcheck",
+        "foxundermoon.shell-format",
+        "redhat.vscode-yaml",
+        "ms-vscode.makefile-tools"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.autoSave": "onFocusChange",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+      }
+    }
+  },
+  "forwardPorts": [
+    8082,
+    8089,
+    8090,
+    4096,
+    8082,
+    8089,
+    8090
+  ],
+  "postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
+  "postStartCommand": "bash .devcontainer/scripts/auto-startup.sh",
+  "postAttachCommand": "echo 'Container ready. Run: bash scripts/use-profile.sh cloud'",
+  "mounts": [
+    "source=${localWorkspaceFolder}/models,target=/workspace/models,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.cache,target=/workspace/.cache,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.config,target=/workspace/.config,type=bind,consistency=cached",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "remoteEnv": {
+    "CLOUD_MODE": "${localEnv:CLOUD_MODE:-false}",
+    "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}",
+    "NVIDIA_NIM_ENDPOINT": "https://integrate.api.nvidia.com/v1",
+    "OPENCODE_CONFIG": "/workspace/.devcontainer/opencode.json",
+    "LLM_LAB_MODELS_DIR": "/workspace/models",
+    "LLM_LAB_CACHE_DIR": "/workspace/.cache/llm-lab",
+    "BIFROST_CONFIG": "/workspace/.config/bifrost/config.json",
+    "BIFROST_CONFIG_STORE_PATH": "/workspace/.config/bifrost/config.db",
+    "CUDA_VISIBLE_DEVICES": "0",
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility,video"
+  },
+  "runArgs": [
+    "--gpus=all",
+    "--shm-size=16g",
+    "--ulimit=memlock=-1",
+    "--ulimit=stack=67108864",
+    "--cap-add=CAP_SYS_ADMIN",
+    "--cap-add=CAP_SYS_RESOURCE",
+    "--cap-add=CAP_DAC_OVERRIDE"
+  ],
+  "containerEnv": {
+    "DEBIAN_FRONTEND": "noninteractive",
+    "TZ": "Europe/Copenhagen"
+  },
+  "overrideFeatureInstallOrder": [
+    "ghcr.io/nmwael/agentic-devcontainer-feature/apt-packages:1",
+    "ghcr.io/nmwael/agentic-devcontainer-feature/gpu-bridge:1",
+    "ghcr.io/nmwael/agentic-devcontainer-feature/models:1",
+    "ghcr.io/nmwael/agentic-devcontainer-feature/llm-lab:1",
+    "ghcr.io/nmwael/agentic-devcontainer-feature/llama-server:1",
+    "ghcr.io/nmwael/agentic-devcontainer-feature/bifrost-gateway:1",
+    "ghcr.io/nmwael/agentic-devcontainer-feature/opencode-agents:1"
+  ]
+}

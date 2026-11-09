@@ -1,0 +1,227 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "version": "1.0",
+  "cloudMode": "${CLOUD_MODE:-false}",
+  "cloudProvider": "opencode",
+  "cloudBaseUrl": "https://integrate.api.nvidia.com/v1",
+  "cloudApiKey": "${NVIDIA_API_KEY}",
+  "provider": {
+    "nvidia": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NVIDIA NIM",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "${NVIDIA_API_KEY}"
+      },
+      "models": {
+        "nemotron-3-ultra-550b-a55b": {
+          "name": "Nemotron 3 Ultra 550B A55B",
+          "limit": {
+            "context": 1000000,
+            "output": 32768
+          }
+        },
+        "nemotron-3.5-super-vl-120b-a12b": {
+          "name": "Nemotron 3.5 Super VL 120B A12B",
+          "limit": {
+            "context": 1000000,
+            "output": 16384
+          }
+        },
+        "nemotron-3.5-super-vl-free": {
+          "name": "Nemotron 3.5 Super VL Free",
+          "limit": {
+            "context": 1000000,
+            "output": 16384
+          }
+        },
+        "nemotron-3-ultra-free": {
+          "name": "Nemotron 3 Ultra Free",
+          "limit": {
+            "context": 1000000,
+            "output": 32768
+          }
+        },
+        "llama-3.1-405b": {
+          "name": "Llama 3.1 405B Instruct",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          }
+        },
+        "llama-3.1-70b": {
+          "name": "Llama 3.1 70B Instruct",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          }
+        },
+        "nemotron-4-340b": {
+          "name": "Nemotron 4 340B Instruct",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          }
+        },
+        "mistral-large": {
+          "name": "Mistral Large 2",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          }
+        }
+      }
+    },
+    "opencode": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OpenCode Provider",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "${NVIDIA_API_KEY}"
+      },
+      "models": {
+        "nemotron-3.5-super-vl-free": {
+          "name": "Nemotron 3.5 Super VL Free",
+          "limit": {
+            "context": 1000000,
+            "output": 16384
+          }
+        },
+        "nemotron-3-ultra-free": {
+          "name": "Nemotron 3 Ultra Free",
+          "limit": {
+            "context": 1000000,
+            "output": 32768
+          }
+        }
+      }
+    },
+    "local": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Local llama-server",
+      "options": {
+        "baseURL": "http://localhost:8089/v1",
+        "apiKey": "EMPTY"
+      },
+      "models": {
+        "qwen2.5-coder-3b": {
+          "name": "Qwen2.5-Coder 3B",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
+        },
+        "qwen2.5-coder-7b": {
+          "name": "Qwen2.5-Coder 7B",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          }
+        },
+        "gemma-4-12b": {
+          "name": "Gemma 4 12B",
+          "limit": {
+            "context": 16384,
+            "output": 8192
+          }
+        },
+        "phi-4": {
+          "name": "Phi-4",
+          "limit": {
+            "context": 16384,
+            "output": 8192
+          }
+        }
+      }
+    }
+  },
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "cloudMode": "${CLOUD_MODE:-false}",
+  "agent": {
+    "default": {
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "max_tokens": 8192
+    },
+    "architect": {
+      "temperature": 0.1,
+      "top_p": 0.95,
+      "max_tokens": 32768,
+      "reasoning": {
+        "effort": "high",
+        "max_tokens": 4096
+      }
+    },
+    "coder": {
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "max_tokens": 16384,
+      "reasoning": {
+        "effort": "medium",
+        "max_tokens": 2048
+      }
+    },
+    "reviewer": {
+      "temperature": 0.1,
+      "top_p": 0.95,
+      "max_tokens": 8192,
+      "reasoning": {
+        "effort": "high",
+        "max_tokens": 4096
+      }
+    },
+    "build": {
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "max_tokens": 16384
+    },
+    "ui": {
+      "temperature": 0.3,
+      "top_p": 0.95,
+      "max_tokens": 16384
+    },
+    "artist": {
+      "temperature": 0.5,
+      "top_p": 0.95,
+      "max_tokens": 16384
+    },
+    "researcher": {
+      "temperature": 0.2,
+      "top_p": 0.95,
+      "max_tokens": 8192,
+      "reasoning": {
+        "effort": "high",
+        "max_tokens": 4096
+      }
+    },
+    "fact-checker": {
+      "temperature": 0.1,
+      "top_p": 0.95,
+      "max_tokens": 32768,
+      "reasoning": {
+        "effort": "high",
+        "max_tokens": 4096
+      }
+    }
+  },
+  "policies": {
+    "allow": [
+      "nvidia/*",
+      "opencode/*",
+      "local/*"
+    ],
+    "deny": [],
+    "defaultProvider": "nvidia"
+  },
+  "permissions": {
+    "bash": true,
+    "read": true,
+    "write": true,
+    "edit": true,
+    "grep": true,
+    "glob": true,
+    "web_search": true,
+    "web_fetch": true,
+    "task": true
+  }
+}

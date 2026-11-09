@@ -1,0 +1,166 @@
+{
+  "version": "1.0",
+  "activeProfile": "cloud",
+  "profiles": {
+    "cloud": {
+      "name": "NVIDIA NIM Cloud Models",
+      "description": "Cloud models via NVIDIA NIM (Nemotron 3 Ultra, Nemotron 3.5 Super VL, etc.)",
+      "models": [
+        {
+          "id": "nemotron-3-ultra-550b-a55b",
+          "name": "Nemotron 3 Ultra 550B A55B",
+          "provider": "nvidia",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "nvidia/nemotron-3-ultra-550b-a55b",
+          "contextWindow": 1000000,
+          "maxTokens": 32768,
+          "capabilities": ["reasoning", "tool-use", "coding", "analysis"],
+          "quantization": "NVFP4",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        },
+        {
+          "id": "nemotron-3.5-super-vl-120b-a12b",
+          "name": "Nemotron 3.5 Super VL 120B A12B",
+          "provider": "nvidia",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+          "contextWindow": 1000000,
+          "maxTokens": 16384,
+          "capabilities": ["vision", "reasoning", "tool-use", "coding", "document-understanding"],
+          "quantization": "BF16/NVFP4",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        },
+        {
+          "id": "nemotron-3.5-super-vl-free",
+          "name": "Nemotron 3.5 Super VL Free",
+          "provider": "opencode",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "nvidia/nemotron-3.5-super-vl:free",
+          "contextWindow": 1000000,
+          "maxTokens": 16384,
+          "capabilities": ["vision", "reasoning", "tool-use", "coding"],
+          "quantization": "BF16/NVFP4",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        },
+        {
+          "id": "nemotron-3-ultra-free",
+          "name": "Nemotron 3 Ultra Free",
+          "provider": "opencode",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "nvidia/nemotron-3-ultra:free",
+          "contextWindow": 1000000,
+          "maxTokens": 32768,
+          "capabilities": ["reasoning", "tool-use", "coding", "analysis"],
+          "quantization": "NVFP4",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        },
+        {
+          "id": "llama-3.1-405b",
+          "name": "Llama 3.1 405B Instruct",
+          "provider": "nvidia",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "meta/llama-3.1-405b-instruct",
+          "contextWindow": 128000,
+          "maxTokens": 8192,
+          "capabilities": ["reasoning", "tool-use", "coding", "multilingual"],
+          "quantization": "FP8",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        },
+        {
+          "id": "llama-3.1-70b",
+          "name": "Llama 3.1 70B Instruct",
+          "provider": "nvidia",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "meta/llama-3.1-70b-instruct",
+          "contextWindow": 128000,
+          "maxTokens": 8192,
+          "capabilities": ["reasoning", "tool-use", "coding"],
+          "quantization": "FP8",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        },
+        {
+          "id": "nemotron-4-340b",
+          "name": "Nemotron 4 340B Instruct",
+          "provider": "nvidia",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "nvidia/nemotron-4-340b-instruct",
+          "contextWindow": 128000,
+          "maxTokens": 8192,
+          "capabilities": ["reasoning", "tool-use", "coding", "multilingual"],
+          "quantization": "FP8",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        },
+        {
+          "id": "mistral-large",
+          "name": "Mistral Large 2",
+          "provider": "nvidia",
+          "endpoint": "https://integrate.api.nvidia.com/v1",
+          "modelId": "mistralai/mistral-large-2407",
+          "contextWindow": 128000,
+          "maxTokens": 8192,
+          "capabilities": ["reasoning", "tool-use", "coding", "multilingual"],
+          "quantization": "FP8",
+          "costPer1kInput": 0,
+          "costPer1kOutput": 0
+        }
+      ]
+    },
+    "local": {
+      "name": "Local Models (llama-server)",
+      "description": "Local models via llama-server (requires GPU)",
+      "models": [
+        {
+          "id": "qwen2.5-coder-3b",
+          "name": "Qwen2.5-Coder 3B Q4_K_M",
+          "provider": "local",
+          "modelId": "qwen2.5-coder-3b",
+          "contextWindow": 32768,
+          "maxTokens": 8192,
+          "capabilities": ["coding", "analysis"],
+          "quantization": "Q4_K_M",
+          "fileName": "qwen2.5-coder-3b-q4_k_m.gguf"
+        },
+        {
+          "id": "qwen2.5-coder-7b",
+          "name": "Qwen2.5-Coder 7B Q4_K_M",
+          "provider": "local",
+          "modelId": "qwen2.5-coder-7b",
+          "contextWindow": 32768,
+          "maxTokens": 8192,
+          "capabilities": ["coding", "analysis"],
+          "quantization": "Q4_K_M",
+          "fileName": "qwen2.5-coder-7b-q4_k_m.gguf"
+        },
+        {
+          "id": "gemma-4-12b",
+          "name": "Gemma 4 12B UD-IQ3_M",
+          "provider": "local",
+          "modelId": "gemma-4-12b",
+          "contextWindow": 16384,
+          "maxTokens": 8192,
+          "capabilities": ["reasoning", "analysis"],
+          "quantization": "UD-IQ3_M",
+          "fileName": "gemma-4-12b-ud-iq3_m.gguf"
+        },
+        {
+          "id": "phi-4",
+          "name": "Phi-4 IQ3_M",
+          "provider": "local",
+          "modelId": "phi-4",
+          "contextWindow": 16384,
+          "maxTokens": 8192,
+          "capabilities": ["reasoning", "coding"],
+          "quantization": "IQ3_M",
+          "fileName": "phi-4-iq3_m.gguf"
+        }
+      ]
+    }
+  }
+}
