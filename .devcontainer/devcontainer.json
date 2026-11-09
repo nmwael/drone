@@ -33,26 +33,11 @@
       "cloudBaseUrl": "https://integrate.api.nvidia.com/v1",
       "cloudApiKey": "${localEnv:NVIDIA_API_KEY}"
     },
-    "ghcr.io/nmwael/agentic-devcontainer-feature/llm-lab:1": {
-      "enabled": "true",
-      "port": 8089,
-      "modelsDir": "/workspace/models",
-      "cacheDir": "/workspace/.cache/llm-lab"
-    },
     "ghcr.io/nmwael/agentic-devcontainer-feature/bifrost-gateway:1": {
       "configStoreEnabled": "true",
       "configStoreType": "sqlite",
       "configStorePath": "/workspace/.config/bifrost/config.db",
       "port": 8082
-    },
-    "ghcr.io/nmwael/agentic-devcontainer-feature/llama-server:1": {
-      "portOrchestrator": 8089,
-      "portCoder": 8090,
-      "gpuLayers": -1,
-      "ctxSize": 16384,
-      "parallelOrchestrator": 3,
-      "parallelCoder": 1,
-      "kvCacheQuant": "q8_0"
     }
   },
   "customizations": {
@@ -80,8 +65,6 @@
   },
   "forwardPorts": [
     8082,
-    8089,
-    8090,
     4096
   ],
   "postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
