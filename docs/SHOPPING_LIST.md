@@ -54,7 +54,7 @@
 | **libr160 Li-ion Cells** | 2 | ✅ **ON HAND** | **€0** | **3.7V 1050mAh Li-ion** (model: libr160)<br>→ Use for: **Electronics backup**, sensor power, ESP32 testing<br>→ Can wire in parallel (2100mAh @ 3.7V) or 2S series (7.4V)<br>→ **BMS ✅ ON HAND**, Need: JST connectors |
 | **Battery Charger** | 1 | 🔄 SALVAGED | €0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
 
-> **Note:** Truck is **100% driving functional** — CP2 remote → ESC + steering servo works perfectly. No motor driver, no servo controller, no MCU in the control loop. 3.3V/5V regulators power **MCUs and sensors only**. This project adds sensor suite (vision, thermal, GPS, IMU, ToF) for autonomy/teleop on top of a working truck.
+> **Note:** Truck is **100% driving functional** — CP2 remote → ESC + steering servo works perfectly. No motor driver, no servo controller, no MCU in the control loop. 3.3V/5V regulators power **MCUs and sensors only**. This project adds sensor suite (vision, GPS, IMU) for autonomy/teleop on top of a working truck.
 
 ---
 
@@ -76,7 +76,7 @@
 | **RC Monster Truck** | 1 | ✅ **ON HAND** | **$0** | **100% functional** — drives perfectly with CP2 remote, no mods needed |
 | **CP2 2.4GHz Remote** | 1 | ✅ **ON HAND** | **$0** | **Direct to ESC + steering servo** — primary control, always works |
 | **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 day camera) |
-| **Sensor Enclosures** | 3-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - C3 hub, motor driver, power distro, battery tray |
+| **Sensor Enclosures** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - C3 hub (GPS/IMU/Mag/Baro/AHT20) inside Universal Box |
 | **VL53L5CX Mounts** | 4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - front, rear, left, right brackets (truck-specific) |
 | **Vibration Dampers** | 4-8 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation |
 | **GPS Antenna Mast** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - elevates ZED-F9P antenna above truck body |
@@ -133,20 +133,31 @@
 
 | Category | Est. Cost (Min) | Est. Cost (Max) |
 |----------|----------------|----------------|
-| Vision Sensors | €65 | €95 |
-| Navigation Sensors | €220 | €285 |
-| Power & Actuation | €30 | €60 |
-| Comms & Ground Station | €10 | €100 |
-| Mechanical (Printed Fittings) | €5 | €15 |
+| Vision Sensors (OV5640) | €15 | €25 |
+| Navigation Sensors (GPS + IMU + Mag) | €220 | €285 |
+| Power & Actuation (battery, regs, box) | €30 | €60 |
+| Comms & Ground Station (router, Quest) | €10 | €100 |
+| Mechanical (Printed Box + Gimbal) | €5 | €15 |
 | Dev Tools | €0 | €0 |
 | **ASA Filament (optional)** | **€0** | **€40** |
-| **TOTAL** | **~€330** | **~€595** |
+| **TOTAL** | **~€280** | **~€525** |
 
 > **Notes:**
 > - **Min cost** assumes: PC ground station, AliExpress/BerryBase/Exp-Tech for sensors
 > - **Max cost** assumes: PC ground station, Mouser/DigiKey/RS Components for all parts
 > - **Already owned saves ~€750-850**: MCUs, BMP280, AHT20, CP2 servos/motors/charger, **RC truck + remote**, basic tools, **FDM printer + PETG/TPU/PLA filament**, **Quest 2 (€300)**, **WiFi 5 router**, **heat-set inserts (M3/M4)**, **buck converters (3.3V/5V)**
 > - **3D Printing saves ~€150-400** vs buying enclosures, gimbal, mounts, dampers, battery trays (only hardware to buy)
+> - **Cost Savings Applied:**
+>   - ❌ MLX90640 thermal camera removed (-€50-70)
+>   - ❌ RP2040 ToF arrays removed (-€216-300)
+>   - ❌ USB-UART adapter removed (onboard USB)
+>   - ❌ JTAG debugger removed (onboard USB JTAG)
+>   - ❌ Logic Analyzer removed (built-in tools)
+>   - ✅ OV5640 only (day camera, €15-25)
+>   - ✅ All enclosures 3D printed (PETG/TPU on hand)
+>   - ✅ RC truck + remote already owned
+>   - ✅ Quest 2 + WiFi 5 router already owned
+>   - ✅ Buck converters + BMS + heat-set inserts on hand
 
 ---
 
