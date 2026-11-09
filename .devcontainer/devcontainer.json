@@ -83,12 +83,7 @@
     "BIFROST_CONFIG_STORE_PATH": "/workspace/.config/bifrost/config.db"
   },
   "runArgs": [
-    "--shm-size=16g",
-    "--ulimit=memlock=-1",
-    "--ulimit=stack=67108864",
-    "--cap-add=CAP_SYS_ADMIN",
-    "--cap-add=CAP_SYS_RESOURCE",
-    "--cap-add=CAP_DAC_OVERRIDE"
+    "--shm-size=16g"
   ],
   "containerEnv": {
     "DEBIAN_FRONTEND": "noninteractive",
