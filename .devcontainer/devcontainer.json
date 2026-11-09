@@ -82,9 +82,7 @@
     "BIFROST_CONFIG": "/workspace/.config/bifrost/config.json",
     "BIFROST_CONFIG_STORE_PATH": "/workspace/.config/bifrost/config.db"
   },
-  "runArgs": [
-    "--shm-size=16g"
-  ],
+  
   "containerEnv": {
     "DEBIAN_FRONTEND": "noninteractive",
     "TZ": "Europe/Copenhagen"
