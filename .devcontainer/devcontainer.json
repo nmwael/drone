@@ -5,11 +5,6 @@
     "ghcr.io/devcontainers-extra/features/apt-get-packages:1.0.8": {
       "packages": "curl,git,jq,build-essential,cmake,ninja-build,ffmpeg,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping,unzip,wget,ca-certificates"
     },
-    "ghcr.io/devcontainers/features/nvidia-cuda:1": {
-      "version": "12.6",
-      "cudnnVersion": "9.5",
-      "nvidiaContainerToolkit": true
-    },
     "ghcr.io/devcontainers/features/docker-in-docker:1": {
       "enableBuildkit": true
     },
@@ -20,7 +15,45 @@
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.22"
     },
-    "ghcr.io/devcontainers/features/common-utils:1": {}
+    "ghcr.io/devcontainers/features/common-utils:1": {},
+    "ghcr.io/nmwael/agentic-devcontainer-feature/models:1": {
+      "modelsConfig": ".devcontainer/llm-lab-models.json",
+      "rolesConfig": ".devcontainer/llm-lab-roles.json",
+      "profilesDir": "profiles",
+      "defaultProfile": "cloud",
+      "cacheDir": "/workspace/.cache/llm-lab",
+      "modelsDir": "/workspace/models"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/opencode-agents:1": {
+      "port": 4096,
+      "passwordFile": "/workspace/.opencode-password",
+      "configFile": ".devcontainer/opencode.json",
+      "cloudMode": "${localEnv:CLOUD_MODE}",
+      "cloudProvider": "opencode",
+      "cloudBaseUrl": "https://integrate.api.nvidia.com/v1",
+      "cloudApiKey": "${localEnv:NVIDIA_API_KEY}"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/llm-lab:1": {
+      "enabled": "true",
+      "port": 8089,
+      "modelsDir": "/workspace/models",
+      "cacheDir": "/workspace/.cache/llm-lab"
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/bifrost-gateway:1": {
+      "configStoreEnabled": "true",
+      "configStoreType": "sqlite",
+      "configStorePath": "/workspace/.config/bifrost/config.db",
+      "port": 8082
+    },
+    "ghcr.io/nmwael/agentic-devcontainer-feature/llama-server:1": {
+      "portOrchestrator": 8089,
+      "portCoder": 8090,
+      "gpuLayers": -1,
+      "ctxSize": 16384,
+      "parallelOrchestrator": 3,
+      "parallelCoder": 1,
+      "kvCacheQuant": "q8_0"
+    }
   },
   "customizations": {
     "vscode": {
