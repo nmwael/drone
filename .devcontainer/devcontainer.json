@@ -1,12 +1,12 @@
 {
   "name": "drone-sensor-suite",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
   "features": {
     "ghcr.io/devcontainers-extra/features/apt-get-packages:1.0.8": {
       "packages": "curl,git,jq,build-essential,cmake,ninja-build,ffmpeg,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping,unzip,wget,ca-certificates"
     },
-    "ghcr.io/devcontainers/features/docker-in-docker:1": {
-      "enableBuildkit": true
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
