@@ -5,9 +5,6 @@
     "ghcr.io/devcontainers-extra/features/apt-get-packages:1.0.8": {
       "packages": "curl,git,jq,build-essential,cmake,ninja-build,ffmpeg,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping,unzip,wget,ca-certificates"
     },
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-      "moby": false
-    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
       "installTools": true
@@ -41,7 +38,6 @@
       "extensions": [
         "ms-vscode-remote.remote-containers",
         "ms-python.python",
-        "ms-azuretools.vscode-docker",
         "ms-vscode.cpptools",
         "llvm-vs-code-extensions.vscode-clangd",
         "ms-vscode.cmake-tools",
@@ -69,8 +65,7 @@
   "mounts": [
     "source=${localWorkspaceFolder}/models,target=/workspace/models,type=bind,consistency=cached",
     "source=${localWorkspaceFolder}/.cache,target=/workspace/.cache,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/.config,target=/workspace/.config,type=bind,consistency=cached",
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=${localWorkspaceFolder}/.config,target=/workspace/.config,type=bind,consistency=cached"
   ],
   "remoteEnv": {
     "CLOUD_MODE": "${localEnv:CLOUD_MODE:-true}",
