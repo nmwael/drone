@@ -22,7 +22,7 @@
 
 | Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
 |------|-----|--------|-----------------|-------------------|
-| **Thermal Camera** | 1 | 🛒 TO BUY | **€50-70** | **MLX90640 32×24** (Melexis) - I2C, 32Hz, -40°C to 300°C<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/Melexis/MLX90640ESF-BAA-000-TU) / [DigiKey DK](https://www.digikey.dk/en/products/detail/melexis/MLX90640ESF-BAA-000-TU/11775055) / [RS Components DK](https://dk.rs-online.com/web/p/thermal-imaging-sensors) / [Conrad DK](https://www.conrad.dk/p/melexis-mlx90640esf-baa-000-tu-infrarot-array-sensor-2226579) |
+| **Thermal Camera** | 0 | ❌ **REMOVED** | **€0** | MLX90640 removed from scope — using OV5640 day camera only |
 | **IR Camera (Night Vision)** | 1 | 🛒 TO BUY | **€15-25** | **OV5640 5MP Camera Module** (CSI/Parallel, IR filter removed)<br>→ [Arducam EU](https://eu.arducam.com/product/ov5640-5mp-camera-module/) / [BerryBase DE](https://www.berrybase.de/kameras/arducam) / [Exp-Tech DE](https://www.exp-tech.de/kameras/arducam) / [Watterott DE](https://www.watterott.com/de/Kameras/Arducam) / [Amazon.de](https://www.amazon.de/s?k=OV5640+Camera+Modul) |
 | **Thermal Camera Alt (lower res)** | - | - | €25-35 | AMG8833 8×8 (Panasonic) - cheaper but low res<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/Panasonic/AMG8833) / [DigiKey DK](https://www.digikey.dk/en/products/detail/panasonic-electronic-components/AMG8833/5907444) |
 
@@ -75,7 +75,7 @@
 |------|-----|--------|-----------|-------|
 | **RC Monster Truck** | 1 | ✅ **ON HAND** | **$0** | **100% functional** — drives perfectly with CP2 remote, no mods needed |
 | **CP2 2.4GHz Remote** | 1 | ✅ **ON HAND** | **$0** | **Direct to ESC + steering servo** — primary control, always works |
-| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 + MLX90640) |
+| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 day camera) |
 | **Sensor Enclosures** | 3-4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - C3 hub, motor driver, power distro, battery tray |
 | **VL53L5CX Mounts** | 4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - front, rear, left, right brackets (truck-specific) |
 | **Vibration Dampers** | 4-8 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation |
@@ -86,7 +86,7 @@
 | **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis |
 
 | **Universal Electronics Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | **Single modular enclosure** — contains ESP32-S3, ESP32-C3, 3×RP2040, ESP8266, power distro (buck converters), BMS, sensor hub (GPS/IMU/Mag/Baro/AHT20), all wiring. Mounts on ANY vehicle via universal bolt pattern (M6/M8 slots). Replaces: separate electronics tray, C3 hub enclosure, power distro box. |
-| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 + MLX90640) — mounts to Universal Box front |
+| **Camera Gimbal (2-axis)** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - uses CP2 servos (pan/tilt for OV5640 day camera) — mounts to Universal Box front |
 | **Sensor Enclosures** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
 | **Power Distribution Box** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
 | **Electronics Tray** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
@@ -171,12 +171,11 @@
 6. **Install sensors in printed C3 hub enclosure**
 
 ### Phase 2: Vision & STANAG (Week 2-4)
-1. MLX90640 thermal (€50-70)
-2. OV5640 camera (€15-25)
-3. ESP32-S3 with PSRAM ✅ ON HAND
-4. **Printed camera gimbal + OV5640/MLX90640 mount** (already printed)
-5. H.264 + KLV + TS firmware
-6. **Mount gimbal on truck, route cables**
+1. OV5640 day camera (€15-25)
+2. ESP32-S3 with PSRAM ✅ ON HAND
+3. **Printed camera gimbal + OV5640 mount** (already printed)
+4. H.264 + KLV + TS firmware
+5. **Mount gimbal on truck, route cables**
 
 ### Phase 3: Ground Station & Oculus (Week 4-6)
 1. WiFi 5 router ✅ ON HAND
@@ -216,8 +215,7 @@
 ## Part Numbers for Quick Search (EU/DK Stores)
 
 ```
-MLX90640ESF-BAA-000-TU     (Thermal 32x24)
-OV5640-CAM                 (5MP Camera)
+OV5640-CAM                 (5MP Day Camera)
 ZED-F9P-00B                (u-blox RTK GPS)
 ANN-MB-00                  (GPS Antenna)
 QMC5883L                   (Magnetometer)
@@ -230,7 +228,7 @@ TCA9548A                   (I2C Mux - if adding ToF later)
 ```
 
 > **Search tips for DK/EU stores:**
-> - Mouser DK: Search by manufacturer part number (e.g., "MLX90640ESF-BAA-000-TU")
+> - Mouser DK: Search by manufacturer part number (e.g., "ZED-F9P-00B")
 > - DigiKey DK: Use "Product Index" → search by keyword
 > - RS Components DK: Search by "Order Code" or keyword
 > - Conrad DK: Search by "Artikelnummer" or keyword

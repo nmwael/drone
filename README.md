@@ -21,7 +21,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 
 | Sensor | Interface | Purpose | Candidate Parts |
 |--------|-----------|---------|-----------------|
-| **Thermal Camera** | I2C/SPI | Heat detection (8x8 to 32x32) | MLX90640 (32x24), AMG8833 (8x8), MLX90641 (16x12) |
+| **Thermal Camera** | I2C/SPI | Heat detection (8x8 to 32x32) | **REMOVED** — using OV5640 day camera only |
 | **IR Camera (Night Vision)** | CSI/Parallel | Low-light imaging | OV2640/OV5640 with IR filter removed, ESP32-S3 CSI |
 | **GNSS/GPS** | UART/I2C | Positioning | u-blox ZED-F9P (RTK), BN-880, SAM-M10Q |
 | **Magnetometer (Compass)** | I2C | Heading | QMC5883L, HMC5883L, RM3100, LIS3MDL |
@@ -89,8 +89,8 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 | Part | Qty | Material | Purpose | Mounting Strategy |
 |------|-----|----------|---------|-------------------|
 | **Universal Electronics Box** | 1 | PETG + TPU gasket | **All-in-one:** ESP32-S3, ESP32-C3, ESP8266, power distro (2× buck converters), BMS for spare cells, sensor hub (GPS/IMU/Mag/Baro/AHT20), all internal wiring | **Universal mount:** 4× M6 slots (50-100mm spacing) + 4× M8 slots (100-150mm) — fits most vehicle frames, roof racks, roll cages. 4× M5 camera gimbal mount on front face. |
-| **Camera Gimbal (2-axis)** | 1 | PETG + TPU | Pan/tilt for OV5640 + MLX90640 | Mounts to Universal Box front face (4× M5) |
-| **OV5640 + MLX90640 Mount** | 1 | PETG | Align thermal + IR cameras | Integrated into gimbal |
+| **Camera Gimbal (2-axis)** | 1 | PETG + TPU | Pan/tilt for OV5640 day camera | Mounts to Universal Box front face (4× M5) |
+| **OV5640 Mount** | 1 | PETG | Align day camera | Integrated into gimbal |
 | **Battery Tray / Strap** | 1 | TPU | Secure 2S/3S LiPo (main vehicle battery) | Separate — uses existing battery compartment |
 | **GPS Antenna Mast** | 1 | PETG/ASA | Elevate ZED-F9P antenna | Mounts to Universal Box top rear |
 | **ESP32-S3 Antenna Mount** | 1 | PETG | External u.FL/SMA antenna | Mounts to Universal Box side |
@@ -100,7 +100,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 
 > **Universal Box Internal Layout:**
 > - **Top:** GPS antenna mast, ESP32-S3 antenna, ventilation slots (TPU mesh)
-> - **Front:** Camera gimbal mount (4× M5), OV5640 + MLX90640
+> - **Front:** Camera gimbal mount (4× M5), OV5640 day camera
 > - **Inside Left:** ESP32-S3 (vision), ESP8266 (backup comms)
 > - **Inside Center:** ESP32-C3 (sensor hub), sensor hub PCB (GPS/IMU/Mag/Baro/AHT20)
 > - **Inside Right:** Power distribution — 2× buck converters (3.3V/5V), BMS for spare cells, XT60 input, fused outputs
@@ -125,7 +125,7 @@ Upgrading an RC toy monster truck with autonomous navigation sensors:
 |------|-----|----------|-----------------|----------|
 | **Universal Electronics Box** | 1 | PETG + TPU | 12-18h | All separate enclosures (electronics tray, C3 hub, power distro) |
 | **Camera Gimbal (2-axis)** | 1 | PETG + TPU | 6-8h | Pan/tilt for vision sensors (uses CP2 servos) |
-| **OV5640 + MLX90640 Mount** | 1 | PETG | 2-3h | Camera alignment bracket |
+| **OV5640 Mount** | 1 | PETG | 2-3h | Camera alignment bracket |
 | **GPS Antenna Mast** | 1 | PETG/ASA | 2h | Elevate ZED-F9P antenna |
 | **ESP32-S3 Antenna Mount** | 1 | PETG | 1h | External u.FL/SMA antenna |
 | **Vibration Dampers** | 4 | TPU (60-80A) | 30min each | Universal Box isolation |
@@ -346,9 +346,6 @@ ESP32-S3 Firmware (ESP-IDF):
 |  ISP / DMA -> YUV420 buffers (double-buffered)                  |
 |       |                                                         |
 |       v                                                         |
-|  Thermal Overlay (MLX90640 -> alpha blend)                      |
-|       |                                                         |
-|       v                                                         |
 |  H.264 Hardware Encoder (ESP32-S3 ENC)                          |
 |       |  - Profile: High @ Level 4.1                            |
 |       |  - Resolution: 1280x720 @ 30fps                         |
@@ -424,8 +421,7 @@ paths:
 | Item | Qty | Purpose | Notes |
 |------|-----|---------|-------|
 | **ESP32-S3 with PSRAM** | 1 | **Required** | H.264 encoder needs PSRAM for frame buffers (min 2MB, 8MB preferred) |
-| **OV5640 Camera Module** | 1 | 720p/1080p @ 30fps | CSI/parallel; IR filter removed for night vision |
-| **MLX90640 Thermal** | 1 | Thermal overlay | 32x24 @ 32 Hz, I2C |
+| **OV5640 Camera Module** | 1 | 720p/1080p @ 30fps | CSI/parallel; IR filter removed for day camera |
 | **u-blox ZED-F9P + GPS Antenna** | 1 | Precision timestamp + position | PPS output to ESP32-S3 GPIO for frame sync |
 | **WiFi 5 Router / AP** | 1 | Ground link | **ON HAND** — existing router (5 GHz capable) |
 | **Ground Station PC / Pi 5** | 1 | MediaMTX + WebXR host | Pi 5 can run MediaMTX; PC needed for WebXR browser |
@@ -440,14 +436,13 @@ paths:
 |-----------|-------------|---------|------------|
 | ESP32-S3 (WiFi + H.264 enc + PSRAM) | 550 | 3.3V | 1815 |
 | OV5640 Camera | 180 | 3.3V | 594 |
-| MLX90640 | 25 | 3.3V | 83 |
 | ESP32-C3 (Sensor Hub) | 120 | 3.3V | 396 |
 | RP2040 x3 | 75 | 3.3V | 248 |
 | GPS (ZED-F9P) | 65 | 3.3V | 215 |
 | IMU + Mag + Baro + 12x ToF | 180 | 3.3V | 594 |
 | **BMP280** | **3.6** | **3.3V** | **12** |
 | **AHT20** | **2.0** | **3.3V** | **7** |
-| **Total (3.3V rail)** | **~1.20A** | | **~3.96W** |
+| **Total (3.3V rail)** | **~1.18A** | | **~3.88W** |
 
 > **3.3V Regulator:** Upgrade to **3A** (e.g., LM2596S-3.3 or TPS5430) with heatsink.
 
@@ -560,7 +555,7 @@ drone/
 2. **Design PCB / perfboard layout** - Power distribution, level shifting, connector pinouts
 3. **Implement ESP32-C3 sensor hub firmware** - GPS + Mag + IMU + AHT20 + BMP280 fusion (priority for navigation)
 4. **Implement RP2040 ToF firmware** - 4x VL53L5CX per RP2040, I2C mux, UART streaming
-5. **Implement ESP32-S3 vision pipeline** - Thermal overlay + IR night vision + TFLite obstacle detection + H.264 + KLV + TS
+5. **Implement ESP32-S3 vision pipeline** — Day camera + H.264 + KLV + TS
 6. **Integrate comms** - ESP-NOW S3<->C3, UART C3<->RP2040s, UART C3->ESP8266
 7. **Field test & calibrate** - Compass hard/soft iron, GPS RTK, thermal thresholds, ToF zones
 
@@ -574,7 +569,6 @@ drone/
 | ESP32-S3 (camera + PSRAM) | 350 | 3.3V | 1155 |
 | ESP32-C3 (active, BLE) | 120 | 3.3V | 396 |
 | RP2040 x3 (active) | 3x25 | 3.3V | 248 |
-| MLX90640 | 25 | 3.3V | 83 |
 | OV5640 | 150 | 3.3V | 495 |
 | u-blox ZED-F9P | 65 | 3.3V | 215 |
 | QMC5883L | 5 | 3.3V | 17 |
@@ -582,7 +576,7 @@ drone/
 | **BMP280** | **3.6** | **3.3V** | **12** |
 | **AHT20** | **2.0** | **3.3V** | **7** |
 | VL53L5CX x12 | 12x20 | 3.3V | 792 |
-| **Total (3.3V rail)** | **~1.24A** | | **~4.08W** |
+| **Total (3.3V rail)** | **~1.21A** | | **~3.99W** |
 
 > **Note:** Use separate 5V BEC (3A+) and 3.3V LDO (2A+) from main LiPo. Existing truck ESC runs directly from LiPo.
 

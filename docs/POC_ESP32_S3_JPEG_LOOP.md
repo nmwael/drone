@@ -301,11 +301,10 @@ I (3399) POC: Frame 2 | TX: ESP-NOW OK | UART: 187 bytes
 ## Next Steps After POC Works
 
 1. **Add real OV5640 camera** — replace JPEG loader with CSI capture
-2. **Add real MLX90640** — thermal overlay blend
-3. **Connect real GPS/IMU/Mag/Baro/AHT20** — replace simulators
-4. **Connect ESP32-C3** — full sensor fusion EKF
-5. **Add RP2040 ToF arrays** — obstacle avoidance
-6. **Field test** — calibrate compass, GPS RTK, thermal thresholds
+2. **Connect real GPS/IMU/Mag/Baro/AHT20** — replace simulators
+3. **Connect ESP32-C3** — full sensor fusion EKF
+4. **Add RP2040 ToF arrays** — obstacle avoidance (if needed)
+5. **Field test** — calibrate compass, GPS RTK
 
 ---
 
