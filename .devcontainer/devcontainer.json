@@ -7,7 +7,7 @@
     },
     "ghcr.io/devcontainers-extra/features/npm-package:1.0.4": {
       "package": "@opencode/cli",
-      "version": "1.19.5"
+      "version": "2.2.7"
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
