@@ -1,5 +1,8 @@
 #!/bin/bash
-set -euo pipefail
+# Fetch model weights for local mode
+
+# Don't exit on error - handle gracefully
+set +e
 
 echo "=== Fetching model weights ==="
 
@@ -31,7 +34,7 @@ download_model() {
     echo "Downloading $filename..."
     if curl -fL --retry 3 --retry-delay 5 -o "$temp_file" "$url"; then
         # Verify it's a valid GGUF file
-        if file "$temp_file" | grep -q "GGUF"; then
+        if file "$temp_file" 2>/dev/null | grep -q "GGUF"; then
             mv "$temp_file" "$filepath"
             echo "✓ Downloaded and verified $filename"
         else
@@ -48,8 +51,10 @@ download_model() {
 
 # Download all models
 for filename in "${!MODELS[@]}"; do
-    download_model "$filename" "${MODELS[$filename]}" || true
+    download_model "$filename" "${MODELS[$filename]}" || echo "WARNING: Failed to download $filename, continuing..."
 done
 
 echo "=== Model fetch complete ==="
-ls -lh "$MODELS_DIR"
+ls -lh "$MODELS_DIR" 2>/dev/null || true
+
+exit 0

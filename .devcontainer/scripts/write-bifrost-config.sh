@@ -1,5 +1,7 @@
 #!/bin/bash
-set -euo pipefail
+# Generate Bifrost config with config_store enabled
+
+set +e
 
 echo "=== Generating Bifrost config ==="
 
@@ -8,12 +10,6 @@ CONFIG_FILE="$CONFIG_DIR/config.json"
 STACK_FILE="/workspace/.devcontainer/stack.json"
 
 mkdir -p "$CONFIG_DIR"
-
-# Read stack.json for model configuration
-if [ ! -f "$STACK_FILE" ]; then
-    echo "Warning: $STACK_FILE not found, using default config"
-    STACK_FILE="/dev/null"
-fi
 
 # Generate bifrost config with config_store enabled
 cat > "$CONFIG_FILE" << 'EOF'
@@ -43,3 +39,5 @@ if [ -f "/workspace/.devcontainer/stack.json" ]; then
 fi
 
 echo "Bifrost config written to $CONFIG_FILE"
+
+exit 0
