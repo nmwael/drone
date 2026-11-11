@@ -1,39 +1,37 @@
 #!/bin/bash
 # Post-create setup for drone sensor suite devcontainer
 
-# Don't exit on error - handle gracefully
 set +e
 
 echo "=== Post-create setup for drone sensor suite ==="
 
-# Create required directories with proper permissions
-# Use sudo if available, otherwise try without
+# Use home directory for user-specific directories to avoid permission issues
+MODELS_DIR="/workspace/models"
+CACHE_DIR="${HOME}/.cache/llm-lab"
+CONFIG_DIR="${HOME}/.config/bifrost"
+OPENCODE_DIR="${HOME}/.opencode"
+
 create_dir() {
     local dir="$1"
     if [ ! -d "$dir" ]; then
         if mkdir -p "$dir" 2>/dev/null; then
             echo "Created directory: $dir"
-        elif sudo mkdir -p "$dir" 2>/dev/null; then
-            sudo chown -R $(whoami):$(whoami) "$dir" 2>/dev/null || true
-            echo "Created directory (with sudo): $dir"
         else
             echo "WARNING: Cannot create directory: $dir"
         fi
     fi
 }
 
-create_dir "/workspace/models"
-create_dir "/workspace/.cache/llm-lab"
-create_dir "/workspace/.config/bifrost"
-create_dir "/workspace/.opencode"
+create_dir "$MODELS_DIR"
+create_dir "$CACHE_DIR"
+create_dir "$CONFIG_DIR"
+create_dir "$OPENCODE_DIR"
 
 # Generate opencode password if not exists
-if [ ! -f /workspace/.opencode-password ]; then
+if [ ! -f "${OPENCODE_DIR}/password" ]; then
     if command -v openssl >/dev/null 2>&1; then
-        if openssl rand -base64 32 > /workspace/.opencode-password 2>/dev/null; then
+        if openssl rand -base64 32 > "${OPENCODE_DIR}/password" 2>/dev/null; then
             echo "Generated opencode password"
-        elif sudo openssl rand -base64 32 | sudo tee /workspace/.opencode-password >/dev/null 2>&1 && sudo chown $(whoami):$(whoami) /workspace/.opencode-password 2>/dev/null; then
-            echo "Generated opencode password (with sudo)"
         else
             echo "WARNING: Could not generate opencode password"
         fi
@@ -57,10 +55,8 @@ fi
 
 # Generate opencode config from template
 if [ -f /workspace/.devcontainer/opencode.json ]; then
-    if cp /workspace/.devcontainer/opencode.json /workspace/.opencode/opencode.json 2>/dev/null; then
+    if cp /workspace/.devcontainer/opencode.json "${HOME}/.opencode/opencode.json" 2>/dev/null; then
         echo "Copied opencode config"
-    elif sudo cp /workspace/.devcontainer/opencode.json /workspace/.opencode/opencode.json 2>/dev/null && sudo chown $(whoami):$(whoami) /workspace/.opencode/opencode.json 2>/dev/null; then
-        echo "Copied opencode config (with sudo)"
     else
         echo "WARNING: Failed to copy opencode config"
     fi
@@ -74,7 +70,7 @@ if [ "${CLOUD_MODE:-true}" = "false" ]; then
 fi
 
 # Set permissions on scripts
-chmod +x /workspace/.devcontainer/scripts/*.sh 2>/dev/null || sudo chmod +x /workspace/.devcontainer/scripts/*.sh 2>/dev/null || true
+chmod +x /workspace/.devcontainer/scripts/*.sh 2>/dev/null || true
 
 echo "=== Post-create complete ==="
 echo "Run: bash scripts/use-profile.sh cloud (or local)"

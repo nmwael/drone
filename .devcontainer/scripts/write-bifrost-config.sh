@@ -5,13 +5,12 @@ set +e
 
 echo "=== Generating Bifrost config ==="
 
-CONFIG_DIR="/workspace/.config/bifrost"
+CONFIG_DIR="${HOME}/.config/bifrost"
 CONFIG_FILE="$CONFIG_DIR/config.json"
 STACK_FILE="/workspace/.devcontainer/stack.json"
 
 mkdir -p "$CONFIG_DIR"
 
-# Generate bifrost config with config_store enabled
 cat > "$CONFIG_FILE" << 'EOF'
 {
   "port": 8082,
@@ -31,11 +30,8 @@ cat > "$CONFIG_FILE" << 'EOF'
 }
 EOF
 
-# If stack.json exists, populate providers from it
 if [ -f "/workspace/.devcontainer/stack.json" ]; then
     echo "Populating providers from stack.json..."
-    # This would be populated by jq from stack.json
-    # For now, leaving empty - will be populated at runtime
 fi
 
 echo "Bifrost config written to $CONFIG_FILE"

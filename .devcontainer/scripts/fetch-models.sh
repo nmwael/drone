@@ -1,18 +1,16 @@
 #!/bin/bash
 # Fetch model weights for local mode
 
-# Don't exit on error - handle gracefully
 set +e
 
 echo "=== Fetching model weights ==="
 
 MODELS_DIR="/workspace/models"
-CACHE_DIR="/workspace/.cache/llm-lab"
+CACHE_DIR="${HOME}/.cache/llm-lab"
 
 mkdir -p "$MODELS_DIR"
 mkdir -p "$CACHE_DIR"
 
-# Model definitions (URL -> filename)
 declare -A MODELS=(
     ["qwen2.5-coder-3b-q4_k_m.gguf"]="https://huggingface.co/Qwen/Qwen2.5-Coder-3B-GGUF/resolve/main/qwen2.5-coder-3b-q4_k_m.gguf"
     ["qwen2.5-coder-7b-q4_k_m.gguf"]="https://huggingface.co/Qwen/Qwen2.5-Coder-7B-GGUF/resolve/main/qwen2.5-coder-7b-q4_k_m.gguf"
@@ -33,7 +31,6 @@ download_model() {
 
     echo "Downloading $filename..."
     if curl -fL --retry 3 --retry-delay 5 -o "$temp_file" "$url"; then
-        # Verify it's a valid GGUF file
         if file "$temp_file" 2>/dev/null | grep -q "GGUF"; then
             mv "$temp_file" "$filepath"
             echo "✓ Downloaded and verified $filename"
@@ -49,7 +46,6 @@ download_model() {
     fi
 }
 
-# Download all models
 for filename in "${!MODELS[@]}"; do
     download_model "$filename" "${MODELS[$filename]}" || echo "WARNING: Failed to download $filename, continuing..."
 done
