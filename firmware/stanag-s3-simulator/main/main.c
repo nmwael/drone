@@ -10,11 +10,12 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
-#include "esp_spiram.h"
+#include "esp_psram.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
+#include "esp_now.h"
 
 #include "jpeg_loader.h"
 #include "sensor_sim.h"
@@ -34,8 +35,7 @@ void app_main(void)
     ESP_LOGI(TAG, "========================================");
     ESP_LOGI(TAG, "STANAG S3 Simulator Starting");
     ESP_LOGI(TAG, "========================================");
-    ESP_LOGI(TAG, "Free heap: %zu bytes", esp_get_free_heap_size());
-    ESP_LOGI(TAG, "PSRAM size: %zu bytes", esp_spiram_get_size());
+    ESP_LOGI(TAG, "Free heap: %lu bytes", (unsigned long)esp_get_free_heap_size());
 
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -141,10 +141,10 @@ void app_main(void)
         frame_count++;
         if (frame_count % 30 == 0) {
             ESP_LOGI(TAG, "Frame %lu | GPS: %.6f, %.6f | Alt: %.1fm | Hdg: %.1f° | Temp: %.1f°C",
-                     frame_count,
-                     sensors.gps.lat, sensors.gps.lon,
-                     sensors.gps.alt, sensors.mag.heading,
-                     sensors.aht20.temp);
+                      frame_count,
+                      sensors.gps.lat, sensors.gps.lon,
+                      sensors.gps.alt, sensors.mag.heading,
+                      sensors.aht20.temp);
         }
 
         // Frame budget check

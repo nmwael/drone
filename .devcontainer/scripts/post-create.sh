@@ -72,6 +72,37 @@ fi
 # Set permissions on scripts
 chmod +x /workspace/.devcontainer/scripts/*.sh 2>/dev/null || true
 
+# Install ESP-IDF via EIM (ESP-IDF Installation Manager) if not already installed
+if ! command -v eim >/dev/null 2>&1; then
+  echo "=== Installing EIM (ESP-IDF Installation Manager) ==="
+  sudo install -m 0755 -d /etc/apt/keyrings
+  sudo curl -fsSL https://dl.espressif.com/dl/eim/eim.gpg -o /etc/apt/keyrings/eim.gpg
+  sudo chmod 0644 /etc/apt/keyrings/eim.gpg
+  sudo curl -fsSL https://dl.espressif.com/dl/eim/eim.sources -o /etc/apt/sources.list.d/espressif.sources
+  sudo apt update
+  sudo apt install -y eim-cli
+fi
+
+# Install ESP-IDF v5.5.6 via EIM
+if ! eim list 2>/dev/null | grep -q "v5.5.6"; then
+  echo "=== Installing ESP-IDF v5.5.6 via EIM ==="
+  eim install -i v5.5.6 -t esp32s3 --cleanup true
+fi
+
+# Add EIM shell integration to bashrc
+if ! grep -q "eim" "${HOME}/.bashrc" 2>/dev/null; then
+  echo "" >> "${HOME}/.bashrc"
+  echo "# ESP-IDF Installation Manager" >> "${HOME}/.bashrc"
+  echo "export EIM_IDF_VERSION=v5.5.6" >> "${HOME}/.bashrc"
+  echo "eval \"\$(eim completion bash)\" 2>/dev/null || true" >> "${HOME}/.bashrc"
+fi
+
+# Set up environment for current session
+export EIM_IDF_VERSION=v5.5.6
+if command -v eim >/dev/null 2>&1; then
+  eim shell v5.5.6 2>/dev/null || true
+fi
+
 echo "=== Post-create complete ==="
 echo "Run: bash scripts/use-profile.sh cloud (or local)"
 
