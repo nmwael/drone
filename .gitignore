@@ -80,6 +80,10 @@ temp/
 *.tmp
 *.temp
 
+# Dev container local model weights
+models/*.gguf
+models/*.tmp
+
 # OS
 Thumbs.db
 ehthumbs.db

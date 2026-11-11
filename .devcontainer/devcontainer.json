@@ -68,8 +68,10 @@
   "postAttachCommand": "echo 'Container ready. Run: bash scripts/use-profile.sh cloud'",
   "mounts": [
     "source=${localWorkspaceFolder}/models,target=/workspace/models,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/.cache,target=/workspace/.cache,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/.config,target=/workspace/.config,type=bind,consistency=cached"
+    "source=/dev,target=/dev,type=bind"
+  ],
+  "runArgs": [
+    "--privileged"
   ],
   "remoteEnv": {
     "CLOUD_MODE": "${localEnv:CLOUD_MODE:-true}",
@@ -77,9 +79,9 @@
     "NVIDIA_NIM_ENDPOINT": "https://integrate.api.nvidia.com/v1",
     "OPENCODE_CONFIG": "/workspace/.devcontainer/opencode.json",
     "LLM_LAB_MODELS_DIR": "/workspace/models",
-    "LLM_LAB_CACHE_DIR": "/workspace/.cache/llm-lab",
-    "BIFROST_CONFIG": "/workspace/.config/bifrost/config.json",
-    "BIFROST_CONFIG_STORE_PATH": "/workspace/.config/bifrost/config.db"
+    "LLM_LAB_CACHE_DIR": "/home/vscode/.cache/llm-lab",
+    "BIFROST_CONFIG": "/home/vscode/.config/bifrost/config.json",
+    "BIFROST_CONFIG_STORE_PATH": "/home/vscode/.config/bifrost/config.db"
   },
   
   "containerEnv": {

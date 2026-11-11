@@ -534,6 +534,19 @@ drone/
 
 ---
 
+## Development Container
+
+The repo ships a dev container with ESP-IDF, Pico SDK, CMake/Ninja, and the
+cloud/local LLM tooling. It boots even when no board is plugged in.
+
+USB serial passthrough is **opt-in at the device level**: the container mounts
+the host `/dev` and runs privileged, so `/dev/ttyUSB0` and `/dev/ttyACM0`
+appear automatically once a board is attached. See
+[`docs/DEV_CONTAINER.md`](docs/DEV_CONTAINER.md) for the Podman/WSL2
+`usbipd-win` recipe and the reason hard `--device` entries must be avoided.
+
+---
+
 ## Next Steps
 
 1. **Finalize sensor selection** - Order thermal camera (MLX90640), GPS (u-blox), Mag (QMC5883L), ToF (12x VL53L5CX)
