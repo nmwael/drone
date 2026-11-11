@@ -536,7 +536,7 @@ drone/
 
 ## Development Container
 
-The repo ships a dev container with ESP-IDF, Pico SDK, CMake/Ninja, and the
+The repo ships a dev container with the CMake/Ninja toolchain and the
 cloud/local LLM tooling. It boots even when no board is plugged in.
 
 USB serial passthrough is **opt-in at the device level**: the container mounts
