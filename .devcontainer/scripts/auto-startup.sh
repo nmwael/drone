@@ -2,7 +2,7 @@
 # Auto-startup script for drone sensor suite devcontainer
 # Handles both cloud mode (NVIDIA NIM) and local mode (llama-server + bifrost)
 
-# Don't exit on error - handle errors gracefully
+# Don't exit on error - handle gracefully
 set +e
 
 echo "=== Auto-startup: Drone Sensor Suite ==="
@@ -49,6 +49,17 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Function to safely write to log file
+safe_log() {
+    local logfile="$1"
+    local message="$2"
+    if [ -w "$(dirname "$logfile")" ] || [ ! -e "$logfile" ] && [ -w "$(dirname "$logfile")" ]; then
+        echo "$message" >> "$logfile" 2>/dev/null || echo "$message"
+    else
+        echo "$message"
+    fi
+}
+
 # Cloud mode: start opencode only
 if [ "${CLOUD_MODE:-true}" = "true" ]; then
     echo "=== CLOUD MODE: Starting opencode only ==="
@@ -64,6 +75,8 @@ if [ "${CLOUD_MODE:-true}" = "true" ]; then
     if ! port_in_use 4096; then
         cd /workspace
         echo "Starting opencode on port 4096..."
+        # Ensure log directory exists
+        mkdir -p /workspace/.cache 2>/dev/null || true
         nohup opencode serve --port 4096 --config /workspace/.opencode/opencode.json > /workspace/.cache/opencode.log 2>&1 &
         OPCODE_PID=$!
         echo "Started opencode (PID: $OPCODE_PID)"
@@ -82,7 +95,7 @@ echo "=== LOCAL MODE: Starting full stack ==="
 # Check if llama-server is available
 if ! command_exists llama-server; then
     echo "WARNING: llama-server not found, skipping local mode services"
-    echo "Install llama-server to enable local mode"
+    echo "Install llama-server to enable local mode services"
     exit 0
 fi
 
@@ -90,6 +103,7 @@ fi
 if ! port_in_use 8089; then
     echo "Starting llama-server orchestrator on port 8089..."
     if [ -f /workspace/models/gemma-4-12b-ud-iq3_m.gguf ]; then
+        mkdir -p /workspace/.cache 2>/dev/null || true
         nohup llama-server \
             --model /workspace/models/gemma-4-12b-ud-iq3_m.gguf \
             --port 8089 \
@@ -116,6 +130,7 @@ fi
 if ! port_in_use 8090; then
     echo "Starting llama-server coder on port 8090..."
     if [ -f /workspace/models/qwen2.5-coder-7b-q4_k_m.gguf ]; then
+        mkdir -p /workspace/.cache 2>/dev/null || true
         nohup llama-server \
             --model /workspace/models/qwen2.5-coder-7b-q4_k_m.gguf \
             --port 8090 \
@@ -146,6 +161,7 @@ wait_for_service "http://localhost:8090/health" "llama-server coder" || true
 if ! port_in_use 8082; then
     echo "Starting bifrost gateway on port 8082..."
     if command_exists bifrost && [ -f /workspace/.config/bifrost/config.json ]; then
+        mkdir -p /workspace/.cache 2>/dev/null || true
         cd /workspace
         nohup bifrost \
             --config /workspace/.config/bifrost/config.json \
@@ -174,6 +190,7 @@ else
     if ! port_in_use 4096; then
         echo "Starting opencode server on port 4096..."
         cd /workspace
+        mkdir -p /workspace/.cache 2>/dev/null || true
         nohup opencode serve \
             --port 4096 \
             --config /workspace/.opencode/opencode.json \
