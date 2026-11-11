@@ -5,6 +5,10 @@
     "ghcr.io/devcontainers-extra/features/apt-get-packages:1.0.8": {
       "packages": "curl,git,jq,build-essential,cmake,ninja-build,ffmpeg,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping,unzip,wget,ca-certificates"
     },
+    "ghcr.io/devcontainers-extra/features/npm-package:1.0.4": {
+      "package": "@opencode/cli",
+      "version": "2.1.2"
+    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
       "installTools": true
