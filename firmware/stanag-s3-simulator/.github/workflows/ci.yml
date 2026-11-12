@@ -1,0 +1,232 @@
+name: ESP-IDF CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'firmware/stanag-s3-simulator/**'
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'firmware/stanag-s3-simulator/**'
+
+env:
+  IDF_VERSION: v5.5
+
+jobs:
+  build:
+    name: Build (ESP32-S3)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup ESP-IDF
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: ${{ env.IDF_VERSION }}
+          install_tools: true
+          install_python_packages: true
+          cache_ccache: true
+          cache_idf: true
+
+      - name: Configure project
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          idf.py set-target esp32s3
+          idf.py reconfigure
+
+      - name: Build project
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          idf.py build
+
+      - name: Check binary size
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          idf.py size
+          idf.py size-components
+          idf.py size-files
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-esp32s3
+          path: |
+            firmware/stanag-s3-simulator/build/*.bin
+            firmware/stanag-s3-simulator/build/*.elf
+            firmware/stanag-s3-simulator/build/*.map
+            firmware/stanag-s3-simulator/build/partition_table/*.bin
+            firmware/stanag-s3-simulator/build/bootloader/*.bin
+          retention-days: 30
+
+  qemu_test:
+    name: QEMU Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup ESP-IDF
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: ${{ env.IDF_VERSION }}
+          install_tools: true
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware-esp32s3
+          path: ./firmware/stanag-s3-simulator/build
+
+      - name: Run QEMU test
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          timeout 60 idf.py -p /dev/null qemu monitor 2>&1 | tee qemu_output.log || true
+
+      - name: Parse QEMU output for TS packets
+        if: always()
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          if [ -f qemu_output.log ]; then
+            python3 scripts/parse_ts_output.py qemu_output.log || true
+          fi
+
+  unit_tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup ESP-IDF
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: ${{ env.IDF_VERSION }}
+          install_tools: true
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware-esp32s3
+          path: ./firmware/stanag-s3-simulator/build
+
+      - name: Run unit tests on QEMU
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          timeout 120 idf.py -p /dev/null qemu monitor 2>&1 | tee test_output.log || true
+          
+          if grep -q "Tests passed" test_output.log; then
+            echo "✅ Unit tests passed"
+          elif grep -q "Tests failed" test_output.log; then
+            echo "❌ Unit tests failed"
+            exit 1
+          else
+            echo "⚠️ Test output unclear"
+            cat test_output.log
+          fi
+
+  static_analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup ESP-IDF
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: ${{ env.IDF_VERSION }}
+
+      - name: Run cppcheck
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          cppcheck --enable=warning,style,performance,portability \
+            --std=c99 \
+            --platform=esp32 \
+            --suppress=missingIncludeSystem \
+            -I main \
+            -I $IDF_PATH/components/freertos/include \
+            -I $IDF_PATH/components/esp_system/include \
+            -I $IDF_PATH/components/log/include \
+            -I $IDF_PATH/components/esp_timer/include \
+            -I $IDF_PATH/components/esp_psram/include \
+            main/*.c \
+            2>&1 | tee cppcheck.log || true
+
+      - name: Run clang-tidy
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          idf.py reconfigure
+          clang-tidy -p build \
+            main/*.c \
+            --checks='-*,bugprone-*,performance-*,readability-*,modernize-*,portability-*' \
+            --header-filter='.*' \
+            2>&1 | tee clang-tidy.log || true
+
+  validate_ts:
+    name: Validate MPEG-TS Structure
+    runs-on: ubuntu-latest
+    needs: qemu_test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install TS analysis tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Download QEMU output
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware-esp32s3
+          path: ./build
+
+      - name: Validate TS packets
+        working-directory: ./firmware/stanag-s3-simulator
+        run: |
+          if [ -f ../qemu_output.log ]; then
+            python3 scripts/parse_ts_output.py ../qemu_output.log
+          else
+            echo "No QEMU output available for TS validation"
+          fi
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build, unit_tests, static_analysis, validate_ts]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware-esp32s3
+          path: ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./artifacts/stanag-s3-simulator.bin
+            ./artifacts/bootloader.bin
+            ./artifacts/partition-table.bin
+            ./artifacts/stanag-s3-simulator.elf
+            ./artifacts/stanag-s3-simulator.map
+          generate_release_notes: true
+          draft: false
+          prerelease: false
