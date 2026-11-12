@@ -14,39 +14,34 @@ on:
 
 env:
   IDF_VERSION: v5.5.6
+  IDF_DOCKER_IMAGE: espressif/idf:${{ env.IDF_VERSION }}
 
 jobs:
   build:
     name: Build (ESP32-S3)
     runs-on: ubuntu-latest
+    container:
+      image: ${{ env.IDF_DOCKER_IMAGE }}
+      options: --user root
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Setup ESP-IDF
-        uses: espressif/esp-idf-ci-action@v1.2.0
-        with:
-          esp_idf_version: ${{ env.IDF_VERSION }}
-          install_tools: true
-          install_python_packages: true
-          cache_ccache: true
-          cache_idf: true
-
       - name: Configure project
-        working-directory: ./firmware/stanag-s3-simulator
+        working-directory: /github/workspace/firmware/stanag-s3-simulator
         run: |
           idf.py set-target esp32s3
           idf.py reconfigure
 
       - name: Build project
-        working-directory: ./firmware/stanag-s3-simulator
+        working-directory: /github/workspace/firmware/stanag-s3-simulator
         run: |
           idf.py build
 
       - name: Check binary size
-        working-directory: ./firmware/stanag-s3-simulator
+        working-directory: /github/workspace/firmware/stanag-s3-simulator
         run: |
           idf.py size
           idf.py size-components
@@ -67,20 +62,18 @@ jobs:
   static_analysis:
     name: Static Analysis
     runs-on: ubuntu-latest
+    container:
+      image: ${{ env.IDF_DOCKER_IMAGE }}
+      options: --user root
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup ESP-IDF
-        uses: espressif/esp-idf-ci-action@v1.2.0
-        with:
-          esp_idf_version: ${{ env.IDF_VERSION }}
-
       - name: Install cppcheck
-        run: sudo apt-get update && sudo apt-get install -y cppcheck
+        run: apt-get update && apt-get install -y cppcheck
 
       - name: Run cppcheck
-        working-directory: ./firmware/stanag-s3-simulator
+        working-directory: /github/workspace/firmware/stanag-s3-simulator
         run: |
           cppcheck --enable=warning,style,performance,portability \
             --std=c99 \
