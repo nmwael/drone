@@ -48,7 +48,7 @@ static struct {
 static bool s_espnow_peer_added = false;
 
 /* Forward declaration for ESP-NOW send callback */
-static void network_tx_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status);
+static void network_tx_espnow_send_cb(const wifi_tx_info_t *tx_info, esp_now_send_status_t status);
 
 esp_err_t network_tx_init(void)
 {
@@ -130,10 +130,10 @@ esp_err_t network_tx_espnow_init(void)
 }
 
 /* ESP-NOW send callback */
-static void network_tx_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+static void network_tx_espnow_send_cb(const wifi_tx_info_t *tx_info, esp_now_send_status_t status)
 {
     if (status != ESP_NOW_SEND_SUCCESS) {
-        ESP_LOGW(TAG, "ESP-NOW send failed to " MACSTR, MAC2STR(mac_addr));
+        ESP_LOGW(TAG, "ESP-NOW send failed to " MACSTR, MAC2STR(tx_info->des_addr));
     }
 }
 
