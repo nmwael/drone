@@ -26,8 +26,4 @@ esp_err_t klv_builder_init(void);
 klv_packet_t* klv_builder_build(sensor_data_t *sensors, uint32_t frame_num);
 void klv_packet_free(klv_packet_t *packet);
 
-/* Internal: encode a single KLV element */
-static inline uint8_t* klv_encode_key_length(uint8_t *buf, uint16_t key, uint16_t length);
-static inline uint16_t klv_decode_key(const uint8_t *buf);
-
 #endif // KLV_BUILDER_H

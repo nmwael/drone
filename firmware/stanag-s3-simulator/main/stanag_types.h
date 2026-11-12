@@ -148,6 +148,7 @@ klv_packet_t* klv_builder_build(sensor_data_t *sensors, uint32_t frame_num);
 /* TS Muxer */
 esp_err_t ts_muxer_init(void);
 ts_packet_t* ts_muxer_mux(h264_nalu_t *nalu, klv_packet_t *klv);
+void ts_packet_free(ts_packet_t *ts);
 
 /* Network TX */
 esp_err_t network_tx_init(void);

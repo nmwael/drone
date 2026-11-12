@@ -33,6 +33,8 @@ void sensor_sim_get_data(sensor_data_t *out)
     out->gps.p_dop = 100;
     out->gps.fix_type = 4;
     out->gps.num_sv = 12;
+    out->gps.tow_ms = 123456789;  // Time of week (ms)
+    out->gps.week = 2300;         // GPS week number
     
     out->imu.accel_x = 0.0f;
     out->imu.accel_y = 0.0f;
