@@ -134,7 +134,7 @@ esp_err_t jpeg_loader_init(void);
 
 /* Sensor Simulators */
 esp_err_t sensor_sim_init(void);
-void sensor_sim_get_data(sensor_data_t *out);
+void sensor_sim_get_data(sensor_data_t *out, uint32_t frame_num);
 void sensor_sim_update(void);
 
 /* H.264 Encoder */

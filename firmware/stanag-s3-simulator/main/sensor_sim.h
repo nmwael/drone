@@ -18,7 +18,7 @@ void jpeg_loader_free_yuv(yuv420_frame_t *yuv);
 
 /* Sensor Simulators */
 esp_err_t sensor_sim_init(void);
-void sensor_sim_get_data(sensor_data_t *out);
+void sensor_sim_get_data(sensor_data_t *out, uint32_t frame_num);
 void sensor_sim_update(void);
 
 #endif // SENSOR_SIM_H

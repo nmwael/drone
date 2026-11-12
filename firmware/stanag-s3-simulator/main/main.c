@@ -169,7 +169,7 @@ void app_main(void)
 
         // 4. Get simulated sensor data
         sensor_data_t sensors;
-        sensor_sim_get_data(&sensors);
+        sensor_sim_get_data(&sensors, frame_count);
 
         // 5. Build KLV packet from sensor data
         klv_packet_t *klv = klv_builder_build(&sensors, frame_count);
