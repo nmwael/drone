@@ -4,23 +4,26 @@ ESP32-S3 firmware that loops 5 JPEG frames, simulates GPS/IMU/Mag/Baro/AHT20 sen
 
 ## Features
 
-- **5 JPEG frames** loaded from SPIFFS → HW JPEG decode → YUV420
-- **H.264 hardware encoder** (High Profile L4.1, 1280×720 @ 30fps, 4 Mbps CBR)
+- **5 JPEG frames** loaded from SPIFFS → SW JPEG decode (stub) → YUV420
+- **H.264 encoder** (High Profile L4.1, 1280×720 @ 30fps) — SW fallback with valid SPS/PPS/IDR NAL units
 - **Simulated sensors**: GPS (RTK), IMU (9-DoF), Magnetometer, Barometer, AHT20
-- **MISB ST 0601 KLV** metadata per frame (UAS Local Set)
-- **MPEG-TS muxer** (PID 0x100 video, PID 0x101 KLV)
+- **MISB ST 0601 KLV** metadata per frame (UAS Local Set + custom tags)
+- **MPEG-TS muxer** with PAT/PMT/PES (PID 0x0000 PAT, 0x1000 PMT, 0x0100 video, 0x0101 KLV)
 - **ESP-NOW / UDP** streaming to ground station
-- **UART telemetry** to ESP32-C3 (JSON format)
+- **UART telemetry** to ESP32-C3 (JSON format, 115200 baud)
+- **PSRAM support** enabled for large frame buffers
+- **Unit tests** for all major modules (Unity framework)
 
 ## Hardware
 
 - ESP32-S3 DevKit (PSRAM required, 8MB+)
 - USB cable (power + serial monitor)
+- Optional: ESP32-C3 for UART telemetry reception
 
 ## Quick Start
 
 ```bash
-# Install ESP-IDF v5.2+
+# Install ESP-IDF v5.5+
 . $HOME/esp/esp-idf/export.sh
 
 # Build
@@ -37,36 +40,41 @@ idf.py flash monitor
 stanag-s3-simulator/
 ├── main/
 │   ├── main.c                 # Entry point, main loop
-│   ├── jpeg_loader.c/.h       # SPIFFS JPEG load + HW decode
+│   ├── jpeg_loader.c/.h       # SPIFFS JPEG load + SW decode (stub)
 │   ├── sensor_sim.c/.h        # GPS/IMU/Mag/Baro/AHT20 simulators
-│   ├── h264_encoder.c/.h      # HW H.264 encode
+│   ├── h264_encoder.c/.h      # H.264 encode (SW fallback with valid NAL)
 │   ├── klv_builder.c/.h       # MISB ST 0601 KLV
-│   ├── ts_muxer.c/.h          # MPEG-TS muxer
+│   ├── ts_muxer.c/.h          # MPEG-TS muxer (PAT/PMT/PES)
 │   ├── network_tx.c/.h        # ESP-NOW/UDP TX
 │   ├── uart_telemetry.c/.h    # UART JSON to C3
 │   └── CMakeLists.txt
+├── test/
+│   ├── test_runner.c          # Unity test runner
+│   ├── *_test.c               # Unit tests for each module
+│   └── CMakeLists.txt
 ├── data/
-│   ├── frame_0.jpg .. frame_4.jpg
+│   ├── frame_1.jpg .. frame_5.jpg
 │   └── CMakeLists.txt         # SPIFFS image generation
-├── components/
-├── sdkconfig.defaults
-├── partitions.csv
-└── CMakeLists.txt
+├── scripts/
+│   ├── klv_extractor.sh       # KLV extraction hook for MediaMTX
+│   └── parse_ts_output.py     # TS/KLV parser for serial logs
+├── .github/workflows/
+│   └── ci.yml                 # GitHub Actions CI/CD
+├── sdkconfig                  # ESP-IDF config (PSRAM enabled)
+├── partitions.csv             # Partition table (SPIFFS ~960KB)
+├── CMakeLists.txt
+├── MEDIAMTX.md                # Ground station documentation
+└── README.md
 ```
 
 ## Data Preparation
 
-Place 10 JPEG frames (1280×720, ~85% quality, all day scenes) in `data/`:
-- `frame_0.jpg` — Day scene 0 (straight road)
-- `frame_1.jpg` — Day scene 1 (gentle left curve)
-- `frame_2.jpg` — Day scene 2 (gentle right curve)
-- `frame_3.jpg` — Day scene 3 (straight with distant trees)
-- `frame_4.jpg` — Day scene 4 (intersection approach)
-- `frame_5.jpg` — Day scene 5 (open road, horizon)
-- `frame_6.jpg` — Day scene 6 (bridge approach)
-- `frame_7.jpg` — Day scene 7 (urban street)
-- `frame_8.jpg` — Day scene 8 (roundabout approach)
-- `frame_9.jpg` — Day scene 9 (highway merge)
+Place 5 JPEG frames (1280×720, ~85% quality, all day scenes) in `data/`:
+- `frame_1.jpg` — Day scene 0 (straight road)
+- `frame_2.jpg` — Day scene 1 (gentle left curve)
+- `frame_3.jpg` — Day scene 2 (gentle right curve)
+- `frame_4.jpg` — Day scene 3 (straight with distant trees)
+- `frame_5.jpg` — Day scene 4 (intersection approach)
 
 Run `idf.py build` — SPIFFS image auto-generated from `data/`.
 
@@ -80,16 +88,33 @@ Run `idf.py build` — SPIFFS image auto-generated from `data/`.
 | Baro | Pressure, altitude, temp | 10 Hz |
 | AHT20 | Temp, humidity | 1 Hz |
 
-All simulators produce realistic noise/drift patterns.
+All simulators produce realistic noise/drift patterns (circular flight path around Systematic Aarhus, 500m radius).
 
 ## KLV Metadata (MISB ST 0601)
 
-Per-frame tags: 0x01-0x0F (UAS Local Set) + 0x4B-0x4E (Temp/RH/Pressure/Alt)
+Per-frame tags:
+- `0x0001` — Position (Lat/Lon/Height, deg7/mm)
+- `0x0002` — Velocity NED (mm/s)
+- `0x0003` — Platform Heading (deg5)
+- `0x0102` — Barometric Altitude (mm)
+- `0x0103` — Platform Temperature (int16 × 0.1°C)
+- `0x0104` — Magnetic Heading (deg5)
+- `0xFFFF` — Timestamp (μs)
+
+## MPEG-TS Structure
+
+| PID | Stream Type | Description |
+|-----|-------------|-------------|
+| 0x0000 | PAT | Program Association Table |
+| 0x1000 | PMT | Program Map Table |
+| 0x0100 | 0x1B (H.264) | Video PES with PCR |
+| 0x0101 | 0x06 (Private) | KLV PES |
+| 0x1FFF | — | Null packets (padding) |
 
 ## Output Streams
 
 1. **ESP-NOW / UDP** → MPEG-TS (Ground Station MediaMTX:8888)
-2. **UART @ 115200** → JSON telemetry (to ESP32-C3)
+2. **UART @ 115200** → JSON telemetry (to ESP32-C3, pins TX=17, RX=18)
 
 ## Ground Station
 
@@ -116,6 +141,68 @@ Open `http://<ground-ip>:8889` in browser or Meta Quest 2 browser.
 - `mediamtx.yml` — Ready-to-use MediaMTX config
 - `scripts/klv_extractor.sh` — KLV extraction hook
 - `MEDIAMTX.md` — Full documentation
+
+## Testing
+
+### Unit Tests (Unity)
+
+```bash
+# Build test app
+idf.py -DTEST_COMPONENT=1 build
+
+# Run on QEMU
+idf.py -p /dev/null qemu monitor
+```
+
+Test coverage:
+- KLV Builder (encoding, keys, values)
+- TS Muxer (PAT/PMT/PES, PIDs, continuity counters)
+- H.264 Encoder (SPS/PPS/IDR, start codes, timestamps)
+- JPEG Loader (SPIFFS, frame cycling, YUV layout)
+- Sensor Simulator (circular path, sensor ranges, correlations)
+- Network TX (UDP/ESP-NOW config, send)
+- UART Telemetry (JSON format, init/deinit)
+
+### TS/KLV Analysis
+
+```bash
+# Capture serial output to file
+idf.py monitor > serial.log
+
+# Parse TS packets and KLV
+python3 scripts/parse_ts_output.py serial.log
+```
+
+## CI/CD
+
+Woodpecker CI (`.woodpecker.yml`) for Codeberg includes:
+- Build verification for ESP32-S3
+- QEMU emulation testing
+- Unit test execution (Unity framework)
+- Static analysis (cppcheck)
+- MPEG-TS structure validation
+- Binary size reporting
+
+Woodpecker is the CI system used by Codeberg (Drone CI compatible syntax).
+
+## Configuration
+
+Key `sdkconfig` settings:
+- `CONFIG_SPIRAM=y` — PSRAM enabled (required for YUV buffers)
+- `CONFIG_SPIRAM_MODE_OCT=y` — Octal PSRAM mode
+- `CONFIG_SPIRAM_SPEED_80M=y` — 80 MHz PSRAM
+- `CONFIG_ESP32S3_SPIRAM_SUPPORT=y` — ESP32-S3 PSRAM support
+- Partition table: Custom (`partitions.csv`) with ~960KB SPIFFS
+
+## Hardware Testing Notes
+
+For hardware testing (not QEMU):
+
+1. Uncomment WiFi/ESP-NOW initialization in `main.c`
+2. Call `network_tx_espnow_init()` after WiFi starts
+3. Configure UDP destination: `network_tx_set_udp_dest("192.168.4.2", 8888)`
+4. Configure ESP-NOW peer MAC: `network_tx_set_espnow_peer(mac_addr)`
+5. Connect UART1 (GPIO17/18) to ESP32-C3 for telemetry
 
 ## License
 

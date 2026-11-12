@@ -117,3 +117,9 @@ void sensor_sim_update(void)
 {
     // No-op - frame-based simulation
 }
+
+esp_err_t sensor_sim_deinit(void)
+{
+    ESP_LOGI(TAG, "Sensor simulator deinitialized");
+    return ESP_OK;
+}

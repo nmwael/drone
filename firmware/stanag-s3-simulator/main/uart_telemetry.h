@@ -12,5 +12,6 @@
 
 esp_err_t uart_telemetry_init(void);
 void uart_telemetry_send(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t frame_num);
+void uart_telemetry_deinit(void);
 
 #endif // UART_TELEMETRY_H

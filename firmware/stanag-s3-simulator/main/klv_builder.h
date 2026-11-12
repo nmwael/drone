@@ -25,5 +25,6 @@
 esp_err_t klv_builder_init(void);
 klv_packet_t* klv_builder_build(sensor_data_t *sensors, uint32_t frame_num);
 void klv_packet_free(klv_packet_t *packet);
+esp_err_t klv_builder_deinit(void);
 
 #endif // KLV_BUILDER_H

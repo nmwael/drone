@@ -10,15 +10,9 @@
 
 /* Function Prototypes */
 
-/* JPEG Loader */
-esp_err_t jpeg_loader_init(void);
-jpeg_frame_t* jpeg_loader_get_next(void);
-yuv420_frame_t* jpeg_loader_decode(jpeg_frame_t *frame);
-void jpeg_loader_free_yuv(yuv420_frame_t *yuv);
-
-/* Sensor Simulators */
 esp_err_t sensor_sim_init(void);
 void sensor_sim_get_data(sensor_data_t *out, uint32_t frame_num);
 void sensor_sim_update(void);
+esp_err_t sensor_sim_deinit(void);
 
 #endif // SENSOR_SIM_H

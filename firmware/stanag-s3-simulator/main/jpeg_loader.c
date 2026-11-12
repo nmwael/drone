@@ -10,6 +10,7 @@
 #include "esp_spiffs.h"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
+#include "esp_psram.h"
 #include "stanag_types.h"
 
 static const char *TAG = "JPEG_LOAD";
@@ -25,7 +26,7 @@ yuv420_frame_t* jpeg_loader_create_dummy_yuv(void);
 static jpeg_frame_t s_frames[NUM_FRAMES];
 static int s_current_frame = 0;
 static bool s_spiffs_mounted = false;
-static bool s_frames_loaded = false;
+static bool s_frames_initialized = false;
 
 // YUV buffer for decoded frames
 static uint8_t *s_yuv_buffer = NULL;
@@ -34,6 +35,10 @@ static size_t s_yuv_buffer_size = 0;
 esp_err_t jpeg_loader_init(void)
 {
     ESP_LOGI(TAG, "Initializing JPEG loader (SPIFFS + dummy YUV for ESP32-S3)...");
+
+    // Initialize frame array
+    memset(s_frames, 0, sizeof(s_frames));
+    s_frames_initialized = true;
 
     // Mount SPIFFS
     esp_vfs_spiffs_conf_t conf = {
@@ -69,7 +74,8 @@ esp_err_t jpeg_loader_init(void)
         ESP_LOGE(TAG, "Failed to alloc YUV buffer");
         return ESP_ERR_NO_MEM;
     }
-    ESP_LOGI(TAG, "YUV buffer allocated: %d bytes", s_yuv_buffer_size);
+    ESP_LOGI(TAG, "YUV buffer allocated: %d bytes (%s)", s_yuv_buffer_size,
+             esp_psram_get_size() > 0 ? "PSRAM" : "Internal RAM");
 
     s_spiffs_mounted = true;
     ESP_LOGI(TAG, "JPEG loader initialized (using dummy YUV for ESP32-S3)");
@@ -80,6 +86,11 @@ jpeg_frame_t* jpeg_loader_get_next(void)
 {
     if (!s_spiffs_mounted) {
         ESP_LOGE(TAG, "SPIFFS not mounted");
+        return NULL;
+    }
+
+    if (!s_frames_initialized) {
+        ESP_LOGE(TAG, "Frames not initialized");
         return NULL;
     }
 
@@ -110,6 +121,7 @@ jpeg_frame_t* jpeg_loader_get_next(void)
     // Allocate frame data buffer
     if (frame->data) {
         free(frame->data);
+        frame->data = NULL;
     }
     frame->data = malloc(fsize);
     if (!frame->data) {
@@ -147,7 +159,7 @@ yuv420_frame_t* jpeg_loader_decode(jpeg_frame_t *frame)
 
     // For ESP32-S3 (no HW JPEG decode in v5.5.6), create dummy YUV
     // In production, this would use HW JPEG decoder on supported chips
-    ESP_LOGW(TAG, "ESP32-S3: No HW JPEG decode in v5.5.6, using dummy YUV (frame %d, %zu bytes JPEG)", 
+    ESP_LOGW(TAG, "ESP32-S3: No HW JPEG decode in v5.5.6, using dummy YUV (frame %d, %zu bytes JPEG)",
              frame->index + 1, frame->len);
     return jpeg_loader_create_dummy_yuv();
 }
@@ -182,4 +194,34 @@ void jpeg_loader_free_yuv(yuv420_frame_t *yuv)
 {
     // Static buffer, nothing to free
     (void)yuv;
+}
+
+esp_err_t jpeg_loader_deinit(void)
+{
+    // Free frame data buffers
+    if (s_frames_initialized) {
+        for (int i = 0; i < NUM_FRAMES; i++) {
+            if (s_frames[i].data) {
+                free(s_frames[i].data);
+                s_frames[i].data = NULL;
+            }
+        }
+        s_frames_initialized = false;
+    }
+
+    // Free YUV buffer
+    if (s_yuv_buffer) {
+        heap_caps_free(s_yuv_buffer);
+        s_yuv_buffer = NULL;
+        s_yuv_buffer_size = 0;
+    }
+
+    // Unmount SPIFFS
+    if (s_spiffs_mounted) {
+        esp_vfs_spiffs_unregister("spiffs");
+        s_spiffs_mounted = false;
+    }
+
+    ESP_LOGI(TAG, "JPEG loader deinitialized");
+    return ESP_OK;
 }

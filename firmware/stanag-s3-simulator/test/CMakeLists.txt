@@ -1,0 +1,30 @@
+idf_component_register(
+    SRCS
+        "test_runner.c"
+        "klv_builder_test.c"
+        "ts_muxer_test.c"
+        "h264_encoder_test.c"
+        "jpeg_loader_test.c"
+        "sensor_sim_test.c"
+        "sensor_sim_extended_test.c"
+        "network_tx_test.c"
+        "uart_telemetry_test.c"
+    INCLUDE_DIRS
+        "."
+        "../main"
+    REQUIRES
+        unity
+        main
+        driver
+        esp_wifi
+        esp_netif
+        esp_event
+        nvs_flash
+        esp_timer
+        freertos
+        esp_psram
+        mbedtls
+        cxx
+        log
+        spiffs
+)

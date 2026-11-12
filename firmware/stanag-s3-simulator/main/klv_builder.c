@@ -5,6 +5,7 @@
 #include "klv_builder.h"
 #include "stanag_types.h"
 #include "esp_log.h"
+#include <inttypes.h>
 
 static const char *TAG = "KLV_BUILDER";
 
@@ -106,8 +107,8 @@ klv_packet_t* klv_builder_build(sensor_data_t *sensors, uint32_t frame_num)
     ptr[3] = (uint8_t)sensors->gps.heading_deg5;
 
     /* --- Baro Altitude Key (0x0102) --- */
-    /* Cast float altitude to int32 mm */
-    int32_t alt_mm = (int32_t)sensors->baro.altitude;
+    /* Convert float altitude (meters) to int32 mm */
+    int32_t alt_mm = (int32_t)(sensors->baro.altitude * 1000.0f);
     ptr = klv_encode_key_length(ptr, ST0601_KEY_BARO_ALT, 4);
     ptr[0] = (uint8_t)(alt_mm >> 24);
     ptr[1] = (uint8_t)(alt_mm >> 16);
@@ -123,8 +124,8 @@ klv_packet_t* klv_builder_build(sensor_data_t *sensors, uint32_t frame_num)
     ptr[1] = (uint8_t)temp_x10;
 
     /* --- Magnetic Heading Key (0x0104) --- */
-    /* Cast float heading to int32 */
-    int32_t mag_heading = (int32_t)sensors->mag.heading;
+    /* Cast float heading to int32 deg5 (deg * 1e5) */
+    int32_t mag_heading = (int32_t)(sensors->mag.heading * 1e5f);
     ptr = klv_encode_key_length(ptr, ST0601_KEY_MAG_HEADING, 4);
     ptr[0] = (uint8_t)(mag_heading >> 24);
     ptr[1] = (uint8_t)(mag_heading >> 16);
@@ -138,7 +139,7 @@ klv_packet_t* klv_builder_build(sensor_data_t *sensors, uint32_t frame_num)
     ptr[2] = (uint8_t)(packet->timestamp_us >> 8);
     ptr[3] = (uint8_t)packet->timestamp_us;
 
-    ESP_LOGD(TAG, "Built KLV packet: %u bytes for frame %u", packet->len, frame_num);
+    ESP_LOGD(TAG, "Built KLV packet: %zu bytes for frame %" PRIu32, packet->len, frame_num);
     return packet;
 }
 
@@ -155,5 +156,11 @@ void klv_packet_free(klv_packet_t *packet)
 esp_err_t klv_builder_init(void)
 {
     ESP_LOGI(TAG, "KLV builder initialized (MISB ST 0601)");
+    return ESP_OK;
+}
+
+esp_err_t klv_builder_deinit(void)
+{
+    ESP_LOGI(TAG, "KLV builder deinitialized");
     return ESP_OK;
 }

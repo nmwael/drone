@@ -1,0 +1,92 @@
+# Woodpecker CI Configuration for Codeberg
+# Woodpecker is the CI system used by Codeberg (compatible with Drone CI syntax)
+
+version: "1"
+
+pipeline:
+  build:
+    image: espressif/idf:v5.5
+    commands:
+      - cd firmware/stanag-s3-simulator
+      - idf.py set-target esp32s3
+      - idf.py build
+    when:
+      event: [push, pull_request]
+
+  qemu_test:
+    image: espressif/idf:v5.5
+    commands:
+      - cd firmware/stanag-s3-simulator
+      - timeout 60 idf.py -p /dev/null qemu monitor 2>&1 | tee qemu_output.log || true
+      - python3 scripts/parse_ts_output.py qemu_output.log || true
+    when:
+      event: [push, pull_request]
+    depends_on:
+      - build
+
+  unit_tests:
+    image: espressif/idf:v5.5
+    commands:
+      - cd firmware/stanag-s3-simulator
+      - timeout 120 idf.py -p /dev/null qemu monitor 2>&1 | tee test_output.log || true
+      - |
+        if grep -q "Tests passed" test_output.log; then
+          echo "✅ Unit tests passed"
+        elif grep -q "Tests failed" test_output.log; then
+          echo "❌ Unit tests failed"
+          exit 1
+        else
+          echo "⚠️ Test output unclear"
+          cat test_output.log
+        fi
+    when:
+      event: [push, pull_request]
+    depends_on:
+      - build
+
+  static_analysis:
+    image: espressif/idf:v5.5
+    commands:
+      - cd firmware/stanag-s3-simulator
+      - idf.py reconfigure
+      - |
+        cppcheck --enable=warning,style,performance,portability \
+          --std=c99 \
+          --platform=esp32 \
+          --suppress=missingIncludeSystem \
+          -I main \
+          -I /opt/esp/idf/components/freertos/include \
+          -I /opt/esp/idf/components/esp_system/include \
+          -I /opt/esp/idf/components/log/include \
+          -I /opt/esp/idf/components/esp_timer/include \
+          -I /opt/esp/idf/components/esp_psram/include \
+          main/*.c \
+          2>&1 | tee cppcheck.log || true
+    when:
+      event: [push, pull_request]
+    depends_on:
+      - build
+
+  validate_ts:
+    image: espressif/idf:v5.5
+    commands:
+      - apt-get update && apt-get install -y ffmpeg
+      - cd firmware/stanag-s3-simulator
+      - timeout 60 idf.py -p /dev/null qemu monitor 2>&1 | tee qemu_output.log || true
+      - python3 scripts/parse_ts_output.py qemu_output.log || true
+    when:
+      event: [push, pull_request]
+    depends_on:
+      - qemu_test
+
+  size_report:
+    image: espressif/idf:v5.5
+    commands:
+      - cd firmware/stanag-s3-simulator
+      - idf.py size
+      - idf.py size-components
+      - idf.py size-files
+    when:
+      event: [push, pull_request]
+    depends_on:
+      - build

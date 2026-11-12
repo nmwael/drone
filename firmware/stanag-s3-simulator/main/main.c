@@ -35,8 +35,6 @@ void app_main(void)
 {
     // Disable task watchdog for QEMU testing
     esp_task_wdt_deinit();
-    // Disable interrupt watchdog
-    esp_task_wdt_deinit();
     ESP_LOGI(TAG, "Task watchdog disabled");
     
     // Early printf to ensure output before any crash
@@ -47,6 +45,7 @@ void app_main(void)
     ESP_LOGI(TAG, "STANAG S3 Simulator Starting");
     ESP_LOGI(TAG, "========================================");
     ESP_LOGI(TAG, "Free heap: %lu bytes", (unsigned long)esp_get_free_heap_size());
+    ESP_LOGI(TAG, "PSRAM: %s", esp_psram_is_initialized() ? "OK" : "NOT INITIALIZED");
 
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -56,7 +55,7 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    // Initialize network stack (needed for ESP-NOW)
+    // Initialize network stack (needed for ESP-NOW/UDP)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -64,10 +63,10 @@ void app_main(void)
     // WiFi phy calibration blocks the main task indefinitely in QEMU
     // For hardware testing, uncomment the WiFi/ESP-NOW section below
     ESP_LOGW(TAG, "WiFi/ESP-NOW initialization skipped (QEMU mode)");
-    ESP_LOGI(TAG, "For hardware testing, enable WiFi section in main.c");
+    ESP_LOGI(TAG, "For hardware testing, enable WiFi section in main.c and call network_tx_espnow_init()");
     
     /*
-    // Initialize WiFi for ESP-NOW
+    // Initialize WiFi for ESP-NOW/UDP
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
@@ -78,14 +77,9 @@ void app_main(void)
         ESP_LOGW(TAG, "WiFi start failed (code: %s)", esp_err_to_name(wifi_ret));
     } else {
         ESP_LOGI(TAG, "WiFi started successfully");
-    }
-
-    // Initialize ESP-NOW
-    esp_err_t now_ret = esp_now_init();
-    if (now_ret != ESP_OK) {
-        ESP_LOGW(TAG, "ESP-NOW init failed (code: %s)", esp_err_to_name(now_ret));
-    } else {
-        ESP_LOGI(TAG, "ESP-NOW initialized successfully");
+        
+        // Initialize ESP-NOW after WiFi start
+        ESP_ERROR_CHECK(network_tx_espnow_init());
     }
     */
 

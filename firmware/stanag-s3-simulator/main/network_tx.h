@@ -11,6 +11,12 @@
 /* Function Prototypes */
 
 esp_err_t network_tx_init(void);
+esp_err_t network_tx_espnow_init(void);  /* Call after WiFi start for hardware */
 void network_tx_send(ts_packet_t *ts);
+void network_tx_deinit(void);
+
+/* Configuration */
+void network_tx_set_udp_dest(const char *ip, uint16_t port);
+void network_tx_set_espnow_peer(const uint8_t *mac);
 
 #endif // NETWORK_TX_H

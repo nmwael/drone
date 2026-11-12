@@ -33,11 +33,11 @@ void test_sensor_sim_get_data_gps(void)
 {
     sensor_data_t data;
     memset(&data, 0, sizeof(sensor_data_t));
-    sensor_sim_get_data(&data);
+    sensor_sim_get_data(&data, 0);
 
     /* Verify GPS data is populated */
-    TEST_ASSERT_NOT_NULL(data.gps.lat);
-    TEST_ASSERT_NOT_NULL(data.gps.lon);
+    TEST_ASSERT_NOT_EQUAL(0.0, data.gps.lat);
+    TEST_ASSERT_NOT_EQUAL(0.0, data.gps.lon);
     TEST_ASSERT_GREATER_THAN(0, data.gps.num_sv);
     TEST_ASSERT_EQUAL(4, data.gps.fix_type);  /* RTK fixed */
 }
@@ -47,12 +47,11 @@ void test_sensor_sim_get_data_imu(void)
 {
     sensor_data_t data;
     memset(&data, 0, sizeof(sensor_data_t));
-    sensor_sim_get_data(&data);
+    sensor_sim_get_data(&data, 0);
 
     /* Verify IMU data is populated */
-    TEST_ASSERT_NOT_NULL(&data.imu);
-    TEST_ASSERT_GREATER_THAN(0, data.imu.accel_z);  /* Z should be ~1g */
-    TEST_ASSERT_NOT_NULL(&data.imu.gyro_x);
+    TEST_ASSERT_GREATER_THAN(0.0f, data.imu.accel_z);  /* Z should be ~1g */
+    TEST_ASSERT_NOT_EQUAL(0.0f, data.imu.gyro_x);
 }
 
 /* Test: sensor_sim_get_data produces valid sensor aggregation */
@@ -60,16 +59,16 @@ void test_sensor_sim_get_data_full(void)
 {
     sensor_data_t data;
     memset(&data, 0, sizeof(sensor_data_t));
-    sensor_sim_get_data(&data);
+    sensor_sim_get_data(&data, 0);
 
-    /* Verify all sensor blocks are initialized */
-    TEST_ASSERT_NOT_NULL(&data.gps);
-    TEST_ASSERT_NOT_NULL(&data.imu);
-    TEST_ASSERT_NOT_NULL(&data.mag);
-    TEST_ASSERT_NOT_NULL(&data.baro);
-    TEST_ASSERT_NOT_NULL(&data.aht20);
+    /* Verify all sensor blocks have non-zero data */
+    TEST_ASSERT_NOT_EQUAL(0.0, data.gps.lat);
+    TEST_ASSERT_NOT_EQUAL(0.0, data.imu.accel_z);
+    TEST_ASSERT_NOT_EQUAL(0.0, data.mag.heading);
+    TEST_ASSERT_NOT_EQUAL(0.0, data.baro.pressure);
+    TEST_ASSERT_NOT_EQUAL(0.0, data.aht20.temp);
 
     /* Verify AHT20 temperature is reasonable */
-    TEST_ASSERT_GREATER_THAN(0, data.aht20.temp);
-    TEST_ASSERT_GREATER_THAN(0, data.aht20.humidity);
+    TEST_ASSERT_GREATER_THAN(0.0f, data.aht20.temp);
+    TEST_ASSERT_GREATER_THAN(0.0f, data.aht20.humidity);
 }
