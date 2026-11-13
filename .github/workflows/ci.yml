@@ -29,18 +29,11 @@ jobs:
         uses: espressif/install-esp-idf-action@v1
         with:
           version: ${{ env.IDF_VERSION }}
-          command: |
-            cd firmware/stanag-s3-simulator
-            idf.py set-target esp32s3
-            idf.py reconfigure
-            idf.py build
-            idf.py size
-            idf.py size-components
-            idf.py size-files
+          command: cd firmware/stanag-s3-simulator && idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files
 
       - name: List build output
         run: |
-          ls -la firmware/stanag-s3-simulator/build/
+          ls -la firmware/stanag-s3-simulator/build/ || echo "Build directory not found"
           ls -la firmware/stanag-s3-simulator/build/*.bin 2>/dev/null || echo "No .bin files found"
           ls -la firmware/stanag-s3-simulator/build/*.elf 2>/dev/null || echo "No .elf files found"
           ls -la firmware/stanag-s3-simulator/build/*.map 2>/dev/null || echo "No .map files found"
@@ -68,21 +61,7 @@ jobs:
         uses: espressif/install-esp-idf-action@v1
         with:
           version: ${{ env.IDF_VERSION }}
-          command: |
-            cd firmware/stanag-s3-simulator
-            apt-get update && apt-get install -y cppcheck
-            cppcheck --enable=warning,style,performance,portability \
-              --std=c99 \
-              --platform=esp32 \
-              --suppress=missingIncludeSystem \
-              -I main \
-              -I $IDF_PATH/components/freertos/include \
-              -I $IDF_PATH/components/esp_system/include \
-              -I $IDF_PATH/components/log/include \
-              -I $IDF_PATH/components/esp_timer/include \
-              -I $IDF_PATH/components/esp_psram/include \
-              main/*.c \
-              2>&1 | tee cppcheck.log || true
+          command: cd firmware/stanag-s3-simulator && apt-get update && apt-get install -y cppcheck && cppcheck --enable=warning,style,performance,portability --std=c99 --platform=esp32 --suppress=missingIncludeSystem -I main -I $IDF_PATH/components/freertos/include -I $IDF_PATH/components/esp_system/include -I $IDF_PATH/components/log/include -I $IDF_PATH/components/esp_timer/include -I $IDF_PATH/components/esp_psram/include main/*.c 2>&1 | tee cppcheck.log || true
 
   release:
     name: Create Release
