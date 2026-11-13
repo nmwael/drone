@@ -95,11 +95,12 @@ jpeg_frame_t* jpeg_loader_get_next(void)
     }
 
     jpeg_frame_t *frame = &s_frames[s_current_frame];
+    int frame_index = s_current_frame;
     s_current_frame = (s_current_frame + 1) % NUM_FRAMES;
 
     // Load JPEG file from SPIFFS
     char filename[64];
-    snprintf(filename, sizeof(filename), "/spiffs/frame_%d.jpg", s_current_frame + 1);
+    snprintf(filename, sizeof(filename), "/spiffs/frame_%d.jpg", frame_index + 1);
 
     FILE *f = fopen(filename, "rb");
     if (!f) {
@@ -144,7 +145,7 @@ jpeg_frame_t* jpeg_loader_get_next(void)
     frame->len = fsize;
     frame->width = FRAME_WIDTH;
     frame->height = FRAME_HEIGHT;
-    frame->index = s_current_frame;
+    frame->index = frame_index;
 
     ESP_LOGI(TAG, "Loaded JPEG frame %d: %zu bytes from %s", frame->index + 1, frame->len, filename);
     return frame;

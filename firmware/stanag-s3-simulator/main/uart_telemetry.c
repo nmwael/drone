@@ -63,22 +63,12 @@ esp_err_t uart_telemetry_init(void)
 /* Forward declaration for fallback function */
 static void uart_telemetry_send_fallback(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t frame_num);
 
-void uart_telemetry_send(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t frame_num)
+/* Format JSON telemetry into buffer. Returns length, or negative on error. */
+static int uart_telemetry_format_json(char *buf, size_t buf_size,
+                                      sensor_data_t *sensors, h264_nalu_t *nalu,
+                                      uint32_t frame_num)
 {
-    if (!sensors || !nalu) {
-        ESP_LOGW(TAG, "Invalid telemetry parameters");
-        return;
-    }
-
-    if (!s_uart_initialized) {
-        /* Fallback to stdout for debugging */
-        uart_telemetry_send_fallback(sensors, nalu, frame_num);
-        return;
-    }
-
-    /* Build JSON telemetry string */
-    char json_buffer[1024];
-    int len = snprintf(json_buffer, sizeof(json_buffer),
+    return snprintf(buf, buf_size,
         "{"
         "\"frame\":%lu,"
         "\"timestamp_us\":%llu,"
@@ -123,6 +113,25 @@ void uart_telemetry_send(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t fra
         sensors->aht20.temp, sensors->aht20.humidity,
         nalu->type, nalu->keyframe ? "true" : "false", nalu->len
     );
+}
+
+void uart_telemetry_send(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t frame_num)
+{
+    if (!sensors || !nalu) {
+        ESP_LOGW(TAG, "Invalid telemetry parameters");
+        return;
+    }
+
+    if (!s_uart_initialized) {
+        /* Fallback to stdout for debugging */
+        uart_telemetry_send_fallback(sensors, nalu, frame_num);
+        return;
+    }
+
+    /* Build JSON telemetry string */
+    char json_buffer[1024];
+    int len = uart_telemetry_format_json(json_buffer, sizeof(json_buffer),
+                                         sensors, nalu, frame_num);
 
     if (len > 0 && len < (int)sizeof(json_buffer)) {
         /* Send via UART */
@@ -140,51 +149,8 @@ void uart_telemetry_send(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t fra
 void uart_telemetry_send_fallback(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t frame_num)
 {
     char json_buffer[1024];
-    int len = snprintf(json_buffer, sizeof(json_buffer),
-        "{"
-        "\"frame\":%lu,"
-        "\"timestamp_us\":%llu,"
-        "\"gps\":{"
-        "\"lat\":%.6f,"
-        "\"lon\":%.6f,"
-        "\"alt\":%.1f,"
-        "\"heading\":%.1f,"
-        "\"fix\":%d,"
-        "\"sats\":%d"
-        "},"
-        "\"imu\":{"
-        "\"roll\":%.1f,"
-        "\"pitch\":%.1f,"
-        "\"yaw\":%.1f"
-        "},"
-        "\"mag\":{"
-        "\"heading\":%.1f"
-        "},"
-        "\"baro\":{"
-        "\"altitude\":%.1f,"
-        "\"pressure\":%.1f,"
-        "\"temp\":%.1f"
-        "},"
-        "\"aht20\":{"
-        "\"temp\":%.1f,"
-        "\"humidity\":%.1f"
-        "},"
-        "\"h264\":{"
-        "\"type\":%d,"
-        "\"keyframe\":%s,"
-        "\"len\":%zu"
-        "}"
-        "}\n",
-        frame_num,
-        nalu->timestamp_us,
-        sensors->gps.lat, sensors->gps.lon, sensors->gps.alt, sensors->gps.heading,
-        sensors->gps.fix, sensors->gps.sats,
-        sensors->imu.roll, sensors->imu.pitch, sensors->imu.yaw,
-        sensors->mag.heading,
-        sensors->baro.altitude, sensors->baro.pressure, sensors->baro.temp,
-        sensors->aht20.temp, sensors->aht20.humidity,
-        nalu->type, nalu->keyframe ? "true" : "false", nalu->len
-    );
+    int len = uart_telemetry_format_json(json_buffer, sizeof(json_buffer),
+                                         sensors, nalu, frame_num);
 
     if (len > 0 && len < (int)sizeof(json_buffer)) {
         printf("%s", json_buffer);

@@ -9,6 +9,7 @@
 #include "esp_now.h"
 #include "esp_wifi.h"
 #include "esp_netif.h"
+#include <fcntl.h>
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include "string.h"

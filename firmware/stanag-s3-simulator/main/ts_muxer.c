@@ -200,8 +200,8 @@ static void build_pat_packet(uint8_t *buf, uint64_t pcr)
     uint8_t pat_with_crc[sizeof(s_pat_data)];
     memcpy(pat_with_crc, s_pat_data, sizeof(s_pat_data));
 
-    /* Compute CRC32 over PAT data (excluding first 3 bytes: table_id, section_syntax, section_length) */
-    uint32_t crc = crc32_mpeg2(&pat_with_crc[3], sizeof(s_pat_data) - 3 - 4);
+    /* Compute CRC32 over PAT data (starting from table_id, per MPEG-TS spec) */
+    uint32_t crc = crc32_mpeg2(pat_with_crc, sizeof(s_pat_data) - 4);
     pat_with_crc[sizeof(s_pat_data) - 4] = (crc >> 24) & 0xFF;
     pat_with_crc[sizeof(s_pat_data) - 3] = (crc >> 16) & 0xFF;
     pat_with_crc[sizeof(s_pat_data) - 2] = (crc >> 8) & 0xFF;
@@ -216,7 +216,7 @@ static void build_pmt_packet(uint8_t *buf, uint64_t pcr)
     uint8_t pmt_with_crc[sizeof(s_pmt_data_base)];
     memcpy(pmt_with_crc, s_pmt_data_base, sizeof(s_pmt_data_base));
 
-    uint32_t crc = crc32_mpeg2(&pmt_with_crc[3], sizeof(s_pmt_data_base) - 3 - 4);
+    uint32_t crc = crc32_mpeg2(pmt_with_crc, sizeof(s_pmt_data_base) - 4);
     pmt_with_crc[sizeof(s_pmt_data_base) - 4] = (crc >> 24) & 0xFF;
     pmt_with_crc[sizeof(s_pmt_data_base) - 3] = (crc >> 16) & 0xFF;
     pmt_with_crc[sizeof(s_pmt_data_base) - 2] = (crc >> 8) & 0xFF;
