@@ -103,6 +103,75 @@ if command -v eim >/dev/null 2>&1; then
   eim shell v5.5.6 2>/dev/null || true
 fi
 
+# Add TokenEconomizer te CLI to PATH for current and future sessions
+TE_DIR="${HOME}/.tokeneconomizer"
+if [ -d "${TE_DIR}/bin" ]; then
+  if ! grep -q "tokeneconomizer" "${HOME}/.bashrc" 2>/dev/null; then
+    echo "" >> "${HOME}/.bashrc"
+    echo "# TokenEconomizer" >> "${HOME}/.bashrc"
+    echo 'export PATH="${HOME}/.tokeneconomizer/bin:${PATH}"' >> "${HOME}/.bashrc"
+  fi
+  export PATH="${TE_DIR}/bin:${PATH}"
+fi
+
+# Set up TokenEconomizer for opencode (cost control for coding agents)
+# See: https://github.com/microsoft/TokenEconomizer
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "WARNING: python3 not found, skipping TokenEconomizer setup"
+else
+    echo "=== Setting up TokenEconomizer for opencode ==="
+    TE_DIR="${HOME}/.tokeneconomizer"
+    if [ ! -d "${TE_DIR}/tokeneconomizer" ]; then
+        if git clone --depth 1 https://github.com/microsoft/TokenEconomizer.git "${TE_DIR}" 2>/dev/null; then
+            echo "Cloned TokenEconomizer to ${TE_DIR}"
+        else
+            echo "WARNING: Failed to clone TokenEconomizer, skipping setup"
+            TE_DIR=""
+        fi
+    else
+        echo "TokenEconomizer already present at ${TE_DIR}"
+        git -C "${TE_DIR}" pull --depth 1 2>/dev/null || true
+    fi
+
+    if [ -n "${TE_DIR}" ]; then
+        # Install TokenEconomizer Python package to get the `te` CLI
+        if pip3 install --user "${TE_DIR}" 2>/dev/null || pip3 install "${TE_DIR}" 2>/dev/null; then
+            echo "Installed TokenEconomizer Python package"
+        else
+            echo "WARNING: pip install failed, te CLI may not be available"
+        fi
+
+        # Symlink opencode plugin
+        mkdir -p "${HOME}/.config/opencode/plugins" 2>/dev/null
+        if ln -sf "${TE_DIR}/plugin/opencode/tokeneconomizer.ts" "${HOME}/.config/opencode/plugins/tokeneconomizer.ts" 2>/dev/null; then
+            echo "Linked opencode plugin to ~/.config/opencode/plugins/"
+        else
+            echo "WARNING: Failed to symlink opencode plugin"
+        fi
+
+        # Find the te CLI (may be in ~/.local/bin after pip install --user)
+        TE_BIN=""
+        if [ -x "${TE_DIR}/bin/te" ]; then
+            TE_BIN="${TE_DIR}/bin/te"
+        elif [ -x "${HOME}/.local/bin/te" ]; then
+            TE_BIN="${HOME}/.local/bin/te"
+        elif command -v te >/dev/null 2>&1; then
+            TE_BIN="$(command -v te)"
+        fi
+
+        if [ -n "${TE_BIN}" ]; then
+            # Ensure te CLI is on PATH for current session
+            TE_BIN_DIR="$(dirname "${TE_BIN}")"
+            export PATH="${TE_BIN_DIR}:${PATH}"
+            # Enable micro-skills for this repository (helps remember ESP-IDF build steps, etc.)
+            "${TE_BIN}" --host opencode config set microskills=on 2>/dev/null || echo "WARNING: Could not set microskills=on"
+            "${TE_BIN}" --host opencode status 2>/dev/null || echo "WARNING: Could not run te status"
+        else
+            echo "WARNING: te CLI not found after installation"
+        fi
+    fi
+fi
+
 echo "=== Post-create complete ==="
 echo "Run: bash scripts/use-profile.sh cloud (or local)"
 
