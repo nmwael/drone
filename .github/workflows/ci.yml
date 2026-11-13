@@ -36,7 +36,7 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace/firmware/stanag-s3-simulator \
             espressif/idf:${{ env.IDF_VERSION }} \
-            idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files
+            sh -c "idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
