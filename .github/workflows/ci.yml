@@ -38,6 +38,13 @@ jobs:
             idf.py size-components
             idf.py size-files
 
+      - name: List build output
+        run: |
+          ls -la firmware/stanag-s3-simulator/build/
+          ls -la firmware/stanag-s3-simulator/build/*.bin 2>/dev/null || echo "No .bin files found"
+          ls -la firmware/stanag-s3-simulator/build/*.elf 2>/dev/null || echo "No .elf files found"
+          ls -la firmware/stanag-s3-simulator/build/*.map 2>/dev/null || echo "No .map files found"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -93,6 +100,10 @@ jobs:
         with:
           name: firmware-esp32s3
           path: ./artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          ls -la ./artifacts/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
