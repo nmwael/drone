@@ -32,24 +32,13 @@ jobs:
           path: /opt/esp/idf
           tools-path: /opt/esp/tools
 
-      - name: Configure project
+      - name: Configure and Build
         working-directory: ./firmware/stanag-s3-simulator
         run: |
-          /opt/esp/idf/install.sh esp32s3
           . /opt/esp/idf/export.sh
           idf.py set-target esp32s3
           idf.py reconfigure
-
-      - name: Build project
-        working-directory: ./firmware/stanag-s3-simulator
-        run: |
-          . /opt/esp/idf/export.sh
           idf.py build
-
-      - name: Check binary size
-        working-directory: ./firmware/stanag-s3-simulator
-        run: |
-          . /opt/esp/idf/export.sh
           idf.py size
           idf.py size-components
           idf.py size-files
