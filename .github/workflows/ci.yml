@@ -25,13 +25,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Test Docker image
+        run: |
+          docker run --rm espressif/idf:${{ env.IDF_VERSION }} echo "Docker image works"
+
       - name: Build with ESP-IDF Docker
         run: |
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace/firmware/stanag-s3-simulator \
             espressif/idf:${{ env.IDF_VERSION }} \
-            bash -c "ls -la && pwd && idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files"
+            bash -c "source /opt/esp/idf/export.sh && idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
