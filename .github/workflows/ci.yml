@@ -25,18 +25,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build with ESP-IDF
-        uses: espressif/install-esp-idf-action@v1
-        with:
-          version: ${{ env.IDF_VERSION }}
-          command: |
-            cd firmware/stanag-s3-simulator
-            idf.py set-target esp32s3
-            idf.py reconfigure
-            idf.py build
-            idf.py size
-            idf.py size-components
-            idf.py size-files
+      - name: Build with ESP-IDF Docker
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/firmware/stanag-s3-simulator \
+            espressif/idf:${{ env.IDF_VERSION }} \
+            sh -c "idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files"
 
       - name: List build output
         run: |
@@ -64,25 +59,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Static Analysis with ESP-IDF
-        uses: espressif/install-esp-idf-action@v1
-        with:
-          version: ${{ env.IDF_VERSION }}
-          command: |
-            cd firmware/stanag-s3-simulator
-            apt-get update && apt-get install -y cppcheck
-            cppcheck --enable=warning,style,performance,portability \
-              --std=c99 \
-              --platform=esp32 \
-              --suppress=missingIncludeSystem \
-              -I main \
-              -I $IDF_PATH/components/freertos/include \
-              -I $IDF_PATH/components/esp_system/include \
-              -I $IDF_PATH/components/log/include \
-              -I $IDF_PATH/components/esp_timer/include \
-              -I $IDF_PATH/components/esp_psram/include \
-              main/*.c \
-              2>&1 | tee cppcheck.log || true
+      - name: Run cppcheck
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/firmware/stanag-s3-simulator \
+            espressif/idf:${{ env.IDF_VERSION }} \
+            bash -c "apt-get update && apt-get install -y cppcheck && cppcheck --enable=warning,style,performance,portability --std=c99 --platform=esp32 --suppress=missingIncludeSystem -I main -I /opt/esp/idf/components/freertos/include -I /opt/esp/idf/components/esp_system/include -I /opt/esp/idf/components/log/include -I /opt/esp/idf/components/esp_timer/include -I /opt/esp/idf/components/esp_psram/include main/*.c 2>&1 | tee cppcheck.log || true"
 
   release:
     name: Create Release
