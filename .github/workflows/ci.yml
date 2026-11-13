@@ -25,27 +25,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install ESP-IDF
-        uses: espressif/install-esp-idf-action@v1
-        with:
-          version: ${{ env.IDF_VERSION }}
-          path: /opt/esp/idf
-          tools-path: /opt/esp/tools
-
-      - name: Configure and Build
-        uses: espressif/install-esp-idf-action@v1
-        with:
-          version: ${{ env.IDF_VERSION }}
-          path: /opt/esp/idf
-          tools-path: /opt/esp/tools
-          command: |
-            cd /github/workspace/firmware/stanag-s3-simulator
-            idf.py set-target esp32s3
-            idf.py reconfigure
-            idf.py build
-            idf.py size
-            idf.py size-components
-            idf.py size-files
+      - name: Build with ESP-IDF Docker
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/firmware/stanag-s3-simulator \
+            espressif/idf:${{ env.IDF_VERSION }} \
+            bash -c "idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -66,36 +51,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install ESP-IDF
-        uses: espressif/install-esp-idf-action@v1
-        with:
-          version: ${{ env.IDF_VERSION }}
-          path: /opt/esp/idf
-          tools-path: /opt/esp/tools
-
-      - name: Install cppcheck
-        run: sudo apt-get update && sudo apt-get install -y cppcheck
-
       - name: Run cppcheck
-        uses: espressif/install-esp-idf-action@v1
-        with:
-          version: ${{ env.IDF_VERSION }}
-          path: /opt/esp/idf
-          tools-path: /opt/esp/tools
-          command: |
-            cd /github/workspace/firmware/stanag-s3-simulator
-            cppcheck --enable=warning,style,performance,portability \
-              --std=c99 \
-              --platform=esp32 \
-              --suppress=missingIncludeSystem \
-              -I main \
-              -I /opt/esp/idf/components/freertos/include \
-              -I /opt/esp/idf/components/esp_system/include \
-              -I /opt/esp/idf/components/log/include \
-              -I /opt/esp/idf/components/esp_timer/include \
-              -I /opt/esp/idf/components/esp_psram/include \
-              main/*.c \
-              2>&1 | tee cppcheck.log || true
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/firmware/stanag-s3-simulator \
+            espressif/idf:${{ env.IDF_VERSION }} \
+            bash -c "apt-get update && apt-get install -y cppcheck && cppcheck --enable=warning,style,performance,portability --std=c99 --platform=esp32 --suppress=missingIncludeSystem -I main -I /opt/esp/idf/components/freertos/include -I /opt/esp/idf/components/esp_system/include -I /opt/esp/idf/components/log/include -I /opt/esp/idf/components/esp_timer/include -I /opt/esp/idf/components/esp_psram/include main/*.c 2>&1 | tee cppcheck.log || true"
 
   release:
     name: Create Release
