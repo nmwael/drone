@@ -35,6 +35,7 @@ jobs:
       - name: Configure project
         working-directory: ./firmware/stanag-s3-simulator
         run: |
+          /opt/esp/idf/install.sh esp32s3
           . /opt/esp/idf/export.sh
           idf.py set-target esp32s3
           idf.py reconfigure
@@ -91,11 +92,11 @@ jobs:
             --platform=esp32 \
             --suppress=missingIncludeSystem \
             -I main \
-            -I $IDF_PATH/components/freertos/include \
-            -I $IDF_PATH/components/esp_system/include \
-            -I $IDF_PATH/components/log/include \
-            -I $IDF_PATH/components/esp_timer/include \
-            -I $IDF_PATH/components/esp_psram/include \
+            -I /opt/esp/idf/components/freertos/include \
+            -I /opt/esp/idf/components/esp_system/include \
+            -I /opt/esp/idf/components/log/include \
+            -I /opt/esp/idf/components/esp_timer/include \
+            -I /opt/esp/idf/components/esp_psram/include \
             main/*.c \
             2>&1 | tee cppcheck.log || true
 
