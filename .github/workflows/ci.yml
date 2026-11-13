@@ -25,15 +25,24 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build with ESP-IDF
+      - name: Install ESP-IDF
         uses: espressif/install-esp-idf-action@v1
         with:
           version: ${{ env.IDF_VERSION }}
-          command: cd firmware/stanag-s3-simulator && idf.py set-target esp32s3 && idf.py reconfigure && idf.py build && idf.py size && idf.py size-components && idf.py size-files
+
+      - name: Build firmware
+        working-directory: firmware/stanag-s3-simulator
+        run: |
+          idf.py set-target esp32s3
+          idf.py reconfigure
+          idf.py build
+          idf.py size
+          idf.py size-components
+          idf.py size-files
 
       - name: List build output
         run: |
-          ls -la firmware/stanag-s3-simulator/build/ || echo "Build directory not found"
+          ls -la firmware/stanag-s3-simulator/build/
           ls -la firmware/stanag-s3-simulator/build/*.bin 2>/dev/null || echo "No .bin files found"
           ls -la firmware/stanag-s3-simulator/build/*.elf 2>/dev/null || echo "No .elf files found"
           ls -la firmware/stanag-s3-simulator/build/*.map 2>/dev/null || echo "No .map files found"
@@ -57,23 +66,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
 
-      - name: Static Analysis with ESP-IDF
+      - name: Install ESP-IDF
         uses: espressif/install-esp-idf-action@v1
         with:
           version: ${{ env.IDF_VERSION }}
-          command: cd firmware/stanag-s3-simulator && apt-get update && apt-get install -y cppcheck && cppcheck --enable=warning,style,performance,portability --std=c99 --platform=esp32 --suppress=missingIncludeSystem -I main -I $IDF_PATH/components/freertos/include -I $IDF_PATH/components/esp_system/include -I $IDF_PATH/components/log/include -I $IDF_PATH/components/esp_timer/include -I $IDF_PATH/components/esp_psram/include main/*.c 2>&1 | tee cppcheck.log || true
+
+      - name: Install cppcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck
+        working-directory: firmware/stanag-s3-simulator
+        run: |
+          cppcheck --enable=warning,style,performance,portability \
+            --std=c99 \
+            --platform=esp32 \
+            --suppress=missingIncludeSystem \
+            -I main \
+            -I "$IDF_PATH/components/freertos/include" \
+            -I "$IDF_PATH/components/esp_system/include" \
+            -I "$IDF_PATH/components/log/include" \
+            -I "$IDF_PATH/components/esp_timer/include" \
+            -I "$IDF_PATH/components/esp_psram/include" \
+            main/*.c \
+            2>&1 | tee ../cppcheck.log || true
 
   release:
     name: Create Release
     runs-on: ubuntu-24.04
-    needs: [build, static_analysis]
+    needs: [build]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7.0.1
-
       - name: Download build artifacts
         uses: actions/download-artifact@v8.0.2
         with:
