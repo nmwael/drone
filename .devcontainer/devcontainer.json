@@ -61,7 +61,12 @@
   },
   "forwardPorts": [
     8082,
-    4096
+    4096,
+    8888,
+    8889,
+    8554,
+    9997,
+    9998
   ],
   "postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
   "postStartCommand": "bash .devcontainer/scripts/auto-startup.sh",

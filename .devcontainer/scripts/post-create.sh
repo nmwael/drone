@@ -103,6 +103,26 @@ if command -v eim >/dev/null 2>&1; then
   eim shell v5.5.6 2>/dev/null || true
 fi
 
+# Download MediaMTX for STANAG ground station testing
+MEDIAMTX_DIR="${HOME}/ground-station/mediamtx"
+MEDIAMTX_VER="v1.21.3"
+if [ ! -x "${MEDIAMTX_DIR}/mediamtx" ]; then
+  echo "=== Downloading MediaMTX ${MEDIAMTX_VER} ==="
+  mkdir -p "${MEDIAMTX_DIR}"
+  cd /tmp
+  if wget -q "https://github.com/bluenviron/mediamtx/releases/download/${MEDIAMTX_VER}/mediamtx_${MEDIAMTX_VER}_linux_amd64.tar.gz" -O mediamtx.tar.gz 2>/dev/null; then
+    tar xzf mediamtx.tar.gz -C "${MEDIAMTX_DIR}" mediamtx mediamtx.yml
+    cp "${MEDIAMTX_DIR}/mediamtx.yml" "${MEDIAMTX_DIR}/mediamtx.yml.sample" 2>/dev/null || true
+    chmod +x "${MEDIAMTX_DIR}/mediamtx"
+    echo "MediaMTX downloaded to ${MEDIAMTX_DIR}"
+  else
+    echo "WARNING: Failed to download MediaMTX"
+  fi
+  rm -f /tmp/mediamtx.tar.gz
+else
+  echo "MediaMTX already present at ${MEDIAMTX_DIR}"
+fi
+
 # Add TokenEconomizer te CLI to PATH for current and future sessions
 TE_DIR="${HOME}/.tokeneconomizer"
 if [ -d "${TE_DIR}/bin" ]; then

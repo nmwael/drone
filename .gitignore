@@ -93,3 +93,8 @@ Desktop.ini
 firmware/**/build/*.bin
 firmware/**/build/*.elf
 firmware/**/build/*.uf2
+
+# MediaMTX binary (downloaded by devcontainer post-create)
+ground-station/mediamtx/mediamtx
+mediamtx*.tar.gz
+
