@@ -47,13 +47,19 @@ void app_main(void)
     ESP_LOGI(TAG, "Free heap: %lu bytes", (unsigned long)esp_get_free_heap_size());
     ESP_LOGI(TAG, "PSRAM: %s", esp_psram_is_initialized() ? "OK" : "NOT INITIALIZED");
 
-    // Initialize NVS
+    // Initialize NVS (non-fatal; may fail on first boot in QEMU where
+    // the flash image has no pre-formatted NVS partition)
     esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "NVS init failed (%s), erasing...", esp_err_to_name(ret));
+        esp_err_t ret2 = nvs_flash_erase();
+        if (ret2 == ESP_OK) {
+            ret = nvs_flash_init();
+        }
     }
-    ESP_ERROR_CHECK(ret);
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "NVS unavailable, continuing without it (%s)", esp_err_to_name(ret));
+    }
 
     // Initialize network stack (needed for ESP-NOW/UDP)
     ESP_ERROR_CHECK(esp_netif_init());

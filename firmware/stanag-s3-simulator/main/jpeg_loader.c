@@ -40,7 +40,7 @@ esp_err_t jpeg_loader_init(void)
     memset(s_frames, 0, sizeof(s_frames));
     s_frames_initialized = true;
 
-    // Mount SPIFFS
+    // Mount SPIFFS (non-fatal; dummy YUV fallback works without it)
     esp_vfs_spiffs_conf_t conf = {
         .base_path = "/spiffs",
         .partition_label = "spiffs",
@@ -50,17 +50,19 @@ esp_err_t jpeg_loader_init(void)
 
     esp_err_t ret = esp_vfs_spiffs_register(&conf);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "SPIFFS mount failed: %s", esp_err_to_name(ret));
-        return ret;
-    }
-
-    // Check SPIFFS info
-    size_t total = 0, used = 0;
-    ret = esp_spiffs_info("spiffs", &total, &used);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "SPIFFS info failed: %s", esp_err_to_name(ret));
+        ESP_LOGW(TAG, "SPIFFS mount failed: %s, using dummy YUV only", esp_err_to_name(ret));
+        s_spiffs_mounted = false;
     } else {
-        ESP_LOGI(TAG, "SPIFFS: total=%d, used=%d, free=%d", total, used, total - used);
+        s_spiffs_mounted = true;
+
+        // Check SPIFFS info
+        size_t total = 0, used = 0;
+        ret = esp_spiffs_info("spiffs", &total, &used);
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "SPIFFS info failed: %s", esp_err_to_name(ret));
+        } else {
+            ESP_LOGI(TAG, "SPIFFS: total=%d, used=%d, free=%d", total, used, total - used);
+        }
     }
 
     // Pre-allocate YUV buffer (1280x720 I420 = 1280*720*1.5 = 1,382,400 bytes)
@@ -77,7 +79,6 @@ esp_err_t jpeg_loader_init(void)
     ESP_LOGI(TAG, "YUV buffer allocated: %d bytes (%s)", s_yuv_buffer_size,
              esp_psram_get_size() > 0 ? "PSRAM" : "Internal RAM");
 
-    s_spiffs_mounted = true;
     ESP_LOGI(TAG, "JPEG loader initialized (using dummy YUV for ESP32-S3)");
     return ESP_OK;
 }
@@ -85,8 +86,18 @@ esp_err_t jpeg_loader_init(void)
 jpeg_frame_t* jpeg_loader_get_next(void)
 {
     if (!s_spiffs_mounted) {
-        ESP_LOGE(TAG, "SPIFFS not mounted");
-        return NULL;
+        // Return a dummy frame when SPIFFS is not available (e.g. QEMU)
+        static jpeg_frame_t dummy_frame;
+        static int dummy_index = 0;
+        memset(&dummy_frame, 0, sizeof(dummy_frame));
+        dummy_frame.data = NULL;
+        dummy_frame.len = 0;
+        dummy_frame.width = FRAME_WIDTH;
+        dummy_frame.height = FRAME_HEIGHT;
+        dummy_frame.index = dummy_index;
+        dummy_index = (dummy_index + 1) % NUM_FRAMES;
+        ESP_LOGW(TAG, "SPIFFS not mounted, returning dummy frame %d", dummy_frame.index);
+        return &dummy_frame;
     }
 
     if (!s_frames_initialized) {
@@ -153,7 +164,7 @@ jpeg_frame_t* jpeg_loader_get_next(void)
 
 yuv420_frame_t* jpeg_loader_decode(jpeg_frame_t *frame)
 {
-    if (!frame || !frame->data || frame->len == 0) {
+    if (!frame) {
         ESP_LOGE(TAG, "Invalid frame");
         return NULL;
     }
