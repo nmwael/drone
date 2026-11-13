@@ -203,6 +203,23 @@ void network_tx_set_espnow_peer(const uint8_t *mac)
     }
 }
 
+/* Debug: print TS packet as hex to serial (for QEMU test-sender forwarding) */
+static void network_tx_send_debug_hex(const uint8_t *data, size_t len)
+{
+    char hexbuf[2048];
+    size_t pos = 0;
+    size_t max_bytes = (sizeof(hexbuf) - 1) / 3;
+    size_t dump_len = (len < max_bytes) ? len : max_bytes;
+
+    for (size_t i = 0; i < dump_len; i++) {
+        pos += snprintf(&hexbuf[pos], sizeof(hexbuf) - pos, "%02X", data[i]);
+    }
+    if (len > max_bytes) {
+        snprintf(&hexbuf[pos], sizeof(hexbuf) - pos, "...");
+    }
+    ESP_LOGI(TAG, "TS_OUT: %s", hexbuf);
+}
+
 /* Configure Unix socket path for QEMU/devcontainer testing */
 void network_tx_set_unix_socket(const char *path)
 {
@@ -235,6 +252,8 @@ void network_tx_send(ts_packet_t *ts)
         } else if (sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
             ESP_LOGW(TAG, "Unix socket send failed: errno %d", errno);
         }
+        /* Also print hex to serial for test-sender forwarding (QEMU can't access host Unix socket) */
+        network_tx_send_debug_hex(ts->data, ts->total_len);
     }
 
     /* Send via UDP */

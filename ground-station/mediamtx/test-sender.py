@@ -130,10 +130,14 @@ def main():
 
     print(f"Found {len(packets)} TS packets", file=sys.stderr)
 
+    # Write raw TS bytes to stdout for piping to FFmpeg
+    sys.stdout.buffer.write(b"".join(packets))
+    sys.stdout.buffer.flush()
+
     # Create socket based on transport
     use_unix = args.use_unix_socket
     if use_unix:
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             sock.connect(args.unix_socket)
             print(f"Sending to Unix socket {args.unix_socket} (delay: {delay_ms} ms, "
