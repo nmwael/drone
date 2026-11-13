@@ -98,3 +98,4 @@ firmware/**/build/*.uf2
 ground-station/mediamtx/mediamtx
 mediamtx*.tar.gz
 
+mediamtx.pid

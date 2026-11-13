@@ -116,6 +116,11 @@ void app_main(void)
     vTaskDelay(pdMS_TO_TICKS(10));
 
     ESP_LOGI(TAG, "Initializing network TX (ESP-NOW/UDP)...");
+    /* Uncomment for QEMU/devcontainer testing with Unix socket.
+       This bypasses WSL2 UDP loopback limitations.
+       Requires MediaMTX configured with source: unix+mpegts:///tmp/stanag.sock
+       Real hardware (UDP) is unaffected when this is commented out. */
+    // network_tx_set_unix_socket("/tmp/stanag.sock");
     ESP_ERROR_CHECK(network_tx_init());
     ESP_LOGI(TAG, "Network TX initialized OK");
     vTaskDelay(pdMS_TO_TICKS(10));

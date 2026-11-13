@@ -19,4 +19,7 @@ void network_tx_deinit(void);
 void network_tx_set_udp_dest(const char *ip, uint16_t port);
 void network_tx_set_espnow_peer(const uint8_t *mac);
 
+/* Unix socket (QEMU/devcontainer testing) */
+void network_tx_set_unix_socket(const char *path);
+
 #endif // NETWORK_TX_H

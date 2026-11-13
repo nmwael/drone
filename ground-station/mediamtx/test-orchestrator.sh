@@ -9,8 +9,9 @@
 #   5. Cleans up
 #
 # Usage:
-#   ./test-orchestrator.sh --file serial.log          # Test from captured log
-#   ./test-orchestrator.sh --stdin                     # Pipe from QEMU
+#   ./test-orchestrator.sh --file serial.log          # Test from captured log (UDP)
+#   ./test-orchestrator.sh --stdin                     # Pipe from QEMU (UDP)
+#   ./test-orchestrator.sh --stdin --use-unix-socket   # Pipe from QEMU via Unix socket
 #   ./test-orchestrator.sh --help                      # Show help
 
 set -e
@@ -50,12 +51,14 @@ INPUT_FILE=""
 DELAY=33
 NO_DELAY=0
 LOOP=0
+USE_UNIX_SOCKET=0
 MEDIA_ONLY=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --file) MODE="file"; INPUT_FILE="$2"; shift 2 ;;
         --stdin) MODE="stdin" ;;
+        --use-unix-socket) USE_UNIX_SOCKET=1 ;;
         --delay) DELAY="$2"; shift 2 ;;
         --no-delay) NO_DELAY=1; DELAY=0 ;;
         --loop) LOOP=1 ;;
@@ -126,9 +129,11 @@ curl -sf "http://localhost:${API_PORT}/v3/paths/list" 2>/dev/null || true
 if [ "${MEDIA_ONLY}" -eq 1 ]; then
     echo ""
     echo "MediaMTX is running. Test endpoints:"
-    echo "  UDP ingest:    127.0.0.1:${MEDIAMTX_PORT}"
-    echo "  WebRTC:        http://localhost:${WEBRTC_PORT}"
-    echo "  API:           http://localhost:${API_PORT}/v3/paths/list"
+    if [ "${USE_UNIX_SOCKET}" -eq 1 ]; then
+        echo "  Unix socket: /tmp/stanag.sock"
+    else
+        echo "  UDP ingest:    127.0.0.1:${MEDIAMTX_PORT}"
+    fi
     echo ""
     echo "To stop: $0 --stop"
     exit 0
@@ -137,9 +142,15 @@ fi
 # Run test sender
 echo ""
 echo "=== Running Test Sender ==="
-SENDER_ARGS="--udp 127.0.0.1:${MEDIAMTX_PORT} --delay ${DELAY}"
+SENDER_ARGS=""
+if [ "${USE_UNIX_SOCKET}" -eq 1 ]; then
+    SENDER_ARGS="--use-unix-socket --unix-socket /tmp/stanag.sock"
+else
+    SENDER_ARGS="--udp 127.0.0.1:${MEDIAMTX_PORT}"
+fi
+SENDER_ARGS="${SENDER_ARGS} --delay ${DELAY}"
 if [ "${NO_DELAY}" -eq 1 ]; then
-    SENDER_ARGS="--udp 127.0.0.1:${MEDIAMTX_PORT} --no-delay"
+    SENDER_ARGS="--delay 0"
 fi
 if [ "${LOOP}" -eq 1 ]; then
     SENDER_ARGS="${SENDER_ARGS} --loop"

@@ -10,6 +10,7 @@
 #include "esp_wifi.h"
 #include "esp_netif.h"
 #include <fcntl.h>
+#include <sys/un.h>
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include "string.h"
@@ -30,19 +31,25 @@ static const char *TAG = "NETWORK_TX";
 static struct {
     bool use_espnow;
     bool use_udp;
+    bool use_unix_socket;
     uint8_t espnow_peer_mac[6];
     char udp_dst_ip[16];
     uint16_t udp_dst_port;
     int udp_socket;
     struct sockaddr_in udp_dest_addr;
+    char unix_socket_path[128];
+    int unix_socket_fd;
     bool initialized;
 } s_net_config = {
     .use_espnow = true,
     .use_udp = true,
+    .use_unix_socket = false,
     .espnow_peer_mac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},  /* Broadcast */
     .udp_dst_ip = "192.168.4.2",  /* Default MediaMTX IP */
     .udp_dst_port = 8888,
     .udp_socket = -1,
+    .unix_socket_path = "",
+    .unix_socket_fd = -1,
     .initialized = false
 };
 
@@ -53,11 +60,40 @@ static void network_tx_espnow_send_cb(const wifi_tx_info_t *tx_info, esp_now_sen
 
 esp_err_t network_tx_init(void)
 {
-    ESP_LOGI(TAG, "Network TX initializing (ESP-NOW: %s, UDP: %s)",
+    ESP_LOGI(TAG, "Network TX initializing (ESP-NOW: %s, UDP: %s, Unix socket: %s)",
              s_net_config.use_espnow ? "yes" : "no",
-             s_net_config.use_udp ? "yes" : "no");
+             s_net_config.use_udp ? "yes" : "no",
+             s_net_config.use_unix_socket ? "yes" : "no");
 
     esp_err_t ret = ESP_OK;
+
+    /* Initialize Unix socket if enabled */
+    if (s_net_config.use_unix_socket && s_net_config.unix_socket_path[0] != '\0') {
+        s_net_config.unix_socket_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+        if (s_net_config.unix_socket_fd < 0) {
+            ESP_LOGE(TAG, "Failed to create Unix socket: errno %d", errno);
+            s_net_config.use_unix_socket = false;
+        } else {
+            struct sockaddr_un addr;
+            memset(&addr, 0, sizeof(addr));
+            addr.sun_family = AF_UNIX;
+            strncpy(addr.sun_path, s_net_config.unix_socket_path,
+                    sizeof(addr.sun_path) - 1);
+
+            if (connect(s_net_config.unix_socket_fd,
+                        (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+                ESP_LOGW(TAG, "Failed to connect to Unix socket %s: errno %d. "
+                            "Falling back to UDP if enabled.",
+                         s_net_config.unix_socket_path, errno);
+                close(s_net_config.unix_socket_fd);
+                s_net_config.unix_socket_fd = -1;
+                s_net_config.use_unix_socket = false;
+            } else {
+                ESP_LOGI(TAG, "Unix socket connected to %s",
+                         s_net_config.unix_socket_path);
+            }
+        }
+    }
 
     /* Initialize UDP socket if enabled */
     if (s_net_config.use_udp) {
@@ -75,7 +111,8 @@ esp_err_t network_tx_init(void)
             s_net_config.udp_dest_addr.sin_port = htons(s_net_config.udp_dst_port);
             inet_pton(AF_INET, s_net_config.udp_dst_ip, &s_net_config.udp_dest_addr.sin_addr);
 
-            ESP_LOGI(TAG, "UDP socket created, target: %s:%d", s_net_config.udp_dst_ip, s_net_config.udp_dst_port);
+            ESP_LOGI(TAG, "UDP socket created, target: %s:%d",
+                     s_net_config.udp_dst_ip, s_net_config.udp_dst_port);
         }
     }
 
@@ -166,6 +203,18 @@ void network_tx_set_espnow_peer(const uint8_t *mac)
     }
 }
 
+/* Configure Unix socket path for QEMU/devcontainer testing */
+void network_tx_set_unix_socket(const char *path)
+{
+    if (path) {
+        strncpy(s_net_config.unix_socket_path, path,
+                sizeof(s_net_config.unix_socket_path) - 1);
+        s_net_config.unix_socket_path[sizeof(s_net_config.unix_socket_path) - 1] = '\0';
+        s_net_config.use_unix_socket = true;
+        ESP_LOGI(TAG, "Unix socket path set to %s", s_net_config.unix_socket_path);
+    }
+}
+
 void network_tx_send(ts_packet_t *ts)
 {
     if (!ts || !ts->data || ts->total_len == 0) {
@@ -174,6 +223,19 @@ void network_tx_send(ts_packet_t *ts)
     }
 
     bool sent_any = false;
+
+    /* Send via Unix socket (QEMU/devcontainer testing) */
+    if (s_net_config.use_unix_socket && s_net_config.unix_socket_fd >= 0) {
+        int sent = sendto(s_net_config.unix_socket_fd, ts->data, ts->total_len, 0,
+                          NULL, 0);
+        if (sent > 0) {
+            sent_any = true;
+            ESP_LOGD(TAG, "Unix socket sent %d bytes to %s",
+                     sent, s_net_config.unix_socket_path);
+        } else if (sent < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            ESP_LOGW(TAG, "Unix socket send failed: errno %d", errno);
+        }
+    }
 
     /* Send via UDP */
     if (s_net_config.use_udp && s_net_config.udp_socket >= 0) {
@@ -217,6 +279,12 @@ void network_tx_deinit(void)
         close(s_net_config.udp_socket);
         s_net_config.udp_socket = -1;
         ESP_LOGI(TAG, "UDP socket closed");
+    }
+
+    if (s_net_config.use_unix_socket && s_net_config.unix_socket_fd >= 0) {
+        close(s_net_config.unix_socket_fd);
+        s_net_config.unix_socket_fd = -1;
+        ESP_LOGI(TAG, "Unix socket closed");
     }
 
     s_net_config.initialized = false;

@@ -123,6 +123,59 @@ else
   echo "MediaMTX already present at ${MEDIAMTX_DIR}"
 fi
 
+# Configure MediaMTX for Unix socket ingestion (QEMU/devcontainer testing).
+# This bypasses WSL2 UDP loopback limitations. Real hardware uses UDP via the
+# committed mediamtx.yml and is unaffected by this devcontainer override.
+echo "=== Configuring MediaMTX for Unix socket (QEMU testing) ==="
+cat > "${MEDIAMTX_DIR}/mediamtx.yml" << 'MEDIAMTX_EOF'
+###############################################
+# MediaMTX Configuration for STANAG 4609 Testing
+# Compatible with MediaMTX v1.21.3
+# Devcontainer: Unix socket ingestion (bypasses WSL2 UDP limitations)
+###############################################
+
+# Global settings
+logLevel: info
+logDestinations: [stdout]
+logStructured: false
+logFile: ""
+
+# API
+api: yes
+apiAddress: :9997
+
+# Metrics
+metrics: yes
+metricsAddress: :9998
+
+# RTSP
+rtsp: yes
+rtspAddress: :8554
+
+# WebRTC
+webrtc: yes
+webrtcAddress: :8889
+webrtcEncryption: false
+webrtcAllowOrigins: ["*"]
+webrtcLocalUDPAddress: :8189
+webrtcIPsFromInterfaces: true
+
+# Paths - Unix socket for QEMU/devcontainer testing
+paths:
+  stanag:
+    source: unix+mpegts:///tmp/stanag.sock
+    sourceOnDemand: no
+
+  telemetry:
+    source: unix+mpegts:///tmp/telemetry.sock
+    sourceOnDemand: no
+
+# HLS disabled
+hls: no
+MEDIAMTX_EOF
+
+echo "MediaMTX configured for Unix socket at /tmp/stanag.sock"
+
 # Set up TokenEconomizer for opencode (cost control for coding agents)
 # See: https://github.com/microsoft/TokenEconomizer
 if ! command -v python3 >/dev/null 2>&1; then
