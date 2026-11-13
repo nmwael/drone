@@ -64,6 +64,11 @@ stanag-s3-simulator/
 ├── partitions.csv             # Partition table (SPIFFS ~960KB)
 ├── CMakeLists.txt
 ├── MEDIAMTX.md                # Ground station documentation
+├── OVERVIEW.md                # Architecture overview with Mermaid diagrams
+├── DATA-FLOW.md               # Per-frame data flow with Mermaid diagrams
+├── BUILD.md                   # Build guide and troubleshooting
+├── TESTING.md                 # Unit test guide (64 Unity tests)
+├── API.md                     # API reference for all modules
 └── README.md
 ```
 
@@ -204,19 +209,20 @@ For hardware testing (not QEMU):
 4. Configure ESP-NOW peer MAC: `network_tx_set_espnow_peer(mac_addr)`
 5. Connect UART1 (GPIO17/18) to ESP32-C3 for telemetry
 
+## Additional Documentation
+
+| Document | Description |
+|---|---|
+| `OVERVIEW.md` | Architecture overview with Mermaid diagrams |
+| `DATA-FLOW.md` | Per-frame data flow with Mermaid diagrams |
+| `BUILD.md` | Build guide and troubleshooting |
+| `TESTING.md` | Unit test guide (64 Unity tests) |
+| `API.md` | API reference for all modules |
+| `MEDIAMTX.md` | Ground station setup (MediaMTX + WebRTC + Meta Quest) |
+| `mediamtx.yml` | MediaMTX configuration file |
+
 ## License
 
-MIT# CI trigger
-# Workflow trigger Thu Nov 12 09:14:48 PM CET 2026
-# CI trigger Thu Nov 12 09:28:05 PM CET 2026
-# CI trigger Thu Nov 12 09:34:43 PM CET 2026
-# CI trigger Thu Nov 12 09:48:23 PM CET 2026
-# CI trigger Fri Nov 13 06:38:59 AM CET 2026
-# CI trigger Fri Nov 13 06:46:43 AM CET 2026
-# CI trigger Fri Nov 13 06:55:24 AM CET 2026
-# CI trigger Fri Nov 13 07:04:26 AM CET 2026
-# CI trigger Fri Nov 13 07:10:30 AM CET 2026
-# CI trigger Fri Nov 13 07:17:10 AM CET 2026
-# CI trigger Fri Nov 13 07:23:11 AM CET 2026
-# CI trigger Fri Nov 13 07:29:48 AM CET 2026
-# CI trigger Fri Nov 13 07:35:41 AM CET 2026
+MIT
+
+# CI trigger
