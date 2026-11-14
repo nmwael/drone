@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STANAG 4609 Viewer - GPS & Sensor Data</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <title>STANAG 4609 Sensor Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"  />
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
@@ -23,21 +23,20 @@
     .data-label { color: #8892b0; }
     .data-value { color: #ccd6f6; font-family: 'Monospace', monospace; font-size: 0.8rem; }
     .map-popup { font-size: 0.8rem; }
-    .map-popup strong { color: #00d9ff; }
     .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
     #video { width: 100%; height: 100%; }
     .overlay-info { position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(0,0,0,0.7); padding: 8px 12px; border-radius: 4px; font-size: 0.75rem; color: #00ff88; font-family: monospace; }
     .sensor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .sensor-item { background: #0f3460; padding: 8px 10px; border-radius: 6px; }
     .sensor-name { font-size: 0.7rem; color: #8892b0; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sensor-value { font-size: 0.9rem; color: #ccd6f6; font-family: monospace; }
+    .sensor-value { font-size: 0.9rem; color: #ccd6f6; font-family: 'Monospace', monospace; }
     .gps-coords { background: #0f3460; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #00ff88; word-break: break-all; }
     .legend { font-size: 0.7rem; color: #8892b0; margin-top: 8px; }
   </style>
 </head>
 <body>
   <header class="header">
-    <h1>🛰️ STANAG 4609 Viewer</h1>
+    <h1>🛰️ STANAG 4609 Sensor Dashboard</h1>
     <div class="status">
       <span class="dot" id="connStatus"></span>
       <span id="connText">Connecting...</span>
@@ -53,7 +52,6 @@
       <div class="panel">
         <h3>📍 GPS Position</h3>
         <div class="gps-coords" id="gpsCoords">Waiting for GPS...</div>
-        <div class="legend">Updates via KLV metadata from MediaMTX stream</div>
       </div>
       <div class="panel">
         <h3>📊 Sensor Data</h3>
@@ -85,32 +83,28 @@
     </aside>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"  ></script>
   <script>
     // ============ Configuration ============
-    const WHEP_URL = 'http://localhost:8889/whep/stanag';
-    const API_URL = 'http://localhost:9997/v3/paths/stanag';
-    
+    const API_URL = '/sensor_data.json';
+    const WEBSOCKET_URL = 'ws://localhost:8080/ws'; // Future WebSocket endpoint
+
     // ============ State ============
-    let peerConnection = null;
-    let dataChannel = null;
-    let marker = null;
-    let map = null;
     let frameCount = 0;
     let klvCount = 0;
-    let lastUpdate = Date.now();
     let bytesReceived = 0;
-    
+    let lastUpdate = Date.now();
+
     // ============ Leaflet Map Init ============
     function initMap() {
-      map = L.map('map', { zoomControl: true }).setView([56.1735, 10.204], 12);
+      const map = L.map('map', { zoomControl: true }).setView([56.1735, 10.204], 12);
       
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
       
-      marker = L.marker([56.1735, 10.204], {
+      const marker = L.marker([56.1735, 10.204], {
         icon: L.divIcon({
           className: 'custom-marker',
           html: '<div style="background:#00d9ff;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px #00d9ff;display:flex;align-items:center;justify-content:center;"><span style="color:#1a1a2e;font-weight:bold;font-size:12px;">🛰️</span></div>',
@@ -120,10 +114,11 @@
       }).addTo(map);
       
       marker.bindPopup('<strong>STANAG Platform</strong><br>Waiting for GPS...').openPopup();
+      
+      return { map, marker };
     }
 
     // ============ KLV Parser ============
-    // MISB ST 0601 KLV keys
     const KLV_KEYS = {
       0x0001: { name: 'Position', parse: parsePosition },
       0x0002: { name: 'Velocity', parse: parseVelocity },
@@ -177,7 +172,7 @@
 
     function parseBaroAlt(val) {
       if (val.length < 4) return null;
-      return (val[0]<<24|val[1]<<16|val[8]<<8|val[3]) / 1000;
+      return (val[0]<<24|val[1]<<16|val[2]<<8|val[3]) / 1000;
     }
 
     function parseTemp(val) {
@@ -237,14 +232,29 @@
       }
     }
 
-    // ============ WebRTC / WHEP Connection ============
-    async function connectWHEP() {
+    // ============ HTTP Polling for Sensor Data ============
+    async function pollSensorData() {
+      try {
+        const resp = await fetch('/sensor_data.json');
+        if (resp.ok) {
+          const data = await resp.json();
+          updateUI(data);
+          document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+          document.getElementById('connStatus').classList.add('connected');
+          document.getElementById('connText').textContent = 'Data Connected';
+        }
+      } catch (e) {
+        // Silently retry
+      }
+    }
+
+    // ============ WebRTC Video (optional, may fail in WSL2) ============
+    async function connectWebRTC() {
       try {
         const pc = new RTCPeerConnection({
           iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         });
-        peerConnection = pc;
-
+        
         pc.ontrack = (event) => {
           const video = document.getElementById('video');
           video.srcObject = event.streams[0];
@@ -253,67 +263,73 @@
         };
 
         pc.ondatachannel = (event) => {
-          dataChannel = event.channel;
-          dataChannel.binaryType = 'arraybuffer';
-          dataChannel.onmessage = handleDataChannelMessage;
+          const dc = event.channel;
+          dc.binaryType = 'arraybuffer';
+          dc.onmessage = (event) => {
+            const data = new Uint8Array(event.data);
+            const klvData = parseKLV(data);
+            if (Object.keys(klvData).length > 0) {
+              updateUI(klvData);
+              klvCount++;
+              document.getElementById('klvCount').textContent = klvCount;
+            }
+          };
           console.log('Data channel opened');
-          document.getElementById('connStatus').classList.add('connected');
-          document.getElementById('connText').textContent = 'Connected';
-        });
+        };
 
         pc.onconnectionstatechange = () => {
-          console.log('PC state:', pc.connectionState);
           if (pc.connectionState === 'connected') {
             document.getElementById('connStatus').classList.add('connected');
             document.getElementById('connText').textContent = 'Connected';
-          } else if (pc.connectionState === 'failed') {
-            document.getElementById('connStatus').classList.remove('connected');
-            document.getElementById('connText').textContent = 'Failed';
           }
         };
 
-        // Create offer
         const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
         await pc.setLocalDescription(offer);
-
-        // POST offer to WHEP endpoint
-        const response = await fetch(WHEP_URL, {
+        
+        const response = await fetch('http://localhost:8889/whep/stanag', {
           method: 'POST',
           headers: { 'Content-Type': 'application/sdp' },
           body: pc.localDescription.sdp
         });
-
-        if (!response.ok) throw new Error('WHEP offer failed: ' + response.status);
+        
+        if (!response.ok) throw new Error('WHEP failed: ' + response.status);
         
         const answer = await response.text();
         await pc.setRemoteDescription({ type: 'answer', sdp: answer });
         
         console.log('WHEP connection established');
-        
       } catch (err) {
-        console.error('WHEP connection failed:', err);
-        document.getElementById('connText').textContent = 'Connection failed: ' + err.message;
-        setTimeout(connectWHEP, 5000);
+        console.warn('WebRTC failed (may not work in WSL2):', err.message);
+        document.getElementById('connText').textContent = 'WebRTC unavailable - using HTTP polling';
       }
     }
 
-    function handleDataChannelMessage(event) {
-      const data = new Uint8Array(event.data);
-      bytesReceived += data.length;
-      klvCount++;
+    // ============ Init ============
+    function init() {
+      const { map, marker } = initMap();
       
-      // Parse KLV from data channel
-      const klvData = parseKLV(data);
-      if (Object.keys(klvData).length > 0) {
-        updateUI(klvData);
-      }
+      document.getElementById('video').addEventListener('loadeddata', () => {
+        document.getElementById('overlayInfo').textContent = 'Video stream connected';
+      });
+      document.getElementById('video').addEventListener('timeupdate', () => {
+        frameCount++;
+        document.getElementById('frameCount').textContent = `Frames: ${frameCount}`;
+      });
       
-      // Update counters
-      document.getElementById('klvCount').textContent = klvCount;
-      document.getElementById('bytesRx').textContent = (bytesReceived / 1024).toFixed(1) + ' KB';
+      connectWHEP();
+      setInterval(pollSensorData, 500);
+      setInterval(pollAPI, 2000);
+      
+      // Keep WebRTC alive
+      setInterval(() => {
+        if (peerConnection && peerConnection.connectionState !== 'connected') {
+          console.log('Reconnecting WebRTC...');
+          connectWHEP();
+        }
+      }, 10000);
     }
 
-    // ============ Periodic API Polling ============
     async function pollAPI() {
       try {
         const resp = await fetch(API_URL);
@@ -324,34 +340,10 @@
             (item.bytesReceived / 1024 / 1024).toFixed(1) + ' MB';
         }
       } catch (e) {
-        console.warn('API poll failed:', e);
+        // Silent
       }
     }
 
-    // ============ Init ============
-    function init() {
-      initMap();
-      document.getElementById('video').addEventListener('loadeddata', () => {
-        document.getElementById('overlayInfo').textContent = 'Stream playing';
-      });
-      document.getElementById('video').addEventListener('timeupdate', () => {
-        frameCount++;
-        document.getElementById('frameCount').textContent = `Frames: ${frameCount}`;
-      });
-      
-      connectWHEP();
-      setInterval(pollAPI, 2000);
-      
-      // Keep WebRTC alive
-      setInterval(() => {
-        if (peerConnection && peerConnection.connectionState !== 'connected') {
-          console.log('Reconnecting...');
-          connectWHEP();
-        }
-      }, 10000);
-    }
-
-    // Start
     window.addEventListener('load', init);
   </script>
 </body>

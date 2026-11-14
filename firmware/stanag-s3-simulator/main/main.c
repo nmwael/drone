@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -150,31 +151,38 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(FRAME_INTERVAL_MS));
         taskYIELD();  // Ensure other tasks get CPU time in QEMU
 
-        // 1. Get next JPEG frame (loops 0-4)
+        // 1. Get simulated sensor data first
+        sensor_data_t sensors;
+        sensor_sim_get_data(&sensors, frame_count);
+
+        /* Print JSON telemetry to stdout for JSON ingestion pipeline */
+        printf("{\"frame\":%" PRIu32 ",\"lat\":%.6f,\"lon\":%.6f,\"alt\":%.1f,\"heading\":%.1f,\"ts\":%" PRIu64 "}\n",
+               frame_count,
+               sensors.gps.lat, sensors.gps.lon, sensors.gps.alt, sensors.gps.heading,
+               (uint64_t)sensors.gps.tow_ms * 1000);
+        fflush(stdout);
+
+        // 2. Get next JPEG frame (loops 0-4)
         jpeg_frame_t *frame = jpeg_loader_get_next();
         if (!frame) {
             ESP_LOGE(TAG, "Failed to get JPEG frame");
             continue;
         }
 
-        // 2. Decode JPEG to YUV420 (HW JPEG decoder)
+        // 3. Decode JPEG to YUV420 (HW JPEG decoder)
         yuv420_frame_t *yuv = jpeg_loader_decode(frame);
         if (!yuv) {
             ESP_LOGE(TAG, "JPEG decode failed");
             continue;
         }
 
-        // 3. Encode YUV420 to H.264 (HW encoder)
+        // 4. Encode YUV420 to H.264 (HW encoder)
         h264_nalu_t *nalu = h264_encoder_encode(yuv);
         if (!nalu) {
             ESP_LOGE(TAG, "H.264 encode failed");
             jpeg_loader_free_yuv(yuv);
             continue;
         }
-
-        // 4. Get simulated sensor data
-        sensor_data_t sensors;
-        sensor_sim_get_data(&sensors, frame_count);
 
         // 5. Build KLV packet from sensor data
         klv_packet_t *klv = klv_builder_build(&sensors, frame_count);

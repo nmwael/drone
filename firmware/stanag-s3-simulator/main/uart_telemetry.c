@@ -140,6 +140,9 @@ void uart_telemetry_send(sensor_data_t *sensors, h264_nalu_t *nalu, uint32_t fra
             ESP_LOGW(TAG, "UART partial write: %d/%d bytes", written, len);
         }
         ESP_LOGD(TAG, "Telemetry sent: frame=%lu, len=%d", frame_num, len);
+        /* Also print to stdout for QEMU/test capture */
+        printf("%s", json_buffer);
+        fflush(stdout);
     } else {
         ESP_LOGW(TAG, "Telemetry buffer overflow or error");
     }

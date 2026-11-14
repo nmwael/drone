@@ -1,34 +1,22 @@
 #!/usr/bin/env python3
 """
-TS Test Sender - Reads TS hex dumps from simulator serial output and sends
-via UDP or Unix socket to MediaMTX for end-to-end testing.
-
-Usage:
-    # Option 1: Read from a log file captured from QEMU (UDP)
-    python3 test-sender.py --file serial.log --udp 127.0.0.1:8888
-
-    # Option 2: Pipe from QEMU output in real-time (UDP)
-    idf.py -p /dev/null qemu monitor 2>&1 | python3 test-sender.py --udp 127.0.0.1:8888
-
-    # Option 3: Send via Unix socket (QEMU/devcontainer, bypasses WSL2 UDP limits)
-    idf.py -p /dev/null qemu monitor 2>&1 | python3 test-sender.py --unix-socket /tmp/stanag.sock
-
-    # Option 4: Send a test pattern (loop TS packets from a captured file)
-    python3 test-sender.py --file serial.log --udp 127.0.0.1:8888 --loop
+STANAG S3 Sensor Simulator - Test Sender
+Reads TS hex dumps + JSON telemetry from QEMU simulator stdin.
+Sends TS packets via UDP/Unix socket to MediaMTX.
+Writes JSON telemetry to sensor_data.json for dashboard polling.
 """
-
 import argparse
-import os
+import json
 import re
 import socket
 import sys
 import time
 from typing import List, Optional
 
-
 TS_PATTERN = re.compile(r"TS_OUT:\s+([0-9A-F\s\.]+)")
 UDP_DEFAULT = "127.0.0.1:8888"
 UNIX_SOCKET_DEFAULT = "/tmp/stanag.sock"
+SENSOR_DATA_PATH = "/workspaces/drone/ground-station/mediamtx/sensor_data.json"
 
 
 def parse_ts_hex(hex_str: str) -> List[bytes]:
@@ -38,13 +26,35 @@ def parse_ts_hex(hex_str: str) -> List[bytes]:
         data = bytes.fromhex(hex_bytes)
     except ValueError:
         return []
-
     packets = []
     for offset in range(0, len(data), 188):
         packet = data[offset : offset + 188]
         if len(packet) == 188 and packet[0] == 0x47:
             packets.append(packet)
     return packets
+
+
+def parse_json_line(line: str):
+    """Try to parse a line as JSON sensor telemetry."""
+    line = line.strip()
+    if not line.startswith("{"):
+        return None
+    try:
+        data = json.loads(line)
+        if any(k in data for k in ("lat", "lon", "alt", "heading", "gps", "imu", "baro", "aht20")):
+            return data
+    except json.JSONDecodeError:
+        pass
+    return None
+
+
+def write_sensor_data(data):
+    """Write sensor data to JSON file for HTTP dashboard polling."""
+    try:
+        with open(SENSOR_DATA_PATH, "w") as f:
+            json.dump(data, f)
+    except Exception as e:
+        print(f"Error writing sensor data: {e}", file=sys.stderr)
 
 
 def send_packets(sock: socket.socket, packets: List[bytes],
@@ -109,6 +119,7 @@ def main():
 
     # Collect packets
     packets: List[bytes] = []
+    sensor_data_list = []
 
     if args.file:
         print(f"Reading TS packets from: {args.file}", file=sys.stderr)
@@ -117,57 +128,140 @@ def main():
         matches = TS_PATTERN.findall(content)
         for hex_str in matches:
             packets.extend(parse_ts_hex(hex_str))
-    else:
-        print("Reading TS packets from stdin...", file=sys.stderr)
-        content = sys.stdin.read()
-        matches = TS_PATTERN.findall(content)
-        for hex_str in matches:
-            packets.extend(parse_ts_hex(hex_str))
+        # Also parse JSON lines from file
+        for line in content.splitlines():
+            data = parse_json_line(line)
+            if data:
+                write_sensor_data(data)
+                sensor_data_list.append(data)
 
-    if not packets:
-        print("No TS packets found!", file=sys.stderr)
-        sys.exit(1)
+        if not packets:
+            print("No TS packets found!", file=sys.stderr)
+            sys.exit(1)
+        print(f"Found {len(packets)} TS packets", file=sys.stderr)
 
-    print(f"Found {len(packets)} TS packets", file=sys.stderr)
+        # Write raw TS bytes to stdout for piping to FFmpeg
+        sys.stdout.buffer.write(b"".join(packets))
+        sys.stdout.buffer.flush()
 
-    # Write raw TS bytes to stdout for piping to FFmpeg
-    sys.stdout.buffer.write(b"".join(packets))
-    sys.stdout.buffer.flush()
+        # Create socket based on transport
+        use_unix = args.use_unix_socket
+        if use_unix:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                sock.connect(args.unix_socket)
+                print(f"Sending to Unix socket {args.unix_socket}", file=sys.stderr)
+                total = send_packets(sock, packets, True, None, delay_ms, args.loop)
+                print(f"Sent {total} packets total", file=sys.stderr)
+            finally:
+                sock.close()
+        else:
+            try:
+                host, port_str = args.udp.rsplit(":", 1)
+                target = (host, int(port_str))
+            except ValueError:
+                print(f"Invalid --udp format: {args.udp} (expected host:port)",
+                      file=sys.stderr)
+                sys.exit(1)
 
-    # Create socket based on transport
-    use_unix = args.use_unix_socket
-    if use_unix:
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            sock.connect(args.unix_socket)
-            print(f"Sending to Unix socket {args.unix_socket} (delay: {delay_ms} ms, "
+            print(f"Sending to {target[0]}:{target[1]} (delay: {delay_ms} ms, "
                   f"loop: {args.loop})", file=sys.stderr)
-            total = send_packets(sock, packets, True, None, delay_ms, args.loop)
-            print(f"Sent {total} packets total", file=sys.stderr)
-        except KeyboardInterrupt:
-            print(f"\nInterrupted", file=sys.stderr)
-        finally:
-            sock.close()
+
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                total = send_packets(sock, packets, False, target,
+                                     delay_ms, args.loop)
+                print(f"Sent {total} packets total", file=sys.stderr)
+            finally:
+                sock.close()
     else:
-        try:
-            host, port_str = args.udp.rsplit(":", 1)
-            target = (host, int(port_str))
-        except ValueError:
-            print(f"Invalid --udp format: {args.udp} (expected host:port)",
-                  file=sys.stderr)
+        print("Reading TS packets and sensor data from stdin...",
+              file=sys.stderr)
+        sys.stderr.flush()
+
+        # Collect packets from stdin
+        packets: List[bytes] = []
+        sensor_data_list = []
+
+        while True:
+            line = sys.stdin.readline()
+            if not line:
+                break
+
+            line = line.strip()
+            if not line:
+                continue
+
+            # Try JSON first (telemetry from UART)
+            data = parse_json_line(line)
+            if data:
+                write_sensor_data(data)
+                sensor_data_list.append(data)
+                continue
+
+            # Try TS hex dump
+            match = TS_PATTERN.match(line)
+            if match:
+                hex_str = match.group(1)
+                hex_bytes = re.sub(r"[\s\.]", "", hex_str)
+                try:
+                    data_bytes = bytes.fromhex(hex_bytes)
+                except ValueError:
+                    continue
+                for offset in range(0, len(data_bytes), 188):
+                    packet = data_bytes[offset:offset + 188]
+                    if len(packet) == 188 and packet[0] == 0x47:
+                        packets.append(packet)
+                continue
+
+            # Unrecognized line - skip
+
+        if not packets:
+            print("No TS packets found!", file=sys.stderr)
             sys.exit(1)
 
-        print(f"Sending to {target[0]}:{target[1]} (delay: {delay_ms} ms, "
-              f"loop: {args.loop})", file=sys.stderr)
+        print(f"Found {len(packets)} TS packets",
+              f"({len(sensor_data_list)} sensor frames)", file=sys.stderr)
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            total = send_packets(sock, packets, False, target, delay_ms, args.loop)
-            print(f"Sent {total} packets total", file=sys.stderr)
-        except KeyboardInterrupt:
-            print(f"\nInterrupted", file=sys.stderr)
-        finally:
-            sock.close()
+        # Write raw TS bytes to stdout for piping to FFmpeg
+        sys.stdout.buffer.write(b"".join(packets))
+        sys.stdout.buffer.flush()
+
+        # Create socket based on transport
+        use_unix = args.use_unix_socket
+        if use_unix:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                sock.connect(args.unix_socket)
+                print(f"Sending to Unix socket {args.unix_socket} "
+                      f"(delay: {delay_ms} ms, loop: {args.loop})",
+                      file=sys.stderr)
+                total = send_packets(sock, packets, True, None,
+                                     delay_ms, args.loop)
+                print(f"Sent {total} packets total", file=sys.stderr)
+            finally:
+                sock.close()
+        else:
+            try:
+                host, port_str = args.udp.rsplit(":", 1)
+                target = (host, int(port_str))
+            except ValueError:
+                print(f"Invalid --udp format: {args.udp} "
+                      f"(expected host:port)",
+                      file=sys.stderr)
+                sys.exit(1)
+
+            print(f"Sending to {target[0]}:{target[1]} "
+                  f"(delay: {delay_ms} ms, loop: {args.loop})",
+                  file=sys.stderr)
+
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                total = send_packets(sock, packets, False, target,
+                                     delay_ms, args.loop)
+                print(f"Sent {total} packets total", file=sys.stderr)
+            finally:
+                sock.close()
 
 
 if __name__ == "__main__":

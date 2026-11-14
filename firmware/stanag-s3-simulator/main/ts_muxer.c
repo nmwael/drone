@@ -54,7 +54,7 @@ static const uint8_t s_pat_data[] = {
     0x00,
     /* Program 1 -> PMT PID 0x1000 */
     0x00, 0x01,  /* program_number = 1 */
-    0xE0, 0x00,  /* reserved=7, network_PID=0x0000 (NIT) */
+    0xF0, 0x00,  /* reserved=111, program_map_PID = 0x1000 */
     /* Program 0 -> NIT PID (optional) */
     /* CRC32 placeholder (4 bytes) - computed at runtime */
     0x00, 0x00, 0x00, 0x00
@@ -232,16 +232,10 @@ static size_t build_video_pes(uint8_t *buf, const uint8_t *nalu_data, size_t nal
     size_t pes_header_len = 19;
     size_t pes_packet_len = 6 + pes_header_len + nalu_len;  /* PES length field doesn't include first 6 bytes */
 
-    if (pes_packet_len > 184) {
-        /* Too large for single TS packet - would need fragmentation */
-        /* For now, truncate */
-        nalu_len = 184 - 6 - pes_header_len;
-        pes_packet_len = 6 + pes_header_len + nalu_len;
-    }
-
+    /* PES header */
     buf[0] = 0x00;
     buf[1] = 0x00;
-    buf[2] = 0x01;
+    buf[3] = 0x01;
     buf[3] = 0xE0;  /* stream_id = video (0xE0) */
     buf[4] = (pes_packet_len - 6) >> 8;  /* PES_packet_length (excludes first 6 bytes) */
     buf[5] = (pes_packet_len - 6) & 0xFF;
@@ -267,7 +261,7 @@ static size_t build_video_pes(uint8_t *buf, const uint8_t *nalu_data, size_t nal
     buf[17] = (dts_90khz >> 7) & 0xFF;
     buf[18] = ((dts_90khz << 1) & 0xFE) | 1;
 
-    /* Copy NALU data */
+    /* Copy NALU data (including start codes) */
     memcpy(&buf[19], nalu_data, nalu_len);
 
     return 19 + nalu_len;
