@@ -156,10 +156,10 @@ void app_main(void)
         sensor_sim_get_data(&sensors, frame_count);
 
         /* Print JSON telemetry to stdout for JSON ingestion pipeline */
-        printf("{\"frame\":%" PRIu32 ",\"lat\":%.6f,\"lon\":%.6f,\"alt\":%.1f,\"heading\":%.1f,\"ts\":%" PRIu64 "}\n",
+        printf("{\"frame\":%" PRIu32 ",\"lat\":%.6f,\"lon\":%.6f,\"alt\":%.1f,\"heading\":%.1f,\"ts\":%" PRIu32 "}\n",
                frame_count,
                sensors.gps.lat, sensors.gps.lon, sensors.gps.alt, sensors.gps.heading,
-               (uint64_t)sensors.gps.tow_ms * 1000);
+               (uint32_t)(sensors.gps.tow_ms * 1000));
         fflush(stdout);
 
         // 2. Get next JPEG frame (loops 0-4)

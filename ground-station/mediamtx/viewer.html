@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STANAG 4609 Sensor Dashboard</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
@@ -46,6 +46,7 @@
   <div class="main">
     <div class="map-container">
       <div id="map"></div>
+      <video id="video" class="video-overlay"></video>
       <div class="overlay-info" id="overlayInfo">Waiting for stream...</div>
     </div>
     <aside class="sidebar">
@@ -83,11 +84,10 @@
     </aside>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"  ></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
     // ============ Configuration ============
     const API_URL = '/sensor_data.json';
-    const WEBSOCKET_URL = 'ws://localhost:8080/ws'; // Future WebSocket endpoint
 
     // ============ State ============
     let frameCount = 0;
@@ -237,8 +237,13 @@
       try {
         const resp = await fetch('/sensor_data.json');
         if (resp.ok) {
-          const data = await resp.json();
-          updateUI(data);
+          const raw = await resp.json();
+          // Convert JSON telemetry format to KLV format for updateUI
+          const klvData = {
+            Position: { lat: raw.lat, lon: raw.lon, height: raw.alt },
+            Heading: raw.heading !== undefined ? raw.heading : undefined
+          };
+          updateUI(klvData);
           document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
           document.getElementById('connStatus').classList.add('connected');
           document.getElementById('connText').textContent = 'Data Connected';
@@ -249,7 +254,7 @@
     }
 
     // ============ WebRTC Video (optional, may fail in WSL2) ============
-    async function connectWebRTC() {
+    async function connectWHEP() {
       try {
         const pc = new RTCPeerConnection({
           iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -262,25 +267,13 @@
           document.getElementById('overlayInfo').textContent = 'Video stream connected';
         };
 
-        pc.ondatachannel = (event) => {
-          const dc = event.channel;
-          dc.binaryType = 'arraybuffer';
-          dc.onmessage = (event) => {
-            const data = new Uint8Array(event.data);
-            const klvData = parseKLV(data);
-            if (Object.keys(klvData).length > 0) {
-              updateUI(klvData);
-              klvCount++;
-              document.getElementById('klvCount').textContent = klvCount;
-            }
-          };
-          console.log('Data channel opened');
-        };
-
         pc.onconnectionstatechange = () => {
           if (pc.connectionState === 'connected') {
             document.getElementById('connStatus').classList.add('connected');
             document.getElementById('connText').textContent = 'Connected';
+          } else if (pc.connectionState === 'failed') {
+            document.getElementById('connStatus').classList.remove('connected');
+            document.getElementById('connText').textContent = 'Failed';
           }
         };
 
