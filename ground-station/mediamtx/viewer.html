@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STANAG 4609 Viewer - GPS & Sensor Data</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
+    .header { background: #16213e; padding: 12px 20px; border-bottom: 1px solid #0f3460; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { margin: 0; font-size: 1.2rem; color: #00d9ff; text-shadow: 0 0 10px #00d9ff; }
+    .status { display: flex; gap: 12px; align-items: center; font-size: 0.85rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; }
+    .dot.connected { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
+    .main { flex: 1; display: flex; overflow: hidden; }
+    .map-container { flex: 1; min-width: 0; height: 100%; }
+    #map { width: 100%; height: 100%; }
+    .sidebar { width: 320px; background: #16213e; border-left: 1px solid #0f3460; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .panel { background: #0f3460; border-radius: 8px; padding: 16px; }
+    .panel h3 { margin: 0 0 12px; font-size: 0.9rem; color: #00d9ff; border-bottom: 1px solid #0f3460; padding-bottom: 8px; }
+    .data-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.85rem; }
+    .data-label { color: #8892b0; }
+    .data-value { color: #ccd6f6; font-family: 'Monospace', monospace; font-size: 0.8rem; }
+    .map-popup { font-size: 0.8rem; }
+    .map-popup strong { color: #00d9ff; }
+    .video-container { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
+    #video { width: 100%; height: 100%; }
+    .overlay-info { position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(0,0,0,0.7); padding: 8px 12px; border-radius: 4px; font-size: 0.75rem; color: #00ff88; font-family: monospace; }
+    .sensor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .sensor-item { background: #0f3460; padding: 8px 10px; border-radius: 6px; }
+    .sensor-name { font-size: 0.7rem; color: #8892b0; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sensor-value { font-size: 0.9rem; color: #ccd6f6; font-family: monospace; }
+    .gps-coords { background: #0f3460; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; color: #00ff88; word-break: break-all; }
+    .legend { font-size: 0.7rem; color: #8892b0; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>🛰️ STANAG 4609 Viewer</h1>
+    <div class="status">
+      <span class="dot" id="connStatus"></span>
+      <span id="connText">Connecting...</span>
+      <span id="frameCount" style="color:#00ff88;font-family:monospace;font-size:0.8rem;"></span>
+    </div>
+  </header>
+  <div class="main">
+    <div class="map-container">
+      <div id="map"></div>
+      <div class="overlay-info" id="overlayInfo">Waiting for stream...</div>
+    </div>
+    <aside class="sidebar">
+      <div class="panel">
+        <h3>📍 GPS Position</h3>
+        <div class="gps-coords" id="gpsCoords">Waiting for GPS...</div>
+        <div class="legend">Updates via KLV metadata from MediaMTX stream</div>
+      </div>
+      <div class="panel">
+        <h3>📊 Sensor Data</h3>
+        <div class="sensor-grid" id="sensorGrid">
+          <div class="sensor-item"><div class="sensor-name">Latitude</div><div class="sensor-value" id="lat">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Longitude</div><div class="sensor-value" id="lon">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Altitude</div><div class="sensor-value" id="alt">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Heading</div><div class="sensor-value" id="hdg">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Speed</div><div class="sensor-value" id="spd">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Roll</div><div class="sensor-value" id="roll">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Pitch</div><div class="sensor-value" id="pitch">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Yaw</div><div class="sensor-value" id="yaw">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Temperature</div><div class="sensor-value" id="temp">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Humidity</div><div class="sensor-value" id="hum">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Pressure</div><div class="sensor-value" id="pres">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Mag Heading</div><div class="sensor-value" id="mag">--</div></div>
+          <div class="sensor-item"><div class="sensor-name">Baro Alt</div><div class="sensor-value" id="baro">--</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>📺 Stream Status</h3>
+        <div class="sensor-grid">
+          <div class="sensor-item"><div class="sensor-name">Frames</div><div class="sensor-value" id="frames">0</div></div>
+          <div class="sensor-item"><div class="sensor-name">Bytes Rx</div><div class="sensor-value" id="bytesRx">0</div></div>
+          <div class="sensor-item"><div class="sensor-name">KLV Packets</div><div class="sensor-value" id="klvCount">0</div></div>
+          <div class="sensor-item"><div class="sensor-name">Last Update</div><div class="sensor-value" id="lastUpdate">--</div></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    // ============ Configuration ============
+    const WHEP_URL = 'http://localhost:8889/whep/stanag';
+    const API_URL = 'http://localhost:9997/v3/paths/stanag';
+    
+    // ============ State ============
+    let peerConnection = null;
+    let dataChannel = null;
+    let marker = null;
+    let map = null;
+    let frameCount = 0;
+    let klvCount = 0;
+    let lastUpdate = Date.now();
+    let bytesReceived = 0;
+    
+    // ============ Leaflet Map Init ============
+    function initMap() {
+      map = L.map('map', { zoomControl: true }).setView([56.1735, 10.204], 12);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      
+      marker = L.marker([56.1735, 10.204], {
+        icon: L.divIcon({
+          className: 'custom-marker',
+          html: '<div style="background:#00d9ff;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px #00d9ff;display:flex;align-items:center;justify-content:center;"><span style="color:#1a1a2e;font-weight:bold;font-size:12px;">🛰️</span></div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        })
+      }).addTo(map);
+      
+      marker.bindPopup('<strong>STANAG Platform</strong><br>Waiting for GPS...').openPopup();
+    }
+
+    // ============ KLV Parser ============
+    // MISB ST 0601 KLV keys
+    const KLV_KEYS = {
+      0x0001: { name: 'Position', parse: parsePosition },
+      0x0002: { name: 'Velocity', parse: parseVelocity },
+      0x0003: { name: 'Heading', parse: parseHeading },
+      0x0102: { name: 'BaroAlt', parse: parseBaroAlt },
+      0x0103: { name: 'Temperature', parse: parseTemp },
+      0x0104: { name: 'MagHeading', parse: parseMagHeading },
+      0xFFFF: { name: 'Timestamp', parse: parseTimestamp }
+    };
+
+    function parseKLV(data) {
+      const results = {};
+      let offset = 0;
+      while (offset + 4 <= data.length) {
+        const key = (data[offset] << 8) | data[offset + 1];
+        const length = (data[offset + 2] << 8) | data[offset + 3];
+        offset += 4;
+        if (offset + length > data.length) break;
+        const value = data.slice(offset, offset + length);
+        offset += length;
+        
+        const handler = KLV_KEYS[key];
+        if (handler) {
+          results[handler.name] = handler.parse(value);
+        }
+      }
+      return results;
+    }
+
+    function parsePosition(val) {
+      if (val.length < 12) return null;
+      const lat = (val[0]<<24|val[1]<<16|val[2]<<8|val[3]) / 1e7;
+      const lon = (val[4]<<24|val[5]<<16|val[6]<<8|val[7]) / 1e7;
+      const height = (val[8]<<24|val[9]<<16|val[10]<<8|val[11]) / 1000;
+      return { lat, lon, height };
+    }
+
+    function parseVelocity(val) {
+      if (val.length < 12) return null;
+      const vn = (val[0]<<24|val[1]<<16|val[2]<<8|val[3]) / 1000;
+      const ve = (val[4]<<24|val[5]<<16|val[6]<<8|val[7]) / 1000;
+      const vd = (val[8]<<24|val[9]<<16|val[10]<<8|val[11]) / 1000;
+      const speed = Math.sqrt(vn*vn + ve*ve + vd*vd);
+      return { vn, ve, vd, speed };
+    }
+
+    function parseHeading(val) {
+      if (val.length < 4) return null;
+      return (val[0]<<24|val[1]<<16|val[2]<<8|val[3]) / 1e5;
+    }
+
+    function parseBaroAlt(val) {
+      if (val.length < 4) return null;
+      return (val[0]<<24|val[1]<<16|val[8]<<8|val[3]) / 1000;
+    }
+
+    function parseTemp(val) {
+      if (val.length < 2) return null;
+      return (val[0]<<8|val[1]) / 10;
+    }
+
+    function parseMagHeading(val) {
+      if (val.length < 4) return null;
+      return (val[0]<<24|val[1]<<16|val[2]<<8|val[3]) / 1e5;
+    }
+
+    function parseTimestamp(val) {
+      if (val.length < 4) return null;
+      return ((val[0]<<24|val[1]<<16|val[2]<<8|val[3]) >>> 0) / 1e6;
+    }
+
+    // ============ UI Updates ============
+    function updateUI(klvData) {
+      if (klvData.Position) {
+        const { lat, lon, height } = klvData.Position;
+        updateGPS(lat, lon, height);
+      }
+      if (klvData.Velocity) {
+        document.getElementById('spd').textContent = klvData.Velocity.speed.toFixed(1) + ' m/s';
+      }
+      if (klvData.Heading !== undefined) {
+        document.getElementById('hdg').textContent = klvData.Heading.toFixed(1) + '°';
+        document.getElementById('yaw').textContent = klvData.Heading.toFixed(1) + '°';
+      }
+      if (klvData.BaroAlt !== undefined) {
+        document.getElementById('baro').textContent = klvData.BaroAlt.toFixed(1) + ' m';
+      }
+      if (klvData.Temperature !== undefined) {
+        document.getElementById('temp').textContent = klvData.Temperature.toFixed(1) + ' °C';
+      }
+      if (klvData.MagHeading !== undefined) {
+        document.getElementById('mag').textContent = klvData.MagHeading.toFixed(1) + '°';
+      }
+      if (klvData.Timestamp !== undefined) {
+        document.getElementById('lastUpdate').textContent = new Date(klvData.Timestamp * 1000).toLocaleTimeString();
+      }
+    }
+
+    function updateGPS(lat, lon, height) {
+      document.getElementById('lat').textContent = lat.toFixed(6) + '°';
+      document.getElementById('lon').textContent = lon.toFixed(6) + '°';
+      document.getElementById('alt').textContent = height.toFixed(1) + ' m';
+      
+      const gpsDiv = document.getElementById('gpsCoords');
+      gpsDiv.innerHTML = `${lat.toFixed(6)}°<br>${lon.toFixed(6)}°<br>${height.toFixed(1)} m`;
+      
+      if (marker && map) {
+        marker.setLatLng([lat, lon]);
+        marker.getPopup().setContent(`<strong>STANAG Platform</strong><br>${lat.toFixed(6)}°, ${lon.toFixed(6)}°<br>${height.toFixed(1)} m`).update();
+        map.panTo([lat, lon]);
+      }
+    }
+
+    // ============ WebRTC / WHEP Connection ============
+    async function connectWHEP() {
+      try {
+        const pc = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        });
+        peerConnection = pc;
+
+        pc.ontrack = (event) => {
+          const video = document.getElementById('video');
+          video.srcObject = event.streams[0];
+          video.play().catch(e => console.log('Video play blocked:', e));
+          document.getElementById('overlayInfo').textContent = 'Video stream connected';
+        };
+
+        pc.ondatachannel = (event) => {
+          dataChannel = event.channel;
+          dataChannel.binaryType = 'arraybuffer';
+          dataChannel.onmessage = handleDataChannelMessage;
+          console.log('Data channel opened');
+          document.getElementById('connStatus').classList.add('connected');
+          document.getElementById('connText').textContent = 'Connected';
+        });
+
+        pc.onconnectionstatechange = () => {
+          console.log('PC state:', pc.connectionState);
+          if (pc.connectionState === 'connected') {
+            document.getElementById('connStatus').classList.add('connected');
+            document.getElementById('connText').textContent = 'Connected';
+          } else if (pc.connectionState === 'failed') {
+            document.getElementById('connStatus').classList.remove('connected');
+            document.getElementById('connText').textContent = 'Failed';
+          }
+        };
+
+        // Create offer
+        const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
+        await pc.setLocalDescription(offer);
+
+        // POST offer to WHEP endpoint
+        const response = await fetch(WHEP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/sdp' },
+          body: pc.localDescription.sdp
+        });
+
+        if (!response.ok) throw new Error('WHEP offer failed: ' + response.status);
+        
+        const answer = await response.text();
+        await pc.setRemoteDescription({ type: 'answer', sdp: answer });
+        
+        console.log('WHEP connection established');
+        
+      } catch (err) {
+        console.error('WHEP connection failed:', err);
+        document.getElementById('connText').textContent = 'Connection failed: ' + err.message;
+        setTimeout(connectWHEP, 5000);
+      }
+    }
+
+    function handleDataChannelMessage(event) {
+      const data = new Uint8Array(event.data);
+      bytesReceived += data.length;
+      klvCount++;
+      
+      // Parse KLV from data channel
+      const klvData = parseKLV(data);
+      if (Object.keys(klvData).length > 0) {
+        updateUI(klvData);
+      }
+      
+      // Update counters
+      document.getElementById('klvCount').textContent = klvCount;
+      document.getElementById('bytesRx').textContent = (bytesReceived / 1024).toFixed(1) + ' KB';
+    }
+
+    // ============ Periodic API Polling ============
+    async function pollAPI() {
+      try {
+        const resp = await fetch(API_URL);
+        const data = await resp.json();
+        const item = data.items?.[0];
+        if (item) {
+          document.getElementById('bytesRx').textContent = 
+            (item.bytesReceived / 1024 / 1024).toFixed(1) + ' MB';
+        }
+      } catch (e) {
+        console.warn('API poll failed:', e);
+      }
+    }
+
+    // ============ Init ============
+    function init() {
+      initMap();
+      document.getElementById('video').addEventListener('loadeddata', () => {
+        document.getElementById('overlayInfo').textContent = 'Stream playing';
+      });
+      document.getElementById('video').addEventListener('timeupdate', () => {
+        frameCount++;
+        document.getElementById('frameCount').textContent = `Frames: ${frameCount}`;
+      });
+      
+      connectWHEP();
+      setInterval(pollAPI, 2000);
+      
+      // Keep WebRTC alive
+      setInterval(() => {
+        if (peerConnection && peerConnection.connectionState !== 'connected') {
+          console.log('Reconnecting...');
+          connectWHEP();
+        }
+      }, 10000);
+    }
+
+    // Start
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
