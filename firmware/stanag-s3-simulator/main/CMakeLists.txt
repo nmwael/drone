@@ -18,7 +18,6 @@ idf_component_register(
         nvs_flash
         esp_timer
         freertos
-        esp_psram
         mbedtls
         cxx
         log

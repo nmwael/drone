@@ -1,8 +1,8 @@
-path = "/root/.espressif"
-idf_path = "/root/.espressif/v5.5.6/esp-idf"
-esp_idf_json_path = "/root/.espressif/tools"
-tool_download_folder_name = "/root/.espressif/dist"
-tool_install_folder_name = "/root/.espressif/tools"
+path = "/home/vscode/.espressif"
+idf_path = "/home/vscode/.espressif/v5.5.6/esp-idf"
+esp_idf_json_path = "/home/vscode/.espressif/tools"
+tool_download_folder_name = "/home/vscode/.espressif/dist"
+tool_install_folder_name = "/home/vscode/.espressif/tools"
 target = ["esp32s3"]
 idf_versions = ["v5.5.6"]
 tools_json_file = "tools/tools.json"
@@ -18,7 +18,7 @@ skip_prerequisites_check = false
 cleanup = true
 skip_components_download = false
 python_env_folder_name = "python"
-activation_script_path_override = "/root/.espressif/tools"
+activation_script_path_override = "/home/vscode/.espressif/tools"
 python_version_override = "python313"
 create_bat_activation_script = false
 

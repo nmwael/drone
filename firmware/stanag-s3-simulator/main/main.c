@@ -11,7 +11,6 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
-#include "esp_psram.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
@@ -46,7 +45,7 @@ void app_main(void)
     ESP_LOGI(TAG, "STANAG S3 Simulator Starting");
     ESP_LOGI(TAG, "========================================");
     ESP_LOGI(TAG, "Free heap: %lu bytes", (unsigned long)esp_get_free_heap_size());
-    ESP_LOGI(TAG, "PSRAM: %s", esp_psram_is_initialized() ? "OK" : "NOT INITIALIZED");
+    ESP_LOGI(TAG, "PSRAM: NOT AVAILABLE (running on internal RAM)");
 
     // Initialize NVS (non-fatal; may fail on first boot in QEMU where
     // the flash image has no pre-formatted NVS partition)

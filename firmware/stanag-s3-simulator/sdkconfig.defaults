@@ -4,7 +4,8 @@
 # which has no spiffs partition and the SPIFFS image generation fails.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 
-# The STANAG simulator (jpeg_loader.c / main.c) calls esp_psram_get_size() and
-# esp_psram_is_initialized(), which are only compiled when SPIRAM support is
-# enabled. PSRAM is also required on the ESP32-S3 for the H.264 frame buffers.
-CONFIG_SPIRAM=y
+# PSRAM is not available on this hardware - disabled
+# CONFIG_SPIRAM=y
+
+# Increase main task stack size to handle large frame processing
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288
