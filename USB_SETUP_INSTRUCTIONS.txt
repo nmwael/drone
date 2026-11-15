@@ -1,0 +1,83 @@
+ESP32-S3 USB Setup for WSL2 + DevContainer + usbipd-win
+=========================================================
+
+PREREQUISITES (on Windows Host):
+- Install usbipd-win: https://github.com/dorssel/usbipd-win/releases
+- Enable WSL2 USB support: `usbipd wsl enable` (run once in Admin PowerShell)
+
+
+STEP 1: Find your ESP32-S3 device (Windows PowerShell Admin)
+-------------------------------------------------------------
+usbipd list
+
+Look for your ESP32-S3 in the list. Note the BUSID (format: X-Y, e.g., 3-1)
+
+
+STEP 2: Bind the device (Windows PowerShell Admin)
+--------------------------------------------------
+usbipd bind --busid X-Y
+
+Replace X-Y with your actual busid from Step 1.
+
+
+STEP 3: Attach to WSL2 (Windows PowerShell Admin)
+-------------------------------------------------
+usbipd attach --wsl --busid X-Y
+
+This makes the device appear in WSL2 (and thus in your devcontainer).
+
+
+STEP 4: Verify inside the container
+-----------------------------------
+ls -la /dev/ttyUSB* /dev/ttyACM*
+
+You should see /dev/ttyUSB0 (or similar) for the ESP32-S3.
+
+
+STEP 5: Persist for DevContainer (required for rebuilds)
+--------------------------------------------------------
+Add to .devcontainer/devcontainer.json under "runArgs":
+
+"runArgs": [
+  "--device=/dev/ttyUSB0"
+],
+
+Then rebuild the container: Dev Containers: Rebuild Container
+
+
+TROUBLESHOOTING:
+----------------
+- If device doesn't appear: unplug/replug ESP32-S3, repeat Steps 2-3
+- Check dmesg -T | grep -i usb for kernel messages
+- Ensure no other process is using the device (e.g., Arduino IDE on Windows)
+- For multiple USB devices, you may need multiple --device entries
+
+
+ESP-IDF FLASH COMMANDS (after device is visible):
+-------------------------------------------------
+# Set target
+idf.py set-target esp32s3
+
+# Flash
+idf.py flash monitor
+
+# Or with specific port
+idf.py -p /dev/ttyUSB0 flash monitor
+
+
+AUTOMATION (optional):
+---------------------
+Create a Windows script attach-esp32.ps1:
+```powershell
+$device = usbipd list | Where-Object { $_ -match "ESP32|Silicon Labs|CP210|CH340" }
+if ($device) {
+    $busid = ($device -split '\s+')[0]
+    usbipd bind --busid $busid
+    usbipd attach --wsl --busid $busid
+    Write-Host "Attached $busid to WSL"
+} else {
+    Write-Host "ESP32-S3 not found"
+}
+```
+
+Run as Admin: .\attach-esp32.ps1

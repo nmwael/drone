@@ -76,7 +76,11 @@
     "source=/dev,target=/dev,type=bind"
   ],
   "runArgs": [
-    "--privileged"
+    "--privileged",
+    "--device=/dev/ttyACM0",
+    "--device=/dev/ttyACM1",
+    "--device=/dev/ttyUSB0",
+    "--device=/dev/ttyUSB1"
   ],
   "remoteEnv": {
     "CLOUD_MODE": "${localEnv:CLOUD_MODE:-true}",
@@ -88,7 +92,6 @@
     "BIFROST_CONFIG": "/home/vscode/.config/bifrost/config.json",
     "BIFROST_CONFIG_STORE_PATH": "/home/vscode/.config/bifrost/config.db"
   },
-  
   "containerEnv": {
     "DEBIAN_FRONTEND": "noninteractive",
     "TZ": "Europe/Copenhagen"
