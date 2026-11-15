@@ -4,8 +4,8 @@
 # which has no spiffs partition and the SPIFFS image generation fails.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 
-# PSRAM is not available on this hardware - disabled
+# PSRAM disabled - AP Memory PSRAM causes heap init crash on this module
 # CONFIG_SPIRAM=y
 
-# Increase main task stack size to handle large frame processing
+# Increase main task stack size to handle frame processing
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288

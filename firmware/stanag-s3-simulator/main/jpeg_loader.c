@@ -15,8 +15,8 @@
 static const char *TAG = "JPEG_LOAD";
 
 #define NUM_FRAMES 5
-#define FRAME_WIDTH 320
-#define FRAME_HEIGHT 240
+#define FRAME_WIDTH 480
+#define FRAME_HEIGHT 320
 
 // Forward declarations
 void jpeg_loader_free_yuv(yuv420_frame_t *yuv);
@@ -64,15 +64,11 @@ esp_err_t jpeg_loader_init(void)
         }
     }
 
-    // Pre-allocate YUV buffer (1280x720 I420 = 1280*720*1.5 = 1,382,400 bytes)
+    // Pre-allocate YUV buffer in internal RAM (480x320 I420 = 480*320*1.5 = 230,400 bytes)
     s_yuv_buffer_size = FRAME_WIDTH * FRAME_HEIGHT * 3 / 2;
     s_yuv_buffer = heap_caps_malloc(s_yuv_buffer_size, MALLOC_CAP_8BIT);
     if (!s_yuv_buffer) {
         ESP_LOGE(TAG, "Failed to alloc YUV buffer in internal RAM");
-        return ESP_ERR_NO_MEM;
-    }
-    if (!s_yuv_buffer) {
-        ESP_LOGE(TAG, "Failed to alloc YUV buffer");
         return ESP_ERR_NO_MEM;
     }
     ESP_LOGI(TAG, "YUV buffer allocated: %d bytes (Internal RAM)", s_yuv_buffer_size);
