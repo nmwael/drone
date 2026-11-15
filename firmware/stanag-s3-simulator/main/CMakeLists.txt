@@ -23,6 +23,7 @@ idf_component_register(
         log
         spiffs
     PRIV_REQUIRES
+        esp_psram
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE

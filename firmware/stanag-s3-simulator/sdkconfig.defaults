@@ -4,8 +4,22 @@
 # which has no spiffs partition and the SPIFFS image generation fails.
 CONFIG_PARTITION_TABLE_CUSTOM=y
 
-# PSRAM disabled - AP Memory PSRAM causes heap init crash on this module
-# CONFIG_SPIRAM=y
+# PSRAM configuration for ESP32-S3 with n16r8 (16MB Flash + 8MB PSRAM)
+# AP Memory PSRAM (vendor 0x0d) - 8MB Octal/OPI mode
+# Use memory map only mode to avoid TLSF heap corruption bug (IDFGH-17504)
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_BOOT_INIT=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_40M=y
+CONFIG_SPIRAM_SIZE=8388608
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+CONFIG_SPIRAM_MEMTEST=n
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=16384
+# Use memory map only - manual allocation via heap_caps_malloc(MALLOC_CAP_SPIRAM)
+CONFIG_SPIRAM_USE_MEMMAP=y
+# Don't add PSRAM to main heap (avoids TLSF corruption bug)
+CONFIG_SPIRAM_USE_CAPS_ALLOC=n
+CONFIG_SPIRAM_USE_MALLOC=n
 
-# Increase main task stack size to handle frame processing
+# Increase main task stack size to handle large frame processing
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288

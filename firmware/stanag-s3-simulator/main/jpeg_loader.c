@@ -10,6 +10,7 @@
 #include "esp_spiffs.h"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
+#include "esp_psram.h"
 #include "stanag_types.h"
 
 static const char *TAG = "JPEG_LOAD";
@@ -64,14 +65,19 @@ esp_err_t jpeg_loader_init(void)
         }
     }
 
-    // Pre-allocate YUV buffer in internal RAM (480x320 I420 = 480*320*1.5 = 230,400 bytes)
+    // Pre-allocate YUV buffer in PSRAM (480x320 I420 = 480*320*1.5 = 230,400 bytes)
     s_yuv_buffer_size = FRAME_WIDTH * FRAME_HEIGHT * 3 / 2;
-    s_yuv_buffer = heap_caps_malloc(s_yuv_buffer_size, MALLOC_CAP_8BIT);
+    s_yuv_buffer = heap_caps_malloc(s_yuv_buffer_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!s_yuv_buffer) {
-        ESP_LOGE(TAG, "Failed to alloc YUV buffer in internal RAM");
+        ESP_LOGW(TAG, "Failed to alloc YUV buffer in PSRAM, trying internal RAM");
+        s_yuv_buffer = heap_caps_malloc(s_yuv_buffer_size, MALLOC_CAP_8BIT);
+    }
+    if (!s_yuv_buffer) {
+        ESP_LOGE(TAG, "Failed to alloc YUV buffer");
         return ESP_ERR_NO_MEM;
     }
-    ESP_LOGI(TAG, "YUV buffer allocated: %d bytes (Internal RAM)", s_yuv_buffer_size);
+    ESP_LOGI(TAG, "YUV buffer allocated: %d bytes (%s)", s_yuv_buffer_size,
+             esp_psram_get_size() > 0 ? "PSRAM" : "Internal RAM");
 
     ESP_LOGI(TAG, "JPEG loader initialized (using dummy YUV for ESP32-S3)");
     return ESP_OK;
