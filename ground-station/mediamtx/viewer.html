@@ -52,7 +52,13 @@
     <aside class="sidebar">
       <div class="panel">
         <h3>📍 GPS Position</h3>
-        <div class="gps-coords" id="gpsCoords">Waiting for GPS...</div>
+        <div class="gps-coords" id="gpsCoords"></div>
+      </div>
+      <div class="panel">
+        <h3>🛣️ Road View</h3>
+        <div style="height:200px;background:#000;border-radius:6px;overflow:hidden;">
+          <img id="roadImg" src="" alt="Road view" style="width:100%;height:100%;object-fit:cover;">
+        </div>
       </div>
       <div class="panel">
         <h3>📊 Sensor Data</h3>
@@ -94,17 +100,18 @@
     let klvCount = 0;
     let bytesReceived = 0;
     let lastUpdate = Date.now();
+    let map, marker;
 
     // ============ Leaflet Map Init ============
     function initMap() {
-      const map = L.map('map', { zoomControl: true }).setView([56.1735, 10.204], 12);
+      const map = L.map('map', { zoomControl: true }).setView([55.6822286227075, 12.57143891669375], 17);
       
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
+        attribution: 'Tiles © Esri'
       }).addTo(map);
       
-      const marker = L.marker([56.1735, 10.204], {
+      const marker = L.marker([55.6822286227075, 12.57143891669375], {
         icon: L.divIcon({
           className: 'custom-marker',
           html: '<div style="background:#00d9ff;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px #00d9ff;display:flex;align-items:center;justify-content:center;"><span style="color:#1a1a2e;font-weight:bold;font-size:12px;">🛰️</span></div>',
@@ -113,7 +120,7 @@
         })
       }).addTo(map);
       
-      marker.bindPopup('<strong>STANAG Platform</strong><br>Waiting for GPS...').openPopup();
+      marker.bindPopup('<strong>STANAG Platform</strong><br>Aarhus track').openPopup();
       
       return { map, marker };
     }
@@ -237,16 +244,36 @@
       try {
         const resp = await fetch('/sensor_data.json');
         if (resp.ok) {
-          const raw = await resp.json();
-          // Convert JSON telemetry format to KLV format for updateUI
-          const klvData = {
-            Position: { lat: raw.lat, lon: raw.lon, height: raw.alt },
-            Heading: raw.heading !== undefined ? raw.heading : undefined
-          };
-          updateUI(klvData);
-          document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+          const data = await resp.json();
+          // Update GPS
+          if (data.lat !== undefined) {
+            document.getElementById('lat').textContent = data.lat.toFixed(6) + '°';
+            document.getElementById('lon').textContent = data.lon.toFixed(6) + '°';
+            document.getElementById('alt').textContent = data.alt.toFixed(1) + ' m';
+            const gpsDiv = document.getElementById('gpsCoords');
+            gpsDiv.innerHTML = `${data.lat.toFixed(6)}°<br>${data.lon.toFixed(6)}°<br>${data.alt.toFixed(1)} m`;
+            // Update road view image
+            const img = document.getElementById('roadImg');
+            if (img) {
+              // Yandex street map static image
+              img.src = `https://static-maps.yandex.ru/1.x/?ll=${data.lon},${data.lat}&z=17&size=640,400&l=map&pt=${data.lon},${data.lat},pm2rdm`;
+            }
+            if (marker && map) {
+              marker.setLatLng([data.lat, data.lon]);
+              marker.getPopup().setContent(`<strong>STANAG Platform</strong><br>${data.lat.toFixed(6)}°, ${data.lon.toFixed(6)}°<br>${data.alt.toFixed(1)} m`).update();
+              map.panTo([data.lat, data.lon]);
+            }
+          }
+          if (data.heading !== undefined) {
+            document.getElementById('hdg').textContent = data.heading.toFixed(1) + '°';
+          }
+          if (data.temp !== undefined) document.getElementById('temp').textContent = data.temp.toFixed(1) + ' °C';
+          if (data.hum !== undefined) document.getElementById('hum').textContent = data.hum.toFixed(1) + ' %';
+          if (data.press !== undefined) document.getElementById('pres').textContent = data.press.toFixed(1) + ' hPa';
+          if (data.mag !== undefined) document.getElementById('mag').textContent = data.mag.toFixed(1) + '°';
           document.getElementById('connStatus').classList.add('connected');
           document.getElementById('connText').textContent = 'Data Connected';
+          document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
         }
       } catch (e) {
         // Silently retry
@@ -277,30 +304,60 @@
           }
         };
 
-        const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
-        await pc.setLocalDescription(offer);
-        
-        const response = await fetch('http://localhost:8889/whep/stanag', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/sdp' },
-          body: pc.localDescription.sdp
-        });
-        
-        if (!response.ok) throw new Error('WHEP failed: ' + response.status);
-        
-        const answer = await response.text();
-        await pc.setRemoteDescription({ type: 'answer', sdp: answer });
-        
-        console.log('WHEP connection established');
-      } catch (err) {
-        console.warn('WebRTC failed (may not work in WSL2):', err.message);
-        document.getElementById('connText').textContent = 'WebRTC unavailable - using HTTP polling';
+        try {
+          const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
+          await pc.setLocalDescription(offer);
+          
+          const response = await fetch('http://localhost:8889/stanag/whep', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/sdp' },
+            body: pc.localDescription.sdp
+          });
+          
+          if (!response.ok) throw new Error('WHEP failed: ' + response.status);
+          
+          const answer = await response.text();
+          await pc.setRemoteDescription({ type: 'answer', sdp: answer });
+          
+          console.log('WHEP connection established');
+        } catch (err) {
+          console.warn('WebRTC failed (may not work in WSL2):', err.message);
+          document.getElementById('connText').textContent = 'WebRTC unavailable - using HTTP polling';
+        }
+      } catch (e) {
+        console.warn('connectWHEP error:', e);
       }
     }
 
     // ============ Init ============
+    let roadNodes = null;
+    let roadIndex = 0;
+    let roadProgress = 0;
+    const roadStep = 0.02; // 2% per tick -> smooth
     function init() {
-      const { map, marker } = initMap();
+      ({ map, marker } = initMap());
+      // Load track from OpenTracks GPX
+      fetch('/track.gpx')
+        .then(r=>r.text())
+        .then(txt=>{
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(txt, 'application/xml');
+          const pts = [...xml.querySelectorAll('trkpt')];
+          roadNodes = pts.map(p=>[parseFloat(p.getAttribute('lat')), parseFloat(p.getAttribute('lon'))]);
+          console.log('Track loaded from GPX', roadNodes.length);
+        })
+        .catch(e=>{
+          console.warn('GPX load failed', e);
+          roadNodes = [];
+          for(let i=0;i<=40;i++){
+            const lat = 55.6820 + i*0.00001;
+            roadNodes.push([lat,12.57143891669375]);
+          }
+          for(let i=39;i>=0;i--){
+            const lat = 55.6820 + i*0.00001;
+            roadNodes.push([lat,12.57143891669375]);
+          }
+        });
       
       document.getElementById('video').addEventListener('loadeddata', () => {
         document.getElementById('overlayInfo').textContent = 'Video stream connected';
@@ -313,14 +370,27 @@
       connectWHEP();
       setInterval(pollSensorData, 500);
       setInterval(pollAPI, 2000);
-      
-      // Keep WebRTC alive
-      setInterval(() => {
-        if (peerConnection && peerConnection.connectionState !== 'connected') {
-          console.log('Reconnecting WebRTC...');
-          connectWHEP();
+      // Road following animation with smooth interpolation
+      setInterval(()=>{
+        if (!roadNodes || roadNodes.length===0) return;
+        roadProgress += roadStep;
+        if (roadProgress >= 1) {
+          roadProgress = 0;
+          roadIndex = (roadIndex + 1) % roadNodes.length;
         }
-      }, 10000);
+        const [lat1, lon1] = roadNodes[roadIndex];
+        const nextIdx = (roadIndex + 1) % roadNodes.length;
+        const [lat2, lon2] = roadNodes[nextIdx];
+        const lat = lat1 + (lat2 - lat1) * roadProgress;
+        const lon = lon1 + (lon2 - lon1) * roadProgress;
+        if (map && marker) {
+          marker.setLatLng([lat, lon]);
+        }
+        const img = document.getElementById('roadImg');
+        if (img) {
+          img.src = `https://static-maps.yandex.ru/1.x/?ll=${lon},${lat}&z=17&size=640,400&l=map&pt=${lon},${lat},pm2rdm`;
+        }
+      }, 50);
     }
 
     async function pollAPI() {
@@ -328,9 +398,12 @@
         const resp = await fetch(API_URL);
         const data = await resp.json();
         const item = data.items?.[0];
-        if (item) {
+        if (item && item.bytesReceived !== undefined) {
           document.getElementById('bytesRx').textContent = 
             (item.bytesReceived / 1024 / 1024).toFixed(1) + ' MB';
+        } else {
+          // Fallback: no items, keep existing value
+          document.getElementById('bytesRx').textContent = '0.0 MB';
         }
       } catch (e) {
         // Silent
