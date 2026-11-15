@@ -249,4 +249,10 @@ fi
 echo "=== Post-create complete ==="
 echo "Run: bash scripts/use-profile.sh cloud (or local)"
 
+# Fix permissions on .local (created by pip install --user as root)
+if [ -d "/home/vscode/.local" ]; then
+    chown -R vscode:vscode /home/vscode/.local
+    echo "Fixed /home/vscode/.local ownership"
+fi
+
 exit 0
