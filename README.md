@@ -595,14 +595,11 @@ appear automatically once a board is attached. See
 
 ## Firmware Subsystems
 
-| Subsystem | Path | Target | Key Features |
-|-----------|------|--------|--------------|
-| **STANAG S3 Simulator** | `firmware/stanag-s3-simulator/` | ESP32-S3 | ✅ Running, STANAG 4609 POC, 5 JPEG loop, simulated sensors |
-| ESP32-S3 Vision | `firmware/esp32-s3-vision/` | ESP32-S3 | 🚧 OV5640 CSI, HW H.264, KLV injection, TS mux |
-| ESP32-C3 Sensor Hub | `firmware/esp32-c3-hub/` | ESP32-C3 | 🚧 u-blox GPS, QMC5883L Mag, ICM-20948 IMU, EKF |
-| RP2040 ToF #1 | `firmware/rp2040-tof-1/` | RP2040 (16MB) | 🚧 4× VL53L5CX, I2C mux, UART |
-| RP2040 ToF #2 | `firmware/rp2040-tof-2/` | RP2040 (4MB) | 🚧 4× VL53L5CX, I2C mux, UART |
-| RP2040 ToF #3 | `firmware/rp2040-tof-3/` | RP2040 (4MB) | 🚧 4× VL53L5CX, I2C mux, UART |
+| Subsystem | Path | Target | Status | AI Onboarding |
+|-----------|------|--------|--------|---------------|
+| **STANAG S3 Simulator** | `firmware/stanag-s3-simulator/` | ESP32-S3 | ✅ **Running** | `AGENTS.md` + `QUICK-REFERENCE.md` |
+| ESP32-S3 Vision | `firmware/esp32-s3-vision/` | ESP32-S3 | 🚧 Planned | `AGENTS.md` + `QUICK-REFERENCE.md` |
+| ESP32-C3 Sensor Hub | `firmware/esp32-c3-hub/` | ESP32-C3 | 🚧 Partial build | `AGENTS.md` + `QUICK-REFERENCE.md` |
 
 ---
 

@@ -13,16 +13,19 @@
   - [AI Onboarding](../firmware/stanag-s3-simulator/AGENTS.md)
   - [Quick Reference](../firmware/stanag-s3-simulator/QUICK-REFERENCE.md)
 
+## Firmware (Planned — Now with AI Onboarding)
+- **[ESP32-S3 Vision](../firmware/esp32-s3-vision/README.md)** — STANAG H.264 + Thermal/IR + TFLite
+  - [AI Onboarding](../firmware/esp32-s3-vision/AGENTS.md)
+  - [Quick Reference](../firmware/esp32-s3-vision/QUICK-REFERENCE.md)
+- **[ESP32-C3 Sensor Hub](../firmware/esp32-c3-hub/README.md)** — GPS + IMU + Mag + EKF
+  - [AI Onboarding](../firmware/esp32-c3-hub/AGENTS.md)
+  - [Quick Reference](../firmware/esp32-c3-hub/QUICK-REFERENCE.md)
+
 ## Hardware
 - [Hardware Inventory](hardware-inventory.md) - Complete parts list
 - [Wiring Diagrams](wiring-diagrams/) - Schematics and pinouts
 - [Sensor Datasheets](sensor-datasheets/) - Component specifications
 - [Power Budget](power-budget.md) - Power consumption analysis
-
-## Firmware (Planned)
-- [ESP32-S3 Vision](firmware/esp32-s3-vision/) - STANAG H.264 + Thermal/IR + TFLite
-- [ESP32-C3 Sensor Hub](firmware/esp32-c3-hub/) - GPS + IMU + Mag + EKF
-- [RP2040 ToF ×3](firmware/rp2040-tof-1/) - 4× VL53L5CX per board
 
 ## Standards & Protocols
 - [STANAG 4609 Implementation](stanag-4609-implementation.md) - MISB ST 0601 KLV
