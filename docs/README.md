@@ -1,17 +1,28 @@
 # Documentation Index
 
+## 🎯 Active & Running
+- **[STANAG S3 Simulator](../firmware/stanag-s3-simulator/README.md)** — ESP32-S3 STANAG 4609 POC **currently on `/dev/ttyACM0`**
+  - [Architecture Overview](../firmware/stanag-s3-simulator/OVERVIEW.md)
+  - [Data Flow & Timing](../firmware/stanag-s3-simulator/DATA-FLOW.md)
+  - [API Reference](../firmware/stanag-s3-simulator/API.md)
+  - [Build Guide](../firmware/stanag-s3-simulator/BUILD.md)
+  - [Testing Guide](../firmware/stanag-s3-simulator/TESTING.md)
+  - [MediaMTX Ground Station](../firmware/stanag-s3-simulator/MEDIAMTX.md)
+  - [Glossary](../firmware/stanag-s3-simulator/GLOSSARY.md)
+  - [Troubleshooting](../firmware/stanag-s3-simulator/TROUBLESHOOTING.md)
+  - [AI Onboarding](../firmware/stanag-s3-simulator/AGENTS.md)
+  - [Quick Reference](../firmware/stanag-s3-simulator/QUICK-REFERENCE.md)
+
 ## Hardware
 - [Hardware Inventory](hardware-inventory.md) - Complete parts list
 - [Wiring Diagrams](wiring-diagrams/) - Schematics and pinouts
 - [Sensor Datasheets](sensor-datasheets/) - Component specifications
 - [Power Budget](power-budget.md) - Power consumption analysis
 
-## Firmware
+## Firmware (Planned)
 - [ESP32-S3 Vision](firmware/esp32-s3-vision/) - STANAG H.264 + Thermal/IR + TFLite
 - [ESP32-C3 Sensor Hub](firmware/esp32-c3-hub/) - GPS + IMU + Mag + EKF
-- [RP2040 Motor](firmware/rp2040-motor/) - PID + Encoder + RC PWM
-- [RP2040 Steering+ToF](firmware/rp2040-steering-tof/) - Servo + VL53L5CX
-- [RP2040 Rear ToF](firmware/rp2040-rear-tof/) - VL53L5CX x2
+- [RP2040 ToF ×3](firmware/rp2040-tof-1/) - 4× VL53L5CX per board
 
 ## Standards & Protocols
 - [STANAG 4609 Implementation](stanag-4609-implementation.md) - MISB ST 0601 KLV
@@ -29,3 +40,10 @@
 - [Calibration](tools/calibration/) - Sensor calibration scripts
 - [Flashing](tools/flashing/) - Firmware upload utilities
 - [Monitoring](tools/monitoring/) - Telemetry visualization
+
+## Meta
+- [AI Agent Instructions (Root)](../AGENTS.md)
+- [Quick Reference (Root)](../QUICK-REFERENCE.md)
+- [Contributing](../CONTRIBUTING.md)
+- [Changelog](../CHANGELOG.md)
+- [Dev Container Setup](DEV_CONTAINER.md)

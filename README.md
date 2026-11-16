@@ -1,10 +1,25 @@
-# RC Monster Truck Sensor Suite
+# RC Monster Truck Sensor Suite — Drone/Firmware Monorepo
+
+**Monorepo for RC truck autonomy + STANAG 4609 video streaming**
 
 Upgrading an RC toy monster truck with autonomous navigation sensors:
 - **IR Vision** (obstacle detection, night vision)
 - **Thermal Vision** (heat signature detection)
 - **GPS** (positioning, waypoint navigation)
 - **Compass/Magnetometer** (heading, orientation)
+
+## Quick Navigation
+
+| Subsystem | Path | Status | Description |
+|-----------|------|--------|-------------|
+| **STANAG S3 Simulator** | `firmware/stanag-s3-simulator/` | ✅ **Running on `/dev/ttyACM0`** | ESP32-S3 STANAG 4609 POC (JPEG→H.264→KLV→MPEG-TS→UDP) |
+| ESP32-S3 Vision | `firmware/esp32-s3-vision/` | 🚧 Planned | Production vision pipeline (OV5640 + HW H.264 + KLV) |
+| ESP32-C3 Sensor Hub | `firmware/esp32-c3-hub/` | 🚧 Planned | GPS + IMU + Mag + Baro + AHT20 + EKF fusion |
+| RP2040 ToF ×3 | `firmware/rp2040-tof-{1,2,3}/` | 🚧 Early | 4× VL53L5CX per board, I2C mux, UART streaming |
+| Ground Station (MediaMTX) | `ground-station/mediamtx/` | ✅ Config ready | MPEG-TS ingest → WebRTC → Meta Quest |
+| WebXR Teleop App | `ground-station/webxr-app/` | 🚧 Scaffold | Three.js + WebXR for Quest 2/3 control |
+
+> **Currently Active:** The **STANAG S3 Simulator** (`firmware/stanag-s3-simulator/`) is flashed and running on `/dev/ttyACM0` outputting live STANAG 4609 telemetry. See its [README](firmware/stanag-s3-simulator/README.md) for details.
 
 ## Hardware Inventory
 
@@ -534,6 +549,37 @@ drone/
 
 ---
 
+## Active Firmware: STANAG S3 Simulator
+
+The **STANAG S3 Simulator** (`firmware/stanag-s3-simulator/`) is currently flashed and running:
+
+```bash
+# View live telemetry (115200 baud)
+stty -F /dev/ttyACM0 115200 raw -echo && cat /dev/ttyACM0
+
+# Parse MPEG-TS/KLV from serial capture
+python3 firmware/stanag-s3-simulator/scripts/parse_ts_output.py serial.log
+```
+
+**What it does:**
+- Loops 5 JPEG frames from SPIFFS → dummy YUV → H.264 (SW fallback)
+- Simulates GPS/IMU/Mag/Baro/AHT20 sensors (circular path, Aarhus)
+- Builds MISB ST 0601 KLV metadata per frame
+- Muxes into MPEG-TS (PAT/PMT/PES, PID 0x0100 video, 0x0101 KLV)
+- Outputs JSON telemetry via UART @ 115200 baud
+- Streams TS packets via UDP/ESP-NOW (configured for MediaMTX)
+
+**Key docs:**
+- [STANAG S3 Simulator README](firmware/stanag-s3-simulator/README.md) — Quick start, features, hardware
+- [Architecture Overview](firmware/stanag-s3-simulator/OVERVIEW.md) — Mermaid diagrams
+- [Data Flow](firmware/stanag-s3-simulator/DATA-FLOW.md) — Per-frame pipeline with timing
+- [API Reference](firmware/stanag-s3-simulator/API.md) — All module APIs
+- [Build Guide](firmware/stanag-s3-simulator/BUILD.md) — ESP-IDF v5.5.6, troubleshooting
+- [Testing Guide](firmware/stanag-s3-simulator/TESTING.md) — 64 Unity tests, QEMU
+- [MediaMTX Ground Station](firmware/stanag-s3-simulator/MEDIAMTX.md) — WebRTC + Meta Quest
+
+---
+
 ## Development Container
 
 The repo ships a dev container with the CMake/Ninja toolchain and the
@@ -544,6 +590,19 @@ the host `/dev` and runs privileged, so `/dev/ttyUSB0` and `/dev/ttyACM0`
 appear automatically once a board is attached. See
 [`docs/DEV_CONTAINER.md`](docs/DEV_CONTAINER.md) for the Podman/WSL2
 `usbipd-win` recipe and the reason hard `--device` entries must be avoided.
+
+---
+
+## Firmware Subsystems
+
+| Subsystem | Path | Target | Key Features |
+|-----------|------|--------|--------------|
+| **STANAG S3 Simulator** | `firmware/stanag-s3-simulator/` | ESP32-S3 | ✅ Running, STANAG 4609 POC, 5 JPEG loop, simulated sensors |
+| ESP32-S3 Vision | `firmware/esp32-s3-vision/` | ESP32-S3 | 🚧 OV5640 CSI, HW H.264, KLV injection, TS mux |
+| ESP32-C3 Sensor Hub | `firmware/esp32-c3-hub/` | ESP32-C3 | 🚧 u-blox GPS, QMC5883L Mag, ICM-20948 IMU, EKF |
+| RP2040 ToF #1 | `firmware/rp2040-tof-1/` | RP2040 (16MB) | 🚧 4× VL53L5CX, I2C mux, UART |
+| RP2040 ToF #2 | `firmware/rp2040-tof-2/` | RP2040 (4MB) | 🚧 4× VL53L5CX, I2C mux, UART |
+| RP2040 ToF #3 | `firmware/rp2040-tof-3/` | RP2040 (4MB) | 🚧 4× VL53L5CX, I2C mux, UART |
 
 ---
 

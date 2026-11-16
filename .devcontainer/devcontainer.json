@@ -8,7 +8,7 @@
     },
     "ghcr.io/devcontainers-extra/features/npm-package:1.0.4": {
       "package": "@opencode/cli",
-      "version": "2.2.7"
+      "version": "2"
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
@@ -64,5 +64,8 @@
     "--privileged",
     "--device=/dev/ttyACM0"
   ],
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "remoteEnv": {
+   "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}"
+  }
 }
