@@ -53,8 +53,8 @@
 | **5V BEC (3A+)** | 1 | ✅ **ON HAND** | €0 | Buck converter (5V 3A+) |
 | **Power Distribution Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printed enclosure with fused 5V/3.3V rails, XT60 in/out |
 | **Main Battery** | 1 | 🛒 TO BUY | **€30-60** | **2S LiPo 5000-8000mAh 50C+** (7.4V) or **3S 5000mAh** (11.1V)<br>→ [HobbyKing EU](https://hobbyking.com/en_us/lipo-batteries.html) / [Banggood EU](https://eu.banggood.com/Lipo-Batteries-c-100000001.html) / [RC-Tech DK](https://www.rc-tech.dk/lipo-batterier) / [HobbyStore DK](https://www.hobbystore.dk/lipo-batterier) / [Amazon.de](https://www.amazon.de/s?k=2S+LiPo+5000mAh) |
-| **Nokia BP-4L Batteries** | Multiple | ✅ **ON HAND** | **€0** | **3.7V ~1500mAh Li-ion** (Nokia phone batteries)<br>→ Use for: **Electronics/sensor power backup**, ESP32/ESP8266 standalone testing<br>→ Can wire 2S (7.4V) or parallel for capacity<br>→ **BMS ✅ ON HAND**, Need: JST connectors, charging solution |
-| **libr160 Li-ion Cells** | 2 | ✅ **ON HAND** | **€0** | **3.7V 1050mAh Li-ion** (model: libr160)<br>→ Use for: **Electronics backup**, sensor power, ESP32 testing<br>→ Can wire in parallel (2100mAh @ 3.7V) or 2S series (7.4V)<br>→ **BMS ✅ ON HAND**, Need: JST connectors |
+| **Nokia BP-4L Batteries** | Multiple | ✅ **ON HAND** | **€0** | **3.7V ~1500mAh Li-ion** (Nokia phone batteries)<br>→ Use for: **Electronics/sensor power backup**, ESP32/ESP8266 standalone testing<br>→ Can wire 2S (7.4V) or parallel for capacity<br>→ **BMS ❌ NOT ON HAND** — Need: BMS board, JST connectors, charging solution |
+| **libr160 Li-ion Cells** | 2 | ✅ **ON HAND** | **€0** | **3.7V 1050mAh Li-ion** (model: libr160)<br>→ Use for: **Electronics backup**, sensor power, ESP32 testing<br>→ Can wire in parallel (2100mAh @ 3.7V) or 2S series (7.4V)<br>→ **BMS ❌ NOT ON HAND** — Need: BMS board, JST connectors |
 | **Battery Charger** | 1 | 🔄 SALVAGED | €0 | CP2 charger (1S/2S) - may need upgrade for 2S/3S |
 
 > **Note:** Truck is **100% driving functional** — CP2 remote → ESC + steering servo works perfectly. No motor driver, no servo controller, no MCU in the control loop. 3.3V/5V regulators power **MCUs and sensors only**. This project adds sensor suite (vision, GPS, IMU) for autonomy/teleop on top of a working truck.
@@ -143,7 +143,7 @@
 >   - ✅ All enclosures 3D printed (PETG/TPU on hand)
 >   - ✅ RC truck + remote already owned
 >   - ✅ Quest 2 + WiFi 5 router already owned
->   - ✅ Buck converters + BMS + heat-set inserts on hand
+>   - ✅ Buck converters + heat-set inserts on hand (BMS for spare cells: ❌ need to buy)
 
 ---
 
