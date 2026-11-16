@@ -94,7 +94,7 @@ if ! grep -q "eim" "${HOME}/.bashrc" 2>/dev/null; then
   echo "" >> "${HOME}/.bashrc"
   echo "# ESP-IDF Installation Manager" >> "${HOME}/.bashrc"
   echo "export EIM_IDF_VERSION=v5.5.6" >> "${HOME}/.bashrc"
-  echo "eval \"\$(eim completion bash)\" 2>/dev/null || true" >> "${HOME}/.bashrc"
+  echo "eval \"\$(eim completions bash)\" 2>/dev/null || true" >> "${HOME}/.bashrc"
 fi
 
 # Set up environment for current session
