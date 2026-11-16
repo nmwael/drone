@@ -13,8 +13,9 @@
 |------|-----|--------|-----------|---------------|
 | ESP32-S3 DevKit (with PSRAM, 8MB) | 1 | ✅ ON HAND | $0 | Must have PSRAM for H.264 encoding |
 | ESP32-C3 DevKit / SuperMini | 1 | ✅ ON HAND | $0 | Sensor hub |
-| RP2040 (Pi Pico or bare module) | 3 | ✅ ON HAND | $0 | Motor, Steering+ToF, Rear ToF — **16MB (128 Mbit) / 4MB (32 Mbit) Flash** |
 | ESP8266MOD (AI Thinker) | 1 | ✅ ON HAND | $0 | Backup telemetry / watchdog / OTA |
+
+**Removed:** RP2040 ×3 (ToF arrays removed from scope)
 
 ---
 
@@ -22,9 +23,9 @@
 
 | Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
 |------|-----|--------|-----------------|-------------------|
-| **Thermal Camera** | 0 | ❌ **REMOVED** | **€0** | MLX90640 removed from scope — using OV5640 day camera only |
-| **IR Camera (Night Vision)** | 1 | 🛒 TO BUY | **€15-25** | **OV5640 5MP Camera Module** (CSI/Parallel, IR filter removed)<br>→ [Arducam EU](https://eu.arducam.com/product/ov5640-5mp-camera-module/) / [BerryBase DE](https://www.berrybase.de/kameras/arducam) / [Exp-Tech DE](https://www.exp-tech.de/kameras/arducam) / [Watterott DE](https://www.watterott.com/de/Kameras/Arducam) / [Amazon.de](https://www.amazon.de/s?k=OV5640+Camera+Modul) |
-| **Thermal Camera Alt (lower res)** | - | - | €25-35 | AMG8833 8×8 (Panasonic) - cheaper but low res<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/Panasonic/AMG8833) / [DigiKey DK](https://www.digikey.dk/en/products/detail/panasonic-electronic-components/AMG8833/5907444) |
+| **Day Camera (OV5640)** | 1 | 🛒 TO BUY | **€15-25** | **OV5640 5MP Camera Module** (CSI/Parallel, 1280×720 @ 30fps)<br>→ [Arducam EU](https://eu.arducam.com/product/ov5640-5mp-camera-module/) / [BerryBase DE](https://www.berrybase.de/kameras/arducam) / [Exp-Tech DE](https://www.exp-tech.de/kameras/arducam) / [Watterott DE](https://www.watterott.com/de/Kameras/Arducam) / [Amazon.de](https://www.amazon.de/s?k=OV5640+Camera+Modul) |
+
+**Removed:** Thermal camera (MLX90640), IR/night vision camera
 
 ---
 
@@ -32,12 +33,14 @@
 
 | Item | Qty | Status | Est. Cost (EUR) | EU/DK Store Links |
 |------|-----|--------|-----------------|-------------------|
-| **GNSS/GPS** | 1 | 🛒 TO BUY | **€6.90** | **u-blox NEO-6M GPS TTL receiver incl. antenna** (2-5m accuracy)<br>→ **[BerryBase DE](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)** (u-blox NEO-6M module with patch antenna, 5V TTL) / [Mouser DK](https://www.mouser.dk/c/gps-gnss-modules) / [DigiKey DK](https://www.digikey.dk/en/products/filter/gps-gnss-modules/224) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-gnss) / [Holybro EU](https://holybro.com/collections/gps/products/m8n-gps-module) / [AliExpress](https://www.aliexpress.com/wholesale?SearchText=NEO-6M+GPS) / [Banggood EU](https://eu.banggood.com/search/gps.html?keyword=NEO-6M) |
-| **GPS Antenna** | 1 | ✅ **INCLUDED** | €0 | **Built into NEO-6M module** (patch antenna on module)<br>→ Optional upgrade: u-blox ANN-MB-00 or Taoglas AA.161<br>→ [Mouser DK](https://www.mouser.dk/c/rf-if-and-rfid/gps-antennas) / [DigiKey DK](https://www.digikey.dk/en/products/filter/rf-antennas/232) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-antennen) / [Amazon.de](https://www.amazon.de/s?k=GPS+patch+antenna) |
+| **GNSS/GPS (NEO-6M)** | 1 | 🛒 TO BUY | **€6.90** | **u-blox NEO-6M GPS TTL receiver incl. antenna** (2-5m accuracy)<br>→ **[BerryBase DE](https://www.berrybase.de/en/detail/019234a35ca671b396889711157d1ce9)** (u-blox NEO-6M module with patch antenna, 5V TTL) / [Mouser DK](https://www.mouser.dk/c/gps-gnss-modules) / [DigiKey DK](https://www.digikey.dk/en/products/filter/gps-gnss-modules/224) / [BerryBase DE](https://www.berrybase.de/sensoren/positionierung/gps-gnss) / [Holybro EU](https://holybro.com/collections/gps/products/m8n-gps-module) / [AliExpress](https://www.aliexpress.com/wholesale?SearchText=NEO-6M+GPS) / [Banggood EU](https://eu.banggood.com/search/gps.html?keyword=NEO-6M) |
+| **GPS Antenna** | 1 | ✅ **INCLUDED** | €0 | **Built into NEO-6M module** (patch antenna on module) |
 | **Magnetometer** | 1 | 🛒 TO BUY | **€8-15** | **QMC5883L** (I2C, 16-bit)<br>→ [Mouser DK](https://www.mouser.dk/c/sensors/magnetic-sensors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/magnetic-sensors/659) / [BerryBase DE](https://www.berrybase.de/sensoren/magnetfeldsensoren) / [Exp-Tech DE](https://www.exp-tech.de/sensoren/magnetfeldsensoren) / [Amazon.de](https://www.amazon.de/s?k=QMC5883L) |
 | **IMU (Accel + Gyro)** | 1 | 🛒 TO BUY | **€12-20** | **ICM-20948** (9-DoF, DMP, I2C/SPI)<br>→ [Mouser DK](https://www.mouser.dk/ProductDetail/TDK-InvenSense/ICM-20948) / [DigiKey DK](https://www.digikey.dk/en/products/detail/tdk-invensense/ICM-20948/8708445) / [RS Components DK](https://dk.rs-online.com/web/p/imu-sensors) / [Watterott DE](https://www.watterott.com/de/Sensoren/IMU) |
 | **Barometer / Pressure** | 1 | ✅ ON HAND | €0 | **BMP280** (I2C, 0x76/0x77) |
 | **Temperature / Humidity** | 1 | ✅ ON HAND | €0 | **AHT20** (I2C, 0x38) |
+
+**Removed:** ZED-F9P RTK GPS (€200+), RP2040 ToF arrays
 
 ---
 
@@ -76,28 +79,15 @@
 | **RC Monster Truck** | 1 | ✅ **ON HAND** | **$0** | **100% functional** — drives perfectly with CP2 remote, no mods needed |
 | **CP2 2.4GHz Remote** | 1 | ✅ **ON HAND** | **$0** | **Direct to ESC + steering servo** — primary control, always works |
 | **Camera Mount (Fixed)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printed bracket for OV5640 day camera (mounts to Universal Box front) |
-| **Sensor Enclosures** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - C3 hub (GPS/IMU/Mag/Baro/AHT20) inside Universal Box |
-| **VL53L5CX Mounts** | 4 | 🖨️ **PRINT** | **$0 (filament)** | Printable - front, rear, left, right brackets (truck-specific) |
-| **Vibration Dampers** | 4-8 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation |
-| **GPS Antenna Mast** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - elevates ZED-F9P antenna above truck body |
-| **Antenna Mount (ESP32-S3)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - u.FL/SMA external antenna bracket |
-| **Wire Routing Clips** | 10+ | 🖨️ **PRINT** | **$0 (filament)** | Printable - cable management along chassis |
-| **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis |
-
-| **Universal Electronics Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | **Single modular enclosure** — contains ESP32-S3, ESP32-C3, 3×RP2040, ESP8266, power distro (buck converters), BMS, sensor hub (GPS/IMU/Mag/Baro/AHT20), all wiring. Mounts on ANY vehicle via universal bolt pattern (M6/M8 slots). Replaces: separate electronics tray, C3 hub enclosure, power distro box. |
-| **Sensor Enclosures** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
-| **Power Distribution Box** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
-| **Electronics Tray** | 0 | ❌ **REPLACED** | **€0** | Consolidated into Universal Electronics Box |
-| **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **€0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis (separate from electronics box) |
-| **VL53L5CX Mounts** | 0 | ❌ **NOT NEEDED** | **€0** | ToF array removed from project |
-| **Vibration Dampers** | 4-8 | 🖨️ **PRINT (TPU)** | **€0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation (between Universal Box and vehicle) |
-| **GPS Antenna Mast** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - elevates ZED-F9P antenna above vehicle body (mounts to Universal Box) |
-| **Antenna Mount (ESP32-S3)** | 1 | 🖨️ **PRINT** | **€0 (filament)** | Printable - u.FL/SMA external antenna bracket (on Universal Box) |
-| **Wire Routing Clips** | 10+ | 🖨️ **PRINT** | **€0 (filament)** | Printable - cable management inside Universal Box |
-| **Servo Adapters / Horns** | 2-4 | 🖨️ **PRINT** | **€0 (filament)** | Printable - adapt CP2 servos to gimbal |
-| Wiring / Connectors | 1 | 🛒 TO BUY | **€20-40** | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving (internal wiring for Universal Box)<br>→ [Mouser DK](https://www.mouser.dk/c/connectors/wire-to-board-connectors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/connectors-interconnects/211) / [RS Components DK](https://dk.rs-online.com/web/p/connectors) / [Conrad DK](https://www.conrad.dk/p/steckverbinder) / [BerryBase DE](https://www.berrybase.de/steckverbinder-kabel) / [Amazon.de](https://www.amazon.de/s?k=JST+SH+Stecker+XT60) |
-| Heat-set Inserts (M3/M4) | 50+ | ✅ **ON HAND** | €0 | For strong bolt-on printed parts |
-| M3/M4 Hardware (screws, nuts, standoffs) | 1 kit | 🛒 TO BUY | **€15-25** | Brass standoffs, nylon lock nuts, button-head screws<br>→ [Mouser DK](https://www.mouser.dk/c/hardware-fasteners-accessories) / [RS Components DK](https://dk.rs-online.com/web/p/fasteners-fixings) / [Conrad DK](https://www.conrad.dk/p/schrauben-muttern) / [BerryBase DE](https://www.berrybase.de/mechanik/befestigungstechnik) / [Watterott DE](https://www.watterott.com/de/Mechanik/Befestigung) / [Amazon.de](https://www.amazon.de/s?k=M3+Messing+H%C3%BClse+Gewindeeinsatz) |
+| **Universal Electronics Box** | 1 | 🖨️ **PRINT** | **€0 (filament)** | **Single modular enclosure** — contains ESP32-S3, ESP32-C3, ESP8266, power distro (buck converters), BMS for spare cells, sensor hub (GPS/IMU/Mag/Baro/AHT20), all internal wiring. Mounts on ANY vehicle via universal bolt pattern (M6/M8 slots). Replaces: separate electronics tray, C3 hub enclosure, power distro box. |
+| **Vibration Dampers** | 4 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - TPU Shore 60-80A for IMU/camera isolation (between Universal Box and vehicle) |
+| **GPS Antenna Mast** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - elevates NEO-6M antenna above vehicle body (mounts to Universal Box) |
+| **Antenna Mount (ESP32-S3)** | 1 | 🖨️ **PRINT** | **$0 (filament)** | Printable - u.FL/SMA external antenna bracket (on Universal Box) |
+| **Wire Routing Clips** | 10+ | 🖨️ **PRINT** | **$0 (filament)** | Printable - cable management inside Universal Box |
+| **Battery Tray / Strap** | 1 | 🖨️ **PRINT (TPU)** | **$0 (filament)** | Printable - secure 2S/3S LiPo to existing chassis (separate from electronics box) |
+| **Wiring / Connectors** | 1 | 🛒 TO BUY | **€20-40** | JST-SH, JST-GH, DuPont, XT60, heat shrink, cable sleeving (internal wiring for Universal Box)<br>→ [Mouser DK](https://www.mouser.dk/c/connectors/wire-to-board-connectors) / [DigiKey DK](https://www.digikey.dk/en/products/filter/connectors-interconnects/211) / [RS Components DK](https://dk.rs-online.com/web/p/connectors) / [Conrad DK](https://www.conrad.dk/p/steckverbinder) / [BerryBase DE](https://www.berrybase.de/steckverbinder-kabel) / [Amazon.de](https://www.amazon.de/s?k=JST+SH+Stecker+XT60) |
+| **Heat-set Inserts (M3/M4)** | 50+ | ✅ **ON HAND** | €0 | For strong bolt-on printed parts |
+| **M3/M4 Hardware (screws, nuts, standoffs)** | 1 kit | 🛒 TO BUY | **€15-25** | Brass standoffs, nylon lock nuts, button-head screws<br>→ [Mouser DK](https://www.mouser.dk/c/hardware-fasteners-accessories) / [RS Components DK](https://dk.rs-online.com/web/p/fasteners-fixings) / [Conrad DK](https://www.conrad.dk/p/schrauben-muttern) / [BerryBase DE](https://www.berrybase.de/mechanik/befestigungstechnik) / [Watterott DE](https://www.watterott.com/de/Mechanik/Befestigung) / [Amazon.de](https://www.amazon.de/s?k=M3+Messing+H%C3%BClse+Gewindeeinsatz) |
 
 > **Design Approach:** Measure your truck's chassis hole patterns, body mount points, and servo spline type. Design printed parts in Fusion 360 / FreeCAD to bolt directly to existing mounting points. Use **TPU dampers** between electronics tray and chassis for vibration isolation.
 
@@ -120,7 +110,7 @@
 
 | Item | Qty | Status | Est. Cost | Notes |
 |------|-----|--------|-----------|-------|
-| **USB-UART Adapter** | 0 | ❌ **NOT NEEDED** | $0 | All boards have onboard USB (ESP32-S3, C3, RP2040, ESP8266) |
+| **USB-UART Adapter** | 0 | ❌ **NOT NEEDED** | $0 | All boards have onboard USB (ESP32-S3, C3, ESP8266) |
 | **JTAG Debugger (ESP-Prog / J-Link)** | 0 | ❌ **NOT NEEDED** | $0 | ESP32 has onboard USB JTAG; printf debugging sufficient |
 | **Logic Analyzer (Saleae / DSLogic)** | 0 | ❌ **NOT NEEDED** | $0 | I2C/SPI/UART debugging via ESP32 built-in tools + printf |
 | Multimeter / Oscilloscope | 1 | ✅ ON HAND | $0 | Basic bench tools |
@@ -135,9 +125,9 @@
 | **Navigation Sensors (GPS + IMU + Mag)** | **€30** | **€55** |
 | Power & Actuation (battery, regs, box) | €30 | €60 |
 | Comms & Ground Station (router, Quest) | €10 | €100 |
-| Mechanical (Printed Box + Gimbal) | €5 | €15 |
+| Mechanical (Printed Box + Mounts) | €5 | €15 |
 | Dev Tools | €0 | €0 |
-| **ASA Filament (optional)** | **€0** | **€40** |
+| ASA Filament (optional) | €0 | €40 |
 | **TOTAL** | **~€85** | **~€310** |
 
 > **Notes:**
@@ -148,18 +138,7 @@
 > - **Cost Savings Applied:**
 >   - ❌ MLX90640 thermal camera removed (-€50-70)
 >   - ❌ RP2040 ToF arrays removed (-€216-300)
->   - ❌ USB-UART adapter removed (onboard USB)
->   - ❌ JTAG debugger removed (onboard USB JTAG)
->   - ❌ Logic Analyzer removed (built-in tools)
->   - ❌ **ZED-F9P RTK GPS replaced with NEO-6M (-€173-243)**
->   - ✅ OV5640 only (day camera, €15-25)
->   - ✅ All enclosures 3D printed (PETG/TPU on hand)
->   - ✅ RC truck + remote already owned
->   - ✅ Quest 2 + WiFi 5 router already owned
->   - ✅ Buck converters + BMS + heat-set inserts on hand
->   - ❌ USB-UART adapter removed (onboard USB)
->   - ❌ JTAG debugger removed (onboard USB JTAG)
->   - ❌ Logic Analyzer removed (built-in tools)
+>   - ❌ ZED-F9P RTK GPS replaced with NEO-6M (-€173-243)
 >   - ✅ OV5640 only (day camera, €15-25)
 >   - ✅ All enclosures 3D printed (PETG/TPU on hand)
 >   - ✅ RC truck + remote already owned
@@ -172,9 +151,9 @@
 
 ### Phase 0: 3D Print Preparation (Week 0) 🖨️ **DO FIRST**
 1. **Slice & print test coupons** - calibrate flow, temperature, bed adhesion
-2. **Print vibration dampers (TPU)** - 4-8 pcs, 30min each, test Shore hardness
-3. **Print sensor enclosures (PETG)** - C3 hub, power distro box, electronics tray (4-6h each)
-4. **Print camera gimbal (PETG + TPU)** - 6-8h, uses CP2 servos
+2. **Print vibration dampers (TPU)** - 4 pcs, 30min each, test Shore hardness
+3. **Print Universal Electronics Box (PETG)** - contains ESP32-S3, ESP32-C3, ESP8266, power distro, sensor hub
+4. **Print camera mount (PETG)** - OV5640 bracket
 5. **Print GPS antenna mast, antenna mount, wire clips** - 2-3h total
 6. **Install heat-set inserts (M3/M4)** - already on hand, install in printed parts
 
@@ -182,18 +161,18 @@
 
 ### Phase 1: Core Navigation (Week 1-2) 🚨 **START HERE**
 1. u-blox NEO-6M GPS + antenna (€6.90)
-2. QMC5883L (€8-15)
-3. ICM-20948 (€12-20)
+2. QMC5883L Magnetometer (€8-15)
+3. ICM-20948 IMU (€12-20)
 4. BMP280 + AHT20 ✅ ON HAND
 5. ESP32-C3 firmware: GPS + Mag + IMU + EKF
-6. **Install sensors in printed C3 hub enclosure**
+6. **Install sensors in printed Universal Box**
 
 ### Phase 2: Vision & STANAG (Week 2-4)
 1. OV5640 day camera (€15-25)
 2. ESP32-S3 with PSRAM ✅ ON HAND
-3. **Printed camera gimbal + OV5640 mount** (already printed)
+3. **Printed camera mount + OV5640** (already printed)
 4. H.264 + KLV + TS firmware
-5. **Mount gimbal on truck, route cables**
+5. **Mount camera on truck, route cables**
 
 ### Phase 3: Ground Station & Oculus (Week 4-6)
 1. WiFi 5 router ✅ ON HAND
@@ -202,11 +181,11 @@
 
 ### Phase 4: Integration & Field Test (Week 6+)
 1. **Existing RC truck + CP2 remote** ✅ ON HAND
-2. **All printed parts ready** - enclosures, gimbal, mounts, dampers, battery tray, electronics tray
-3. Vibration isolation (printed TPU dampers installed between electronics tray and chassis)
+2. **All printed parts ready** - Universal Box, camera mount, dampers, battery tray
+3. Vibration isolation (printed TPU dampers installed between Universal Box and chassis)
 4. Full system integration - wire all sensors, MCUs
 5. Configure RC manual: CP2 receiver → ESC + steering servo (direct, no MCU)
-6. Field test & calibrate: compass, GPS RTK, thermal thresholds
+6. Field test & calibrate: compass, GPS, IMU
 
 ---
 
@@ -242,7 +221,6 @@ BMP280                     (Pressure - HAVE)
 AHT20                      (Temp/Humidity - HAVE)
 TPS5430                    (3A Buck Reg 3.3V - HAVE)
 LM2596S-5.0                (5V Buck Reg - HAVE)
-TCA9548A                   (I2C Mux - if adding ToF later)
 ```
 
 > **Search tips for DK/EU stores:**
@@ -254,4 +232,4 @@ TCA9548A                   (I2C Mux - if adding ToF later)
 
 ---
 
-**Next Action:** Order Phase 1 parts (GPS, Mag, IMU) to start ESP32-C3 sensor hub firmware development.
+## Next Action: Order Phase 1 parts (GPS, Mag, IMU) to start ESP32-C3 sensor hub firmware development.
