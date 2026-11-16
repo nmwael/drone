@@ -2,7 +2,7 @@
 
 **Status:** 🚧 **Planned / Scaffold** — Partial build exists (has build artifacts)
 
-Sensor fusion hub for ESP32-C3: GPS/GNSS, 9-DoF IMU, Magnetometer, Barometer, Temperature/Humidity. Runs Extended Kalman Filter (EKF) for fused navigation solution. Provides telemetry to ESP32-S3 vision via ESP-NOW and UART. Interfaces with RP2040 ToF arrays via UART.
+Sensor fusion hub for ESP32-C3: GPS/GNSS, 9-DoF IMU, Magnetometer, Barometer, Temperature/Humidity. Runs Extended Kalman Filter (EKF) for fused navigation solution. Provides telemetry to ESP32-S3 vision via ESP-NOW and UART.
 
 ---
 
@@ -27,9 +27,9 @@ Sensor fusion hub for ESP32-C3: GPS/GNSS, 9-DoF IMU, Magnetometer, Barometer, Te
 │              ┌──────────────┼──────────────┐                    │
 │              ▼              ▼              ▼                    │
 │  ┌─────────────────┐ ┌──────────────┐ ┌─────────────────────┐  │
-│  │ Telemetry       │ │ ESP-NOW to   │ │ UART to RP2040s     │  │
-│  │ Provider (S3)   │ │ S3 Vision    │ │ (ToF arrays x3)     │  │
-│  │ (UART @ 115200) │ │ (2.4 GHz)    │ │ (115200 baud each)  │  │
+│  │ Telemetry       │ │ ESP-NOW to   │ │ (Available for      │  │
+│  │ Provider (S3)   │ │ S3 Vision    │ │ future expansion)  │  │
+│  │ (UART @ 115200) │ │ (2.4 GHz)    │ │                     │  │
 │  └─────────────────┘ └──────────────┘ └─────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -47,8 +47,9 @@ Sensor fusion hub for ESP32-C3: GPS/GNSS, 9-DoF IMU, Magnetometer, Barometer, Te
 | **BMP280** | `bmp280.h` | Barometric Pressure/Temperature (I2C) |
 | **EKF Fusion** | `sensor_fusion_ekf.h` | Extended Kalman Filter for nav |
 | **ESP-NOW Comms** | `comms_espnow.h` | ESP-NOW to ESP32-S3 vision |
-| **UART to RP2040** | `comms_uart_rp2040.h` | UART to 3× RP2040 ToF boards |
 | **Telemetry Provider** | `telemetry_provider.h` | Data source for S3 vision (UART) |
+
+**Removed:** UART to RP2040 ToF boards (no longer planned)
 
 ---
 
@@ -67,7 +68,6 @@ Sensor fusion hub for ESP32-C3: GPS/GNSS, 9-DoF IMU, Magnetometer, Barometer, Te
 | **Output Rate** | 100 Hz (IMU), 10 Hz (GPS/Mag/Baro), 1 Hz (AHT20) |
 | **ESP-NOW** | 2.4 GHz, broadcast to S3 vision |
 | **UART to S3** | GPIO 17/18, 115200 baud, JSON/protobuf |
-| **UART to RP2040s** | 3× UART, 115200 baud each |
 | **PPS Input** | GPIO for GPS time sync |
 
 ---
@@ -85,11 +85,6 @@ Sensor fusion hub for ESP32-C3: GPS/GNSS, 9-DoF IMU, Magnetometer, Barometer, Te
 - Outputs via UART @ 115200 to S3 vision
 - Format: JSON or binary protobuf (TBD)
 - Includes: Position, velocity, attitude, covariance, sensor health
-
-### RP2040 ToF Interface
-- 3× RP2040 boards, each with 4× VL53L5CX (16 zones each)
-- UART command/response protocol
-- Aggregates 48× 8×8 depth maps → obstacle map for S3
 
 ### ESP-NOW to S3 Vision
 - Low-latency telemetry broadcast
@@ -133,11 +128,10 @@ CONFIG_ESP_WIFI_ESPNOW_ENABLE_LONG_RANGE=y
 | **I2C0** | GPIO 11/12 | IMU, Mag, Baro, AHT20, BMP280 |
 | **UART0** | GPIO 20/21 | GPS/GNSS (ZED-F9P) + PPS |
 | **UART1** | GPIO 17/18 | ESP32-S3 Vision (telemetry) |
-| **UART2** | GPIO 6/7 | RP2040 ToF #1 |
-| **UART3** | GPIO 8/9 | RP2040 ToF #2 |
-| **UART4** | GPIO 10/11 | RP2040 ToF #3 |
 | **ESP-NOW** | Internal WiFi | 2.4 GHz to S3 |
 | **Status LED** | GPIO 8 (or similar) | Build-dependent |
+
+**Removed:** UART2/3/4 for RP2040 ToF boards
 
 ---
 
@@ -154,8 +148,9 @@ CONFIG_ESP_WIFI_ESPNOW_ENABLE_LONG_RANGE=y
 | BMP280 | 🚧 Placeholder | `bmp280.h` declared |
 | EKF Fusion | 🚧 Placeholder | `sensor_fusion_ekf.h` declared |
 | ESP-NOW Comms | 🚧 Placeholder | `comms_espnow.h` declared |
-| UART to RP2040 | 🚧 Placeholder | `comms_uart_rp2040.h` declared |
 | Telemetry Provider | 🚧 Placeholder | `telemetry_provider.h` declared |
+
+**Removed:** `comms_uart_rp2040.h` (RP2040 ToF no longer planned)
 
 ---
 
@@ -164,9 +159,8 @@ CONFIG_ESP_WIFI_ESPNOW_ENABLE_LONG_RANGE=y
 1. **Create component headers** (`.h` files) with API definitions
 2. **Implement I2C sensor drivers** — GPS UART, IMU, Mag, Baro, AHT20, BMP280
 3. **Implement EKF fusion** — 15+ state EKF (or use ESP-IDF `esp_ekf` if available)
-3. **Implement telemetry provider** — UART protocol to S3 vision
-4. **Implement ESP-NOW comms** — Broadcast to S3 vision
-5. **Implement RP2040 UART protocol** — Command/response for ToF data
+4. **Implement telemetry provider** — UART protocol to S3 vision
+5. **Implement ESP-NOW comms** — Broadcast to S3 vision
 6. **Add unit tests** — Unity framework (like simulator)
 7. **Create documentation** — API.md, BUILD.md, TESTING.md, etc.
 
@@ -181,7 +175,6 @@ CONFIG_ESP_WIFI_ESPNOW_ENABLE_LONG_RANGE=y
 | **Root Project Docs** | `/workspaces/drone/AGENTS.md`, `QUICK-REFERENCE.md` |
 | **ESP32-S3 Vision** | `../esp32-s3-vision/` (consumer of telemetry) |
 | **STANAG S3 Simulator** | `../stanag-s3-simulator/` (reference for KLV/TS) |
-| **RP2040 ToF** | `../rp2040-tof-*/` (removed - placeholder only) |
 
 ---
 

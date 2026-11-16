@@ -14,10 +14,10 @@
   - [Quick Reference](../firmware/stanag-s3-simulator/QUICK-REFERENCE.md)
 
 ## Firmware (Planned — Now with AI Onboarding)
-- **[ESP32-S3 Vision](../firmware/esp32-s3-vision/README.md)** — STANAG H.264 + Thermal/IR + TFLite
+- **[ESP32-S3 Vision](../firmware/esp32-s3-vision/README.md)** — STANAG H.264 Day Camera Video Streaming
   - [AI Onboarding](../firmware/esp32-s3-vision/AGENTS.md)
   - [Quick Reference](../firmware/esp32-s3-vision/QUICK-REFERENCE.md)
-- **[ESP32-C3 Sensor Hub](../firmware/esp32-c3-hub/README.md)** — GPS + IMU + Mag + EKF
+- **[ESP32-C3 Sensor Hub](../firmware/esp32-c3-hub/README.md)** — GPS + IMU + Mag + EKF Fusion
   - [AI Onboarding](../firmware/esp32-c3-hub/AGENTS.md)
   - [Quick Reference](../firmware/esp32-c3-hub/QUICK-REFERENCE.md)
 

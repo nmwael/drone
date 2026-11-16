@@ -1,8 +1,8 @@
-# ESP32-S3 Vision Firmware — STANAG 4609 + Thermal/IR + TFLite
+# ESP32-S3 Vision Firmware — STANAG 4609 Day Camera Video Streaming
 
 **Status:** 🚧 **Planned / Scaffold** — Not yet implemented
 
-Production vision pipeline for ESP32-S3 with OV5640 camera, hardware H.264 encoding, MISB ST 0601 KLV metadata, MPEG-TS streaming via ESP-NOW/UDP, and TensorFlow Lite Micro inference.
+Production vision pipeline for ESP32-S3 with OV5640 day camera, hardware H.264 encoding, MISB ST 0601 KLV metadata, MPEG-TS streaming via ESP-NOW/UDP to ground station.
 
 ---
 
@@ -12,23 +12,23 @@ Production vision pipeline for ESP32-S3 with OV5640 camera, hardware H.264 encod
 ┌─────────────────────────────────────────────────────────────────┐
 │                      ESP32-S3 (Vision)                          │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │ OV5640 Day   │  │ Thermal/IR   │  │ Vision Inference     │  │
-│  │ Camera (CSI) │  │ Camera       │  │ (TFLite Micro)       │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
-│         │                 │                     │              │
-│         ▼                 ▼                     ▼              │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              Frame Processing Pipeline                    │  │
-│  │  CSI → ISP → YUV420 → HW H.264 Enc → KLV → MPEG-TS       │  │
-│  └──────────────────────────┬────────────────────────────────┘  │
-│                             │                                   │
-│                             ▼                                   │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              Output Streams                               │  │
-│  │  ESP-NOW/UDP → MediaMTX:8888 (STANAG 4609 TS + KLV)      │  │
-│  │  UART @ 115200 → ESP32-C3 (Telemetry/Commands)           │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│  ┌──────────────┐                                               │
+│  │ OV5640 Day   │                                               │
+│  │ Camera (CSI) │                                               │
+│  └──────┬───────┘                                               │
+│         │                                                        │
+│         ▼                                                        │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              Frame Processing Pipeline                    │   │
+│  │  CSI → ISP → YUV420 → HW H.264 Enc → KLV → MPEG-TS       │   │
+│  └──────────────────────────┬────────────────────────────────┘   │
+│                             │                                    │
+│                             ▼                                    │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              Output Streams                               │   │
+│  │  ESP-NOW/UDP → MediaMTX:8888 (STANAG 4609 TS + KLV)      │   │
+│  │  UART @ 115200 → ESP32-C3 (Telemetry/Commands)           │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,9 +38,7 @@ Production vision pipeline for ESP32-S3 with OV5640 camera, hardware H.264 encod
 
 | Component | Source File | Purpose |
 |-----------|-------------|---------|
-| **Thermal Camera** | `main/thermal_camera.c` | Thermal imaging sensor interface |
-| **IR Camera** | `main/ir_camera.c` | Infrared/night vision camera |
-| **Vision Inference** | `main/vision_inference.c` | TFLite Micro object detection/tracking |
+| **Day Camera** | `main/day_camera.c` | OV5640 CSI camera driver |
 | **UART Comms** | `main/comms_uart.c` | Communication with ESP32-C3 hub |
 | **H.264 Encoder** | `main/h264_encoder.c` | **Hardware** H.264 encoding (ESP32-S3 ENC) |
 | **KLV Builder** | `main/klv_builder.c` | MISB ST 0601 metadata injection |
@@ -56,12 +54,10 @@ Production vision pipeline for ESP32-S3 with OV5640 camera, hardware H.264 encod
 | **MCU** | ESP32-S3 (PSRAM required, 8MB+) |
 | **Framework** | ESP-IDF v5.5+ |
 | **Day Camera** | OV5640 @ 1280×720 @ 30fps (CSI) |
-| **Thermal/IR** | MLX90640 or OV5640 w/ IR filter removed |
 | **Video Codec** | H.264 High Profile L4.1 (HW encoder) |
 | **Container** | MPEG-TS (STANAG 4609 compliant) |
 | **Metadata** | MISB ST 0601 KLV (UAS Local Set) |
 | **Transport** | ESP-NOW (primary) + UDP (fallback) |
-| **Inference** | TFLite Micro (ESP-DL) |
 | **Telemetry** | UART @ 115200 to ESP32-C3 |
 
 ---
@@ -72,8 +68,6 @@ Production vision pipeline for ESP32-S3 with OV5640 camera, hardware H.264 encod
 |---------|---------------------|---------------------------|
 | **Video Source** | 5 JPEG frames (SPIFFS) | OV5640 CSI camera (live) |
 | **H.264 Encoding** | Software fallback | **Hardware encoder** |
-| **Thermal/IR** | ❌ Not implemented | ✅ Dual camera support |
-| **AI Inference** | ❌ None | ✅ TFLite Micro (ESP-DL) |
 | **KLV Tags** | 7 basic tags | Full MISB ST 0601 UAS Local Set |
 | **Sensor Data** | Simulated | Real sensors via C3 hub |
 | **Target Use** | Compliance testing | Production deployment |
@@ -118,7 +112,6 @@ CONFIG_VIDEO_H264_ENC_HW=y
 | Signal | ESP32-S3 GPIO | Notes |
 |--------|---------------|-------|
 | **CSI Camera** | CSI interface (dedicated) | OV5640 day camera |
-| **Thermal/IR** | CSI or parallel | MLX90640 (I2C) or 2nd OV5640 |
 | **UART to C3** | GPIO 17/18 (UART1) | 115200 baud, telemetry + commands |
 | **ESP-NOW Antenna** | U.FL / PCB | 2.4 GHz for ESP-NOW |
 | **Status LED** | GPIO 48 (RGB) | Built-in on DevKit |
@@ -131,26 +124,23 @@ CONFIG_VIDEO_H264_ENC_HW=y
 |-----------|--------|-------|
 | Project scaffold | ✅ CMakeLists.txt | Component list defined |
 | Main entry | ✅ main.c | Task structure outlined |
-| Thermal camera | 🚧 Placeholder | `thermal_camera.h` declared |
-| IR camera | 🚧 Placeholder | `ir_camera.h` declared |
-| Vision inference | 🚧 Placeholder | `vision_inference.h` declared |
-| H.264 encoder | 🚧 Placeholder | `h264_encoder.h` declared |
-| KLV builder | 🚧 Placeholder | `klv_builder.h` declared |
-| TS muxer | 🚧 Placeholder | `ts_muxer.h` declared |
-| WiFi stream | 🚧 Placeholder | `wifi_stream.h` declared |
-| UART comms | 🚧 Placeholder | `comms_uart.h` declared |
+| Day camera | 🚧 Placeholder | `day_camera.h` to be created |
+| H.264 encoder | 🚧 Placeholder | `h264_encoder.h` to be created |
+| KLV builder | 🚧 Placeholder | `klv_builder.h` to be created |
+| TS muxer | 🚧 Placeholder | `ts_muxer.h` to be created |
+| WiFi stream | 🚧 Placeholder | `wifi_stream.h` to be created |
+| UART comms | 🚧 Placeholder | `comms_uart.h` to be created |
 
 ---
 
 ## Next Implementation Steps
 
 1. **Create component headers** (`.h` files) with API definitions
-2. **Implement camera drivers** — OV5640 CSI + thermal sensor I2C
+2. **Implement OV5640 CSI driver** — `day_camera.c` using ESP-IDF `esp_camera`
 3. **Port H.264/KLV/TS from simulator** — Adapt for HW encoder
-4. **Integrate ESP-DL + TFLite Micro** — Object detection model
-5. **Implement ESP-NOW + UART comms** — C3 hub protocol
-6. **Add unit tests** — Unity framework (like simulator)
-7. **Create documentation** — API.md, BUILD.md, TESTING.md, etc.
+4. **Implement ESP-NOW + UART comms** — C3 hub protocol
+5. **Add unit tests** — Unity framework (like simulator)
+6. **Create documentation** — API.md, BUILD.md, TESTING.md, etc.
 
 ---
 

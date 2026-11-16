@@ -8,6 +8,8 @@
 **Language:** C (C99)  
 **Build:** `idf.py` (CMake + Ninja)  
 
+**Scope:** GPS + IMU + Mag + Baro + Temp/RH → EKF Fusion → Telemetry to S3 Vision. **No RP2040 ToF boards.**
+
 ---
 
 ## Planned Architecture
@@ -17,9 +19,9 @@ Sensors (I2C/UART) → Raw Data → EKF Fusion → Fused Pose (100 Hz)
                                                     ↓
                     ┌──────────────────────────────┼──────────────────────────────┐
                     ▼                              ▼                              ▼
-         Telemetry Provider (UART)         ESP-NOW Broadcast              RP2040 UART x3
-         → ESP32-S3 Vision                 → ESP32-S3 Vision               → ToF Data
-         @ 115200 baud                     @ 2.4 GHz                       @ 115200 each
+         Telemetry Provider (UART)         ESP-NOW Broadcast              (Available for
+         → ESP32-S3 Vision                 → ESP32-S3 Vision               future expansion)
+         @ 115200 baud                     @ 2.4 GHz
 ```
 
 ---
@@ -35,8 +37,9 @@ Sensors (I2C/UART) → Raw Data → EKF Fusion → Fused Pose (100 Hz)
 | BMP280 | `bmp280.h` | Baro Pressure/Temp via I2C |
 | EKF Fusion | `sensor_fusion_ekf.h` | 15+ state Extended Kalman Filter |
 | ESP-NOW Comms | `comms_espnow.h` | Broadcast to ESP32-S3 |
-| UART to RP2040 | `comms_uart_rp2040.h` | 3× UART to ToF boards |
 | Telemetry Provider | `telemetry_provider.h` | Data source for S3 vision |
+
+**Removed:** `comms_uart_rp2040.h` (RP2040 ToF no longer planned)
 
 ---
 
@@ -174,13 +177,6 @@ typedef struct {
 } espnow_frame_t;
 ```
 
-### 4. RP2040 UART Protocol (ToF Arrays)
-```c
-// Command/response over UART @ 115200
-// Commands: START, STOP, GET_FRAME, CALIBRATE
-// Response: 4× VL53L5CX × 8×8 zones = 256 distance values per board
-```
-
 ---
 
 ## Build Configuration (Planned)
@@ -211,10 +207,9 @@ factory,  app,  factory, 0x10000, 0x100000,
 | I2C0 SDA/SCL | GPIO 11/12 | IMU, Mag, Baro, AHT20, BMP280 |
 | UART0 RX/TX | GPIO 20/21 | GPS ZED-F9P + PPS |
 | UART1 RX/TX | GPIO 17/18 | ESP32-S3 Vision (telemetry) |
-| UART2 RX/TX | GPIO 6/7 | RP2040 ToF #1 |
-| UART3 RX/TX | GPIO 8/9 | RP2040 ToF #2 |
-| UART4 RX/TX | GPIO 10/11 | RP2040 ToF #3 |
 | WiFi/ESP-NOW | Internal | ESP32-S3 Vision (2.4 GHz) |
+
+**Removed:** UART2/3/4 for RP2040 ToF boards
 
 ---
 
@@ -226,7 +221,6 @@ factory,  app,  factory, 0x10000, 0x100000,
 | EKF fusion | Synthetic data with known ground truth |
 | Telemetry output | Capture UART, validate JSON/protobuf |
 | ESP-NOW latency | Measure S3 receive timestamp |
-| RP2040 protocol | Loopback test with simulated ToF |
 | Sensor health | Simulate failures, verify detection |
 
 ---

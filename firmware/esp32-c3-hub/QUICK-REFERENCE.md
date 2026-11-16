@@ -2,6 +2,8 @@
 
 ## ⚠️ Status: PLANNED / SCAFFOLD — Partial Build Exists
 
+**Scope:** GPS + IMU + Mag + Baro + Temp/RH → EKF → Telemetry to S3. **No RP2040 ToF boards.**
+
 ---
 
 ## 🎯 Target Specs
@@ -18,7 +20,6 @@
 | Sensor Fusion | EKF (15+ state) @ 100 Hz |
 | ESP-NOW | 2.4 GHz broadcast to S3 |
 | UART to S3 | GPIO 17/18 @ 115200 baud |
-| UART to RP2040s | 3× UART @ 115200 baud |
 
 ---
 
@@ -38,10 +39,11 @@ esp32-c3-hub/
 │   ├── bmp280.c/h              # Baro Pressure/Temp I2C
 │   ├── sensor_fusion_ekf.c/h   # EKF fusion (15+ state)
 │   ├── comms_espnow.c/h        # ESP-NOW to S3
-│   ├── comms_uart_rp2040.c/h   # UART to 3× RP2040 ToF
 │   └── telemetry_provider.c/h  # UART data source for S3
 └── build/                      # Existing build artifacts
 ```
+
+**Removed:** `comms_uart_rp2040.c/h` (RP2040 ToF no longer planned)
 
 ---
 
@@ -86,10 +88,9 @@ CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=32
 | I2C0 SDA/SCL | 11/12 | IMU, Mag, Baro, AHT20, BMP280 |
 | UART0 RX/TX | 20/21 | GPS ZED-F9P + PPS |
 | UART1 RX/TX | 17/18 | ESP32-S3 Vision (telemetry) |
-| UART2 RX/TX | 6/7 | RP2040 ToF #1 |
-| UART3 RX/TX | 8/9 | RP2040 ToF #2 |
-| UART4 RX/TX | 10/11 | RP2040 ToF #3 |
 | ESP-NOW | WiFi Radio | S3 Vision (2.4 GHz) |
+
+**Removed:** UART2/3/4 for RP2040 ToF boards
 
 ---
 
@@ -104,7 +105,6 @@ CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=32
 | `bmp280` | `init()`, `read_pressure_temp()` |
 | `sensor_fusion_ekf` | `init()`, `update(imu)`, `update_gps()`, `get_state()` |
 | `comms_espnow` | `init()`, `send_telemetry()`, `set_peer()` |
-| `comms_uart_rp2040` | `init()`, `send_cmd()`, `recv_frame()` |
 | `telemetry_provider` | `init()`, `send_to_s3()`, `recv_from_s3()` |
 
 ---
@@ -148,7 +148,6 @@ Total                 : 19 states
 - [ ] Implement 19-state EKF fusion (or port existing)
 - [ ] Implement telemetry_provider (UART protocol to S3)
 - [ ] Implement ESP-NOW broadcast to S3
-- [ ] Implement 3× UART protocol to RP2040 ToF boards
 - [ ] Add unit tests (Unity, like simulator)
 - [ ] Create documentation (API.md, BUILD.md, TESTING.md, etc.)
 
