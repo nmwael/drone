@@ -1,96 +1,33 @@
 {
-  "name": "drone-sensor-suite",
+  "name": "Drone Firmware Development",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
   "features": {
-    "ghcr.io/devcontainers-extra/features/apt-get-packages:1.0.8": {
-      "packages": "curl,git,jq,build-essential,cmake,ninja-build,ffmpeg,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping,unzip,wget,ca-certificates"
-    },
-    "ghcr.io/devcontainers-extra/features/npm-package:1.0.4": {
-      "package": "@opencode/cli",
-      "version": "2.2.7"
-    },
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts",
-      "installTools": true
-    },
-    "ghcr.io/devcontainers/features/go:1": {
-      "version": "1.22"
-    },
-    "ghcr.io/devcontainers/features/common-utils:1": {},
-    "ghcr.io/nmwael/agentic-devcontainer-feature/models:1": {
-      "modelsConfig": ".devcontainer/llm-lab-models.json",
-      "rolesConfig": ".devcontainer/llm-lab-roles.json",
-      "profilesDir": "profiles",
-      "defaultProfile": "cloud",
-      "cacheDir": "/workspace/.cache/llm-lab",
-      "modelsDir": "/workspace/models"
-    },
-    "ghcr.io/nmwael/agentic-devcontainer-feature/opencode-agents:1": {
-      "INSTALL_DIR": "/workspace/.opencode",
-      "WITH_LIBRARY": "true",
-      "OVERWRITE": "true"
-    },
-    "ghcr.io/nmwael/agentic-devcontainer-feature/bifrost-gateway:1": {
-      "configStoreEnabled": "true",
-      "configStoreType": "sqlite",
-      "configStorePath": "/workspace/.config/bifrost/config.db",
-      "port": 8082
-    }
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
+  "postCreateCommand": "bash /workspaces/drone/.devcontainer/setup-esp-idf.sh",
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-vscode-remote.remote-containers",
-        "ms-python.python",
+        "espressif.esp-idf-extension",
         "ms-vscode.cpptools",
-        "llvm-vs-code-extensions.vscode-clangd",
-        "ms-vscode.cmake-tools",
-        "timonwong.shellcheck",
-        "foxundermoon.shell-format",
-        "redhat.vscode-yaml",
-        "ms-vscode.makefile-tools"
+        "ms-vscode.cmake-tools"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
-        "files.autoSave": "onFocusChange",
-        "editor.formatOnSave": true,
-        "editor.tabSize": 2,
-        "editor.insertSpaces": true
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "bash",
+            "args": ["--init-file", "/workspaces/drone/.devcontainer/esp-idf-env.sh"]
+          }
+        }
       }
     }
   },
-  "forwardPorts": [
-    8082,
-    4096,
-    8888,
-    8889,
-    8554,
-    9997,
-    9998
-  ],
-  "postCreateCommand": "bash .devcontainer/scripts/post-create.sh",
-  "postStartCommand": "bash .devcontainer/scripts/auto-startup.sh && bash -c \"if [ -d /home/vscode/.local ]; then chown -R vscode:vscode /home/vscode/.local; echo 'Fixed /home/vscode/.local ownership'; fi\"",
-  "postAttachCommand": "echo 'Container ready. Run: bash scripts/use-profile.sh cloud'",
-  "mounts": [
-    "source=${localWorkspaceFolder}/models,target=/workspace/models,type=bind,consistency=cached",
-    "source=/dev,target=/dev,type=bind"
-  ],
   "runArgs": [
-    "--privileged",
-    "--device=/dev/ttyACM0"
+    "--device=/dev/ttyUSB0",
+    "--device=/dev/ttyUSB1",
+    "--device=/dev/ttyACM0",
+    "--device=/dev/ttyACM1"
   ],
-  "remoteEnv": {
-    "CLOUD_MODE": "${localEnv:CLOUD_MODE:-true}",
-    "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}",
-    "NVIDIA_NIM_ENDPOINT": "https://integrate.api.nvidia.com/v1",
-    "OPENCODE_CONFIG": "/workspace/.devcontainer/opencode.json",
-    "LLM_LAB_MODELS_DIR": "/workspace/models",
-    "LLM_LAB_CACHE_DIR": "/home/vscode/.cache/llm-lab",
-    "BIFROST_CONFIG": "/home/vscode/.config/bifrost/config.json",
-    "BIFROST_CONFIG_STORE_PATH": "/home/vscode/.config/bifrost/config.db"
-  },
-  "containerEnv": {
-    "DEBIAN_FRONTEND": "noninteractive",
-    "TZ": "Europe/Copenhagen"
-  }
+  "remoteUser": "vscode"
 }

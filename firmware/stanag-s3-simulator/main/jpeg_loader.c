@@ -31,6 +31,8 @@ static bool s_frames_initialized = false;
 // YUV buffer for decoded frames
 static uint8_t *s_yuv_buffer = NULL;
 static size_t s_yuv_buffer_size = 0;
+static int s_yuv_width = FRAME_WIDTH;
+static int s_yuv_height = FRAME_HEIGHT;
 
 esp_err_t jpeg_loader_init(void)
 {
@@ -65,19 +67,31 @@ esp_err_t jpeg_loader_init(void)
         }
     }
 
-    // Pre-allocate YUV buffer in PSRAM (480x320 I420 = 480*320*1.5 = 230,400 bytes)
+    // Pre-allocate YUV buffer - try PSRAM first, fallback to internal RAM with smaller frame
     s_yuv_buffer_size = FRAME_WIDTH * FRAME_HEIGHT * 3 / 2;
+    s_yuv_width = FRAME_WIDTH;
+    s_yuv_height = FRAME_HEIGHT;
+    
+    // Try PSRAM allocation
     s_yuv_buffer = heap_caps_malloc(s_yuv_buffer_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    if (!s_yuv_buffer) {
-        ESP_LOGW(TAG, "Failed to alloc YUV buffer in PSRAM, trying internal RAM");
+    if (s_yuv_buffer) {
+        ESP_LOGI(TAG, "YUV buffer allocated in PSRAM: %d bytes (%dx%d)", s_yuv_buffer_size, s_yuv_width, s_yuv_height);
+    } else {
+        // Try internal RAM with reduced frame size (320x240 = 115,200 bytes YUV420)
+        ESP_LOGW(TAG, "PSRAM allocation failed, trying internal RAM with reduced frame size");
+        s_yuv_width = 320;
+        s_yuv_height = 240;
+        s_yuv_buffer_size = s_yuv_width * s_yuv_height * 3 / 2;
+        
         s_yuv_buffer = heap_caps_malloc(s_yuv_buffer_size, MALLOC_CAP_8BIT);
+        if (s_yuv_buffer) {
+            ESP_LOGI(TAG, "YUV buffer allocated in internal RAM (reduced): %d bytes (%dx%d)", 
+                     s_yuv_buffer_size, s_yuv_width, s_yuv_height);
+        } else {
+            ESP_LOGE(TAG, "Failed to alloc YUV buffer in any memory");
+            return ESP_ERR_NO_MEM;
+        }
     }
-    if (!s_yuv_buffer) {
-        ESP_LOGE(TAG, "Failed to alloc YUV buffer");
-        return ESP_ERR_NO_MEM;
-    }
-    ESP_LOGI(TAG, "YUV buffer allocated: %d bytes (%s)", s_yuv_buffer_size,
-             esp_psram_get_size() > 0 ? "PSRAM" : "Internal RAM");
 
     ESP_LOGI(TAG, "JPEG loader initialized (using dummy YUV for ESP32-S3)");
     return ESP_OK;
@@ -181,24 +195,24 @@ yuv420_frame_t* jpeg_loader_create_dummy_yuv(void)
 {
     static yuv420_frame_t yuv;
     yuv.y = s_yuv_buffer;
-    yuv.u = s_yuv_buffer + FRAME_WIDTH * FRAME_HEIGHT;
-    yuv.v = s_yuv_buffer + FRAME_WIDTH * FRAME_HEIGHT + (FRAME_WIDTH * FRAME_HEIGHT / 4);
-    yuv.width = FRAME_WIDTH;
-    yuv.height = FRAME_HEIGHT;
-    yuv.stride_y = FRAME_WIDTH;
-    yuv.stride_uv = FRAME_WIDTH / 2;
+    yuv.u = s_yuv_buffer + s_yuv_width * s_yuv_height;
+    yuv.v = s_yuv_buffer + s_yuv_width * s_yuv_height + (s_yuv_width * s_yuv_height / 4);
+    yuv.width = s_yuv_width;
+    yuv.height = s_yuv_height;
+    yuv.stride_y = s_yuv_width;
+    yuv.stride_uv = s_yuv_width / 2;
     yuv.timestamp_us = esp_timer_get_time();
 
     // Fill with test pattern (Y=gradient, U=128, V=128)
-    for (int i = 0; i < FRAME_WIDTH * FRAME_HEIGHT; i++) {
+    for (int i = 0; i < s_yuv_width * s_yuv_height; i++) {
         yuv.y[i] = (i % 256);
     }
-    for (int i = 0; i < FRAME_WIDTH * FRAME_HEIGHT / 4; i++) {
+    for (int i = 0; i < s_yuv_width * s_yuv_height / 4; i++) {
         yuv.u[i] = 128;
         yuv.v[i] = 128;
     }
 
-    ESP_LOGD(TAG, "Created dummy YUV frame (%dx%d)", FRAME_WIDTH, FRAME_HEIGHT);
+    ESP_LOGD(TAG, "Created dummy YUV frame (%dx%d)", s_yuv_width, s_yuv_height);
     return &yuv;
 }
 

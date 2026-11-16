@@ -1,0 +1,21 @@
+#
+# STANAG S3 Simulator - Project Configuration
+#
+
+menu "STANAG S3 Simulator Configuration"
+
+config WIFI_SSID
+    string "WiFi SSID"
+    default ""
+    help
+        SSID of the WiFi network to connect to.
+        Leave empty to run in ESP-NOW only mode (no AP connection).
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+    default ""
+    help
+        Password for the WiFi network.
+        Required if SSID is set.
+
+endmenu

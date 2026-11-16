@@ -31,6 +31,40 @@ static const char *TAG = "STANAG_POC";
 #define FRAME_RATE_HZ 30
 #define FRAME_INTERVAL_MS (1000 / FRAME_RATE_HZ)
 
+/* WiFi event handler */
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data)
+{
+    if (event_base == WIFI_EVENT) {
+        switch (event_id) {
+            case WIFI_EVENT_STA_START:
+                ESP_LOGI(TAG, "WiFi STA started");
+                break;
+            case WIFI_EVENT_STA_CONNECTED:
+                ESP_LOGI(TAG, "Connected to AP");
+                break;
+            case WIFI_EVENT_STA_DISCONNECTED:
+                wifi_event_sta_disconnected_t *disconn = (wifi_event_sta_disconnected_t *)event_data;
+                ESP_LOGW(TAG, "Disconnected from AP, reason: %d, retrying...", disconn->reason);
+                esp_wifi_connect();
+                break;
+            default:
+                break;
+        }
+    } else if (event_base == IP_EVENT) {
+        switch (event_id) {
+            case IP_EVENT_STA_GOT_IP:
+                ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+                ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+                ESP_LOGI(TAG, "Netmask: " IPSTR, IP2STR(&event->ip_info.netmask));
+                ESP_LOGI(TAG, "Gateway: " IPSTR, IP2STR(&event->ip_info.gw));
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 void app_main(void)
 {
     // Disable task watchdog for QEMU testing
@@ -65,29 +99,61 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    // NOTE: WiFi/ESP-NOW initialization is SKIPPED in QEMU
-    // WiFi phy calibration blocks the main task indefinitely in QEMU
-    // For hardware testing, uncomment the WiFi/ESP-NOW section below
-    ESP_LOGW(TAG, "WiFi/ESP-NOW initialization skipped (QEMU mode)");
-    ESP_LOGI(TAG, "For hardware testing, enable WiFi section in main.c and call network_tx_espnow_init()");
-    
-    /*
+    // Create default WiFi STA interface
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
+    assert(sta_netif);
+
     // Initialize WiFi for ESP-NOW/UDP
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N));
+    
+    // Register WiFi event handler
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
+    
+    // Configure WiFi credentials (set via menuconfig or runtime)
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = CONFIG_WIFI_SSID,
+            .password = CONFIG_WIFI_PASSWORD,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+            .pmf_cfg = {
+                .capable = true,
+                .required = false
+            },
+        },
+    };
+    
+    // If SSID is empty, skip connection (QEMU/testing mode)
+    if (strlen((char*)wifi_config.sta.ssid) > 0) {
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+        ESP_LOGI(TAG, "WiFi configured for SSID: %s", wifi_config.sta.ssid);
+    } else {
+        ESP_LOGW(TAG, "No WiFi SSID configured, running in ESP-NOW only mode");
+    }
     
     esp_err_t wifi_ret = esp_wifi_start();
     if (wifi_ret != ESP_OK) {
         ESP_LOGW(TAG, "WiFi start failed (code: %s)", esp_err_to_name(wifi_ret));
+        ESP_LOGW(TAG, "Continuing without WiFi (QEMU mode)");
     } else {
         ESP_LOGI(TAG, "WiFi started successfully");
         
-        // Initialize ESP-NOW after WiFi start
+        // Initialize ESP-NOW after WiFi start (works with or without AP connection)
         ESP_ERROR_CHECK(network_tx_espnow_init());
+        
+        // Configure UDP destination for MediaMTX
+        network_tx_set_udp_dest("192.168.4.2", 8888);
+        
+        // Connect to WiFi if credentials provided
+        if (strlen((char*)wifi_config.sta.ssid) > 0) {
+            ESP_LOGI(TAG, "Connecting to WiFi...");
+            esp_wifi_connect();
+        }
     }
-    */
 
     // Initialize subsystems
     ESP_LOGI(TAG, "Initializing SPIFFS...");
