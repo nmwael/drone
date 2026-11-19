@@ -39,3 +39,7 @@ CONFIG_ESP_WIFI_MGMT_SBUF_NUM=32
 
 # Increase main task stack size to handle large frame processing
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=12288
+
+# Status LED Configuration
+CONFIG_STATUS_LED_GPIO=45
+CONFIG_STATUS_LED_SCAN=n

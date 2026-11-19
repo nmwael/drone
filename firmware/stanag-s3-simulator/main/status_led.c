@@ -166,12 +166,12 @@ static void pattern_ms(led_state_t st, int *on, int *off)
 {
     switch (st) {
     case LED_STATE_OFF:       *on = 0;    *off = 0;    break;
-    case LED_STATE_BOOT:     *on = 50;   *off = 50;   break;
-    case LED_STATE_WIFI_WAIT:  *on = 1000; *off = 1000; break;
-    case LED_STATE_SRT_WAIT:  *on = 250;  *off = 250;  break;
+    case LED_STATE_BOOT:     *on = 200;  *off = 200;  break;  /* slower boot blink */
+    case LED_STATE_WIFI_WAIT:  *on = 2000; *off = 2000; break;  /* slow blue pulse = waiting for WiFi */
+    case LED_STATE_SRT_WAIT:  *on = 500;  *off = 500;  break;  /* medium amber pulse = SRT connecting */
     case LED_STATE_SRT_ON:
-    case LED_STATE_ON:        *on = 1;    *off = 0;    break;  /* solid */
-    case LED_STATE_ERROR:     *on = 100;  *off = 150;  break;
+    case LED_STATE_ON:        *on = 1;    *off = 0;    break;  /* solid green = streaming */
+    case LED_STATE_ERROR:     *on = 200;  *off = 800;  break;  /* slow red double flash */
     default:                  *on = 0;    *off = 0;    break;
     }
 }

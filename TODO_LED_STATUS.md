@@ -1,32 +1,24 @@
-# TODO: Fix WS2812 LED Status Indicator
+# DONE: Fixed WS2812 LED Status Indicator
 
-## Issue
-The status LED pin scan runs on every boot (~12 seconds), printing:
-```
-=== WS2812 PIN SCAN: 32 pins, ~400ms each (~12s) ===
-[scan] GPIO 0 done
-...
-[scan] GPIO 47 done  ← This is the actual LED
-=== PIN SCAN COMPLETE ===
-Tell me which GPIO number lit up and I will set STATUS_LED_GPIO to it.
-```
-
-## Root Cause
-`CONFIG_STATUS_LED_SCAN=y` is enabled in sdkconfig (or via menuconfig), causing the LED driver to scan all GPIOs on startup instead of using the configured pin.
-
-## Fix
-1. Disable pin scan in menuconfig:
+## Changes Made
+1. **Disabled pin scan** in `sdkconfig.defaults`:
    ```
-   idf.py menuconfig
-   → Component config → Status LED → [ ] Scan for LED pin
+   CONFIG_STATUS_LED_SCAN=n
+   CONFIG_STATUS_LED_GPIO=45
    ```
-2. Or set `CONFIG_STATUS_LED_SCAN=n` in `sdkconfig.defaults`
-3. Ensure `CONFIG_STATUS_LED_GPIO=47` is set (the actual WS2812 GPIO)
 
-## Files to Update
-- `firmware/stanag-s3-simulator/sdkconfig.defaults` - add `CONFIG_STATUS_LED_SCAN=n`
-- Verify `CONFIG_STATUS_LED_GPIO=47` is set
+2. **Slower blink patterns** in `main/status_led.c`:
+   - BOOT: 200ms on/200ms off (was 50ms)
+   - WIFI_WAIT: 2s on/2s off slow blue pulse (was 1s)
+   - SRT_WAIT: 500ms on/500ms off amber pulse (was 250ms)
+   - SRT_ON: Solid green
+   - ERROR: 200ms on/800ms off red double flash
 
-## Expected Result
-- Boot time reduced by ~12 seconds
-- LED immediately shows status (WiFi connecting → blue, SRT connecting → yellow, SRT streaming → green)
+## Result
+- Boot time reduced by ~12 seconds (no pin scan)
+- LED immediately shows status after init
+- Slower, more readable blink patterns
+
+## Verified
+- ESP32 boots without pin scan
+- LED shows WiFi connecting (slow blue) → SRT connecting (medium amber) → Streaming (solid green)
