@@ -2,6 +2,8 @@
 # Post-create setup for drone sensor suite devcontainer
 
 set +e
+modprobe cdc_acm 2>/dev/null || true
+udevadm trigger --subsystem-match=tty 2>/dev/null || true
 
 echo "=== Post-create setup for drone sensor suite ==="
 

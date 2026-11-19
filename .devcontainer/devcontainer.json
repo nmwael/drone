@@ -64,8 +64,8 @@
     "--privileged",
     "--device=/dev/ttyACM0"
   ],
-  "remoteUser": "vscode",
   "remoteEnv": {
-   "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}"
-  }
+    "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}"
+  },
+  "postStartCommand": "bash -c \"modprobe cdc_acm 2>/dev/null || true; udevadm trigger --subsystem-match=tty 2>/dev/null || true; chmod 666 /dev/ttyACM* 2>/dev/null || true; chmod 666 /dev/ttyUSB* 2>/dev/null || true\"; nohup bash .devcontainer/scripts/auto-startup.sh > /home/vscode/.cache/auto-startup.log 2>&1 & bash -c \"if [ -d /home/vscode/.local ]; then chown -R vscode:vscode /home/vscode/.local; echo Fixed /home/vscode/.local ownership; fi\""
 }
