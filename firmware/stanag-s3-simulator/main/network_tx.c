@@ -1,7 +1,7 @@
 /*
- * Network TX - ESP-NOW/UDP Implementation
+ * Network TX - Multi-Transport Implementation
  *
- * Supports both ESP-NOW (for direct drone-to-ground) and UDP (for WiFi/network)
+ * Supports UDP, SRT, ESP-NOW, and Unix socket for MPEG-TS streaming
  */
 
 #include "stanag_types.h"
@@ -17,6 +17,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "network_tx.h"
+#include "network_tx_srt.h"
+
 /* MAC address formatting macros (from esp_rom/ets_sys.h) */
 #ifndef MACSTR
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
@@ -26,6 +29,12 @@
 #endif
 
 static const char *TAG = "NETWORK_TX";
+
+/* Active transport mode */
+static network_tx_mode_t s_active_mode = NETWORK_TX_MODE_UDP;
+
+/* SRT configuration */
+static srt_config_t s_srt_config;
 
 /* Configuration - set via menuconfig or runtime */
 static struct {
@@ -58,9 +67,29 @@ static bool s_espnow_peer_added = false;
 /* Forward declaration for ESP-NOW send callback */
 static void network_tx_espnow_send_cb(const wifi_tx_info_t *tx_info, esp_now_send_status_t status);
 
+void network_tx_set_mode(network_tx_mode_t mode)
+{
+    s_active_mode = mode;
+    ESP_LOGI(TAG, "Transport mode set to %d", mode);
+}
+
+
+
+void network_tx_set_srt_config(const srt_config_t *config)
+{
+    if (config) {
+        memcpy(&s_srt_config, config, sizeof(srt_config_t));
+        ESP_LOGI(TAG, "SRT config updated: %s:%d, mode=%d, latency=%dms, encryption=%s",
+                 s_srt_config.ip, s_srt_config.port, s_srt_config.mode,
+                 s_srt_config.latency_ms,
+                 s_srt_config.passphrase[0] ? "enabled" : "disabled");
+    }
+}
+
 esp_err_t network_tx_init(void)
 {
-    ESP_LOGI(TAG, "Network TX initializing (ESP-NOW: %s, UDP: %s, Unix socket: %s)",
+    ESP_LOGI(TAG, "Network TX initializing (mode: %d, ESP-NOW: %s, UDP: %s, Unix socket: %s)",
+             s_active_mode,
              s_net_config.use_espnow ? "yes" : "no",
              s_net_config.use_udp ? "yes" : "no",
              s_net_config.use_unix_socket ? "yes" : "no");
@@ -83,7 +112,7 @@ esp_err_t network_tx_init(void)
             if (connect(s_net_config.unix_socket_fd,
                         (struct sockaddr *)&addr, sizeof(addr)) < 0) {
                 ESP_LOGW(TAG, "Failed to connect to Unix socket %s: errno %d. "
-                            "Falling back to UDP if enabled.",
+                                "Falling back to UDP if enabled.",
                          s_net_config.unix_socket_path, errno);
                 close(s_net_config.unix_socket_fd);
                 s_net_config.unix_socket_fd = -1;
@@ -127,6 +156,20 @@ esp_err_t network_tx_init(void)
 
     s_net_config.initialized = true;
     return ret;
+}
+
+/* Initialize SRT transport (call after network_tx_init if using SRT mode) */
+esp_err_t network_tx_srt_init(void)
+{
+    if (s_active_mode != NETWORK_TX_MODE_SRT) {
+        ESP_LOGW(TAG, "SRT init called but active mode is %d", s_active_mode);
+        return ESP_ERR_INVALID_STATE;
+    }
+    /* Apply defaults if no config was set via network_tx_set_srt_config() */
+    if (s_srt_config.ip[0] == '\0') {
+        network_tx_srt_config_default(&s_srt_config);
+    }
+    return network_tx_srt_module_init(&s_srt_config);
 }
 
 /* Initialize ESP-NOW after WiFi is started (for hardware testing) */
@@ -241,8 +284,19 @@ void network_tx_send(ts_packet_t *ts)
 
     bool sent_any = false;
 
+    /* Send via SRT (if active mode) */
+    if (s_active_mode == NETWORK_TX_MODE_SRT) {
+        esp_err_t ret = network_tx_srt_module_send(ts);
+        if (ret == ESP_OK) {
+            sent_any = true;
+        } else if (ret == ESP_ERR_INVALID_STATE) {
+            ESP_LOGW(TAG, "SRT not connected, packet dropped");
+        }
+    }
+
     /* Send via Unix socket (QEMU/devcontainer testing) */
-    if (s_net_config.use_unix_socket && s_net_config.unix_socket_fd >= 0) {
+    if (s_active_mode == NETWORK_TX_MODE_UNIX_SOCKET ||
+        (s_net_config.use_unix_socket && s_net_config.unix_socket_fd >= 0)) {
         int sent = sendto(s_net_config.unix_socket_fd, ts->data, ts->total_len, 0,
                           NULL, 0);
         if (sent > 0) {
@@ -257,7 +311,8 @@ void network_tx_send(ts_packet_t *ts)
     }
 
     /* Send via UDP */
-    if (s_net_config.use_udp && s_net_config.udp_socket >= 0) {
+    if (s_active_mode == NETWORK_TX_MODE_UDP ||
+        (s_net_config.use_udp && s_net_config.udp_socket >= 0)) {
         int sent = sendto(s_net_config.udp_socket, ts->data, ts->total_len, 0,
                           (struct sockaddr *)&s_net_config.udp_dest_addr,
                           sizeof(s_net_config.udp_dest_addr));
@@ -270,7 +325,8 @@ void network_tx_send(ts_packet_t *ts)
     }
 
     /* Send via ESP-NOW */
-    if (s_net_config.use_espnow && s_espnow_peer_added) {
+    if (s_active_mode == NETWORK_TX_MODE_ESP_NOW ||
+        (s_net_config.use_espnow && s_espnow_peer_added)) {
         esp_err_t ret = esp_now_send(s_net_config.espnow_peer_mac, ts->data, ts->total_len);
         if (ret == ESP_OK) {
             sent_any = true;
@@ -285,8 +341,33 @@ void network_tx_send(ts_packet_t *ts)
     }
 }
 
+bool network_tx_srt_is_connected(void)
+{
+    return network_tx_srt_module_is_connected();
+}
+
+void network_tx_srt_deinit(void)
+{
+    network_tx_srt_module_deinit();
+}
+
+esp_err_t network_tx_srt_get_stats(char *buf, size_t buf_len)
+{
+    return network_tx_srt_module_get_stats(buf, buf_len);
+}
+
+network_tx_mode_t network_tx_get_mode(void)
+{
+    return s_active_mode;
+}
+
 void network_tx_deinit(void)
 {
+    /* Deinit SRT if active */
+    if (s_active_mode == NETWORK_TX_MODE_SRT) {
+        network_tx_srt_module_deinit();
+    }
+
     if (s_net_config.use_espnow && s_espnow_peer_added) {
         esp_now_del_peer(s_net_config.espnow_peer_mac);
         s_espnow_peer_added = false;

@@ -7,11 +7,14 @@ idf_component_register(
         "klv_builder.c"
         "ts_muxer.c"
         "network_tx.c"
+        "network_tx_srt.c"
         "uart_telemetry.c"
+        "status_led.c"
     INCLUDE_DIRS
         "."
     REQUIRES
         driver
+        esp_driver_rmt
         esp_wifi
         esp_netif
         esp_event
@@ -22,6 +25,7 @@ idf_component_register(
         cxx
         log
         spiffs
+        srt
     PRIV_REQUIRES
         esp_psram
 )

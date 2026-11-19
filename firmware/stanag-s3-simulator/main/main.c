@@ -25,11 +25,16 @@
 #include "ts_muxer.h"
 #include "network_tx.h"
 #include "uart_telemetry.h"
+#include "srt_endpoint.h"
+#include "status_led.h"
 
 static const char *TAG = "STANAG_POC";
 
 #define FRAME_RATE_HZ 30
 #define FRAME_INTERVAL_MS (1000 / FRAME_RATE_HZ)
+
+/* Global link-state flag (set from the IP_EVENT handler) */
+static volatile bool s_wifi_got_ip = false;
 
 /* WiFi event handler */
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
@@ -58,6 +63,10 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                 ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
                 ESP_LOGI(TAG, "Netmask: " IPSTR, IP2STR(&event->ip_info.netmask));
                 ESP_LOGI(TAG, "Gateway: " IPSTR, IP2STR(&event->ip_info.gw));
+                s_wifi_got_ip = true;
+                break;
+            case IP_EVENT_STA_LOST_IP:
+                s_wifi_got_ip = false;
                 break;
             default:
                 break;
@@ -70,6 +79,15 @@ void app_main(void)
     // Disable task watchdog for QEMU testing
     esp_task_wdt_deinit();
     ESP_LOGI(TAG, "Task watchdog disabled");
+
+    // Status LED (boot pattern until WiFi/SRT state is known)
+    status_led_init();
+    status_led_set(LED_STATE_BOOT);
+
+#if CONFIG_STATUS_LED_SCAN
+    /* Diagnostic: identify which GPIO the onboard LED is on */
+    status_led_pin_scan();
+#endif
     
     // Early printf to ensure output before any crash
     printf("\n\n=== STANAG S3 Simulator Starting ===\n");
@@ -181,13 +199,46 @@ void app_main(void)
     ESP_LOGI(TAG, "TS muxer initialized OK");
     vTaskDelay(pdMS_TO_TICKS(10));
 
-    ESP_LOGI(TAG, "Initializing network TX (ESP-NOW/UDP)...");
+    ESP_LOGI(TAG, "Initializing network TX (ESP-NOW/UDP/SRT)...");
     /* Uncomment for QEMU/devcontainer testing with Unix socket.
        This bypasses WSL2 UDP loopback limitations.
        Requires MediaMTX configured with source: unix+mpegts:///tmp/stanag.sock
        Real hardware (UDP) is unaffected when this is commented out. */
-    network_tx_set_unix_socket("/tmp/stanag.sock");
+    // network_tx_set_unix_socket("/tmp/stanag.sock");
+
+    /* SRT Configuration — endpoint + credentials come from srt_endpoint.h
+       (gitignored; see srt_endpoint.h.example). Do NOT commit secrets. */
+    network_tx_set_mode(NETWORK_TX_MODE_SRT);
+    srt_config_t srt_cfg;
+    network_tx_srt_config_default(&srt_cfg);
+    strcpy(srt_cfg.ip, SRT_ENDPOINT_IP);
+    srt_cfg.port = SRT_ENDPOINT_PORT;
+    srt_cfg.mode = SRT_MODE_CALLER;             // Connect to listener
+    srt_cfg.latency_ms = 200;                   // 200ms buffer
+    // Stream ID with credentials (passed via SRTO_STREAMID socket option)
+    // Format: publish:live/<stream_id>:<credential_id>:<credential_secret>
+    strcpy(srt_cfg.stream_id, SRT_ENDPOINT_STREAM_ID);
+    // Optional encryption (if needed):
+    // strcpy(srt_cfg.passphrase, "secret");
+    // srt_cfg.pbkeylen = 16;  // AES-128
+    network_tx_set_srt_config(&srt_cfg);
+
+    /* UDP Configuration (commented out - works with MediaMTX)
+       network_tx_set_mode(NETWORK_TX_MODE_UDP);
+       network_tx_set_udp_dest("192.168.4.2", 8888);  // MediaMTX IP:port
+    */
+
     ESP_ERROR_CHECK(network_tx_init());
+    
+    /* Initialize SRT if using SRT mode (after network_tx_init).
+       Non-fatal: retried in the main loop until the network is reachable. */
+    if (network_tx_get_mode() == NETWORK_TX_MODE_SRT) {
+        esp_err_t srt_ret = network_tx_srt_init();
+        if (srt_ret != ESP_OK) {
+            ESP_LOGW(TAG, "SRT init deferred (will retry): %s", esp_err_to_name(srt_ret));
+        }
+    }
+    
     ESP_LOGI(TAG, "Network TX initialized OK");
     vTaskDelay(pdMS_TO_TICKS(10));
 
@@ -200,8 +251,11 @@ void app_main(void)
     ESP_LOGI(TAG, "Starting main loop @ %d fps", FRAME_RATE_HZ);
 
     TickType_t last_wake = xTaskGetTickCount();
-    const TickType_t frame_ticks = pdMS_TO_TICKS(1000 / FRAME_RATE_HZ);
     uint32_t frame_count = 0;
+    TickType_t last_srt_retry = last_wake;
+    const TickType_t srt_retry_ticks = pdMS_TO_TICKS(2000);  /* retry every 2s */
+    const TickType_t led_tick_ticks = pdMS_TO_TICKS(20);     /* LED refresh ~50Hz */
+    TickType_t last_led_tick = last_wake;
 
     ESP_LOGI(TAG, "Entering main loop...");
     printf(">>> Entering main loop...\n");
@@ -211,7 +265,29 @@ void app_main(void)
         printf(">>> Main loop iteration %lu\n", frame_count);
         fflush(stdout);
         ESP_LOGI(TAG, "Main loop iteration %lu", frame_count);
-        
+
+        /* ---- Status LED + SRT retry (runs every iteration, cheap) ---- */
+        TickType_t now = xTaskGetTickCount();
+        status_led_update();
+
+        /* LED state: SRT streaming > WiFi up > WiFi waiting */
+        if (network_tx_get_mode() == NETWORK_TX_MODE_SRT) {
+            if (network_tx_srt_is_connected()) {
+                status_led_set(LED_STATE_SRT_ON);
+            } else if (s_wifi_got_ip) {
+                status_led_set(LED_STATE_SRT_WAIT);
+                /* Time-based reconnect attempt (frame counter is unreliable here) */
+                if (now - last_srt_retry >= srt_retry_ticks) {
+                    last_srt_retry = now;
+                    ESP_LOGI(TAG, "Retrying SRT connection...");
+                    network_tx_srt_deinit();
+                    network_tx_srt_init();
+                }
+            } else {
+                status_led_set(LED_STATE_WIFI_WAIT);
+            }
+        }
+
         // Frame timing
         vTaskDelay(pdMS_TO_TICKS(FRAME_INTERVAL_MS));
         taskYIELD();  // Ensure other tasks get CPU time in QEMU
@@ -261,7 +337,7 @@ void app_main(void)
             ESP_LOGE(TAG, "TS mux failed");
         }
 
-        // 7. Transmit via ESP-NOW/UDP
+        // 7. Transmit via ESP-NOW/UDP/SRT
         if (ts) {
             network_tx_send(ts);
         }

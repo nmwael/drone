@@ -99,3 +99,7 @@ ground-station/mediamtx/mediamtx
 mediamtx*.tar.gz
 
 mediamtx.pid
+
+# SRT endpoint credentials (never commit)
+firmware/stanag-s3-simulator/main/srt_endpoint.h
+firmware/stanag-s3-simulator/components/srt_full/

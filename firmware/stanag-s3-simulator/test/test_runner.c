@@ -79,6 +79,37 @@ extern void test_network_tx_send_null_ts(void);
 extern void test_network_tx_send_empty_ts(void);
 extern void test_network_tx_deinit(void);
 
+/* Network TX SRT Tests */
+extern void test_network_tx_srt_config_default(void);
+extern void test_network_tx_set_srt_config(void);
+extern void test_network_tx_mode_enum(void);
+extern void test_network_tx_srt_mode_enum(void);
+extern void test_network_tx_get_set_mode(void);
+extern void test_network_tx_srt_init_without_component(void);
+extern void test_srt_config_encryption_fields(void);
+extern void test_network_tx_srt_get_stats_buffer(void);
+extern void test_network_tx_srt_is_connected_false_initially(void);
+
+/* SRT Stub Tests */
+extern void test_srt_getversion_returns_string(void);
+extern void test_srt_create_socket_returns_valid(void);
+extern void test_srt_create_socket_multiple(void);
+extern void test_srt_bind_works(void);
+extern void test_srt_listen_works(void);
+extern void test_srt_setsockopt_stream_id(void);
+extern void test_srt_setsockopt_latency(void);
+extern void test_srt_setsockopt_mss(void);
+extern void test_srt_setsockopt_passphrase(void);
+extern void test_srt_sendmsg2_unconnected(void);
+extern void test_srt_close_works(void);
+extern void test_srt_error_handling(void);
+extern void test_srt_bistats_works(void);
+extern void test_srt_constants_defined(void);
+extern void test_srt_startup_cleanup(void);
+extern void test_srt_setsockopt_tlpktdrop(void);
+extern void test_srt_setsockopt_enforced_encryption(void);
+extern void test_srt_version_value(void);
+
 extern void test_uart_telemetry_init(void);
 extern void test_uart_telemetry_send_valid(void);
 extern void test_uart_telemetry_send_null_sensors(void);
@@ -169,6 +200,37 @@ void app_main(void)
     RUN_TEST(test_network_tx_send_null_ts);
     RUN_TEST(test_network_tx_send_empty_ts);
     RUN_TEST(test_network_tx_deinit);
+
+    /* Network TX SRT Tests */
+    RUN_TEST(test_network_tx_srt_config_default);
+    RUN_TEST(test_network_tx_set_srt_config);
+    RUN_TEST(test_network_tx_mode_enum);
+    RUN_TEST(test_network_tx_srt_mode_enum);
+    RUN_TEST(test_network_tx_get_set_mode);
+    RUN_TEST(test_network_tx_srt_init_without_component);
+    RUN_TEST(test_srt_config_encryption_fields);
+    RUN_TEST(test_network_tx_srt_get_stats_buffer);
+    RUN_TEST(test_network_tx_srt_is_connected_false_initially);
+
+    /* SRT Stub Tests */
+    RUN_TEST(test_srt_getversion_returns_string);
+    RUN_TEST(test_srt_create_socket_returns_valid);
+    RUN_TEST(test_srt_create_socket_multiple);
+    RUN_TEST(test_srt_bind_works);
+    RUN_TEST(test_srt_listen_works);
+    RUN_TEST(test_srt_setsockopt_stream_id);
+    RUN_TEST(test_srt_setsockopt_latency);
+    RUN_TEST(test_srt_setsockopt_mss);
+    RUN_TEST(test_srt_setsockopt_passphrase);
+    RUN_TEST(test_srt_sendmsg2_unconnected);
+    RUN_TEST(test_srt_close_works);
+    RUN_TEST(test_srt_error_handling);
+    RUN_TEST(test_srt_bistats_works);
+    RUN_TEST(test_srt_constants_defined);
+    RUN_TEST(test_srt_startup_cleanup);
+    RUN_TEST(test_srt_setsockopt_tlpktdrop);
+    RUN_TEST(test_srt_setsockopt_enforced_encryption);
+    RUN_TEST(test_srt_version_value);
 
     /* UART Telemetry Tests */
     RUN_TEST(test_uart_telemetry_init);

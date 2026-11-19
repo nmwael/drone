@@ -207,14 +207,53 @@ Resets continuity counters. Returns `ESP_OK`.
 
 ## Network TX (`network_tx.c` / `network_tx.h`)
 
+### Transport Modes
+
+```c
+typedef enum {
+    NETWORK_TX_MODE_UDP,
+    NETWORK_TX_MODE_SRT,
+    NETWORK_TX_MODE_ESP_NOW,
+    NETWORK_TX_MODE_UNIX_SOCKET
+} network_tx_mode_t;
+```
+
+### SRT Configuration
+
+```c
+typedef enum {
+    SRT_MODE_CALLER,   // Connect to remote listener (most common)
+    SRT_MODE_LISTENER, // Bind and wait for incoming connection
+    SRT_MODE_RENDEZVOUS // Both sides connect to each other
+} srt_mode_t;
+
+typedef struct {
+    char ip[64];              // Remote IP (caller) or bind IP (listener)
+    uint16_t port;            // Remote port (caller) or bind port (listener)
+    srt_mode_t mode;          // Connection mode
+    char passphrase[64];      // Encryption passphrase (empty = no encryption)
+    int pbkeylen;             // PB key length: 0, 16, 24, 32 (bytes)
+    int latency_ms;           // SRT latency buffer (ms), default 200
+    bool enable_tlpktdrop;    // Drop packets too late for playout
+    int mss;                  // Max segment size (bytes), default 1500
+    bool nonce_enabled;       // Use nonce for encryption
+} srt_config_t;
+```
+
 ### `esp_err_t network_tx_init(void)`
-Creates non-blocking UDP socket to `192.168.4.2:8888`. ESP-NOW init is deferred (requires WiFi).
+Initializes all enabled transports (UDP, ESP-NOW, Unix socket). SRT is initialized separately via `network_tx_srt_init()`.
+
+### `void network_tx_set_mode(network_tx_mode_t mode)`
+Sets active transport mode. Default: `NETWORK_TX_MODE_UDP`.
+
+### `network_tx_mode_t network_tx_get_mode(void)`
+Returns current active transport mode.
 
 ### `esp_err_t network_tx_espnow_init(void)`
 Initializes ESP-NOW after WiFi is started. Adds broadcast peer `FF:FF:FF:FF:FF:FF`.
 
 ### `void network_tx_send(ts_packet_t *ts)`
-Sends TS packet via UDP and/or ESP-NOW (whichever is enabled and available).
+Sends TS packet via the active transport mode (UDP, SRT, ESP-NOW, or Unix socket).
 
 ### `void network_tx_set_udp_dest(const char *ip, uint16_t port)`
 Configures UDP destination (default: `192.168.4.2:8888`).
@@ -222,8 +261,56 @@ Configures UDP destination (default: `192.168.4.2:8888`).
 ### `void network_tx_set_espnow_peer(const uint8_t *mac)`
 Configures ESP-NOW peer MAC address.
 
+### `void network_tx_set_unix_socket(const char *path)`
+Configures Unix socket path for QEMU/devcontainer testing.
+
+### SRT-Specific Functions
+
+### `void network_tx_srt_config_default(srt_config_t *config)`
+Fills `config` with default values (CALLER mode, 192.168.4.2:9000, 200ms latency, no encryption).
+
+### `void network_tx_set_srt_config(const srt_config_t *config)`
+Sets SRT configuration. Must be called before `network_tx_srt_init()`.
+
+### `esp_err_t network_tx_srt_init(void)`
+Initializes SRT transport using the configured `srt_config_t`. Call after `network_tx_init()` when mode is `NETWORK_TX_MODE_SRT`.
+
+### `bool network_tx_srt_is_connected(void)`
+Returns `true` if SRT connection is established.
+
+### `esp_err_t network_tx_srt_get_stats(char *buf, size_t buf_len)`
+Fills `buf` with formatted SRT statistics (packets sent/lost/retransmitted, RTT, bandwidth, buffer usage).
+
 ### `void network_tx_deinit(void)`
-Closes UDP socket, removes ESP-NOW peer, deinitializes ESP-NOW.
+Closes UDP socket, removes ESP-NOW peer, deinitializes ESP-NOW, and deinitializes SRT if active.
+
+---
+
+### SRT Usage Example
+
+```c
+// In app_main(), before network_tx_init():
+network_tx_set_mode(NETWORK_TX_MODE_SRT);
+
+srt_config_t srt_cfg;
+network_tx_srt_config_default(&srt_cfg);
+strcpy(srt_cfg.ip, "192.168.4.2");      // MediaMTX IP
+srt_cfg.port = 9000;                     // SRT port
+srt_cfg.mode = SRT_MODE_CALLER;          // Connect to listener
+srt_cfg.latency_ms = 200;                // 200ms buffer
+
+// Optional encryption:
+// strcpy(srt_cfg.passphrase, "secret123");
+// srt_cfg.pbkeylen = 16;  // AES-128
+
+network_tx_set_srt_config(&srt_cfg);
+
+// Then initialize:
+ESP_ERROR_CHECK(network_tx_init());
+ESP_ERROR_CHECK(network_tx_srt_init());
+
+// In main loop, send works automatically via network_tx_send(ts)
+```
 
 ---
 

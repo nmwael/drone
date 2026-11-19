@@ -33,10 +33,25 @@ sequenceDiagram
     TSM-->>-Main: ts_packet_t (MPEG-TS, 188-byte packets)
 
     Main->>+NET: network_tx_send(ts)
-    NET-->>-Main: (UDP / ESP-NOW broadcast)
+    NET-->>-Main: (UDP / SRT / ESP-NOW / Unix socket)
 
     Main->>+UART: uart_telemetry_send(sensors, nalu, frame_num)
     UART-->>-Main: (JSON @ 115200 baud)
+```
+
+## Network Transport Options
+
+```mermaid
+graph LR
+    NET[Network TX] -->|UDP| MTX[MediaMTX:8888]
+    NET -->|SRT| SRT[SRT:9000]
+    NET -->|ESP-NOW| PEER[Peer MAC]
+    NET -->|Unix Socket| SOCK[/tmp/stanag.sock]
+
+    MTX -->|RTMP/HLS/WebRTC| VIEWER[Viewer]
+    SRT -->|SRT/RTP| VIEWER
+    PEER -->|Direct| GROUND[Ground Station]
+    SOCK -->|QEMU Test| MTX
 ```
 
 ## Frame Timing Budget (33 ms @ 30 fps)

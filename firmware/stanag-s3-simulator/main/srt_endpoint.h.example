@@ -1,0 +1,24 @@
+/*
+ * SRT endpoint credentials -- TEMPLATE
+ *
+ * Copy this file to `srt_endpoint.h` and fill in your endpoint:
+ *     cp main/srt_endpoint.h.example main/srt_endpoint.h
+ *
+ * `srt_endpoint.h` is gitignored -- never commit real credentials.
+ *
+ * Endpoint format (from your provider):
+ *     srt://<ip>:<port>?streamid=publish:live/<stream_id>:<creds_id>:<creds_secret>
+ *
+ * The whole `streamid=` value (after `?streamid=`) goes into
+ * SRT_ENDPOINT_STREAM_ID, e.g.
+ *     publish:live/my_stream:my_stream:0123456789abcdef...
+ */
+
+#ifndef SRT_ENDPOINT_H
+#define SRT_ENDPOINT_H
+
+#define SRT_ENDPOINT_IP        "0.0.0.0"
+#define SRT_ENDPOINT_PORT      8890
+#define SRT_ENDPOINT_STREAM_ID "publish:live/CHANGEME:CHANGEME:CHANGEME"
+
+#endif /* SRT_ENDPOINT_H */

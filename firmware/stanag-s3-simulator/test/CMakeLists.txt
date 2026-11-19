@@ -8,6 +8,8 @@ idf_component_register(
         "sensor_sim_test.c"
         "sensor_sim_extended_test.c"
         "network_tx_test.c"
+        "network_tx_srt_test.c"
+        "srt_stub_test.c"
         "uart_telemetry_test.c"
     INCLUDE_DIRS
         "."
@@ -27,4 +29,5 @@ idf_component_register(
         cxx
         log
         spiffs
+        srt
 )
