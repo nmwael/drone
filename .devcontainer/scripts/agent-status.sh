@@ -4,7 +4,6 @@
 
 set +e
 
-OPENCODE_DIR="${HOME}/.opencode"
 CACHE_DIR="${HOME}/.cache"
 STATUS_FILE="${CACHE_DIR}/agent-status.json"
 LOG_FILE="${CACHE_DIR}/agent-status.log"
@@ -59,32 +58,48 @@ remove_agent() {
     jq --arg id "$agent_id" 'del(.agents[$id]) | .updated = (now|floor)' "${STATUS_FILE}" > "${tmp}" && mv "${tmp}" "${STATUS_FILE}"
 }
 
+# Get session info from opencode CLI
+get_sessions() {
+    opencode session list --format json 2>/dev/null || echo '[]'
+}
+
+# Get subagent count (child sessions) - check for subagent entries in status file
+get_subagent_count() {
+    # Count agents with type in (architect, coder, researcher, reviewer) and status != completed
+    jq -r '.agents | to_entries[] | select(.value.type | IN("architect","coder","researcher","reviewer")) | .key' "${STATUS_FILE}" 2>/dev/null | wc -l
+}
+
 # Get agent status for display
 get_status_line() {
     init_status
     
-    # Check opencode server
+    # Check opencode server (port 4096 or 4097)
     local opencode_status="⬤"
     local opencode_color="${RED}"
-    if curl -sf --max-time 1 "http://localhost:4096/health" > /dev/null 2>&1; then
-        opencode_status="⬤"
-        opencode_color="${GREEN}"
-    fi
+    local server_port=""
+    for port in 4096 4097; do
+        if curl -sf --max-time 1 "http://localhost:${port}/health" > /dev/null 2>&1; then
+            opencode_status="⬤"
+            opencode_color="${GREEN}"
+            server_port="${port}"
+            break
+        fi
+    done
     
-    # Check active sessions from opencode API
-    local sessions_json=$(curl -sf --max-time 1 "http://localhost:4096/api/sessions" 2>/dev/null || echo '[]')
+    # Check active sessions from opencode CLI
+    local sessions_json=$(get_sessions)
     local session_count=$(echo "${sessions_json}" | jq 'length' 2>/dev/null || echo "0")
     
-    # Check for running subagents (look for session directories)
-    local subagent_count=0
-    if [ -d "${OPENCODE_DIR}/session" ]; then
-        subagent_count=$(ls -1 "${OPENCODE_DIR}/session" 2>/dev/null | wc -l)
-    fi
+    # Get subagent count from status file
+    local subagent_count=$(get_subagent_count)
     
     # Build status line
     local line=""
     line+="${CYAN}${BOLD}▣ AGENTS${NC} "
     line+="${opencode_color}opencode${NC}:${GREEN}${opencode_status}${NC} "
+    if [ -n "${server_port}" ]; then
+        line+="${BLUE}port${NC}:${server_port} "
+    fi
     line+="${BLUE}sessions${NC}:${session_count} "
     line+="${MAGENTA}subagents${NC}:${subagent_count} "
     
@@ -121,18 +136,14 @@ watch_mode() {
         echo -e "$(get_status_line)"
         echo "═══════════════════════════════════════════════════════════════════"
         echo ""
-        echo "OpenCode API: http://localhost:4096"
+        echo "OpenCode Server: http://localhost:${server_port:-4096}"
         echo "Logs: ${LOG_FILE}"
         echo ""
         echo "Active OpenCode Sessions:"
-        curl -sf "http://localhost:4096/api/sessions" 2>/dev/null | jq -r '.[] | "  \(.id)  \(.title)  \(.status)"' 2>/dev/null || echo "  (none or API unavailable)"
+        get_sessions | jq -r '.[] | "  \(.id)  \(.title)"' 2>/dev/null || echo "  (none or CLI unavailable)"
         echo ""
-        echo "Subagent Sessions (${OPENCODE_DIR}/session):"
-        if [ -d "${OPENCODE_DIR}/session" ]; then
-            ls -1 "${OPENCODE_DIR}/session" 2>/dev/null | sed 's/^/  /' || echo "  (none)"
-        else
-            echo "  (directory not found)"
-        fi
+        echo "Tracked Subagents (from status file):"
+        jq -r '.agents | to_entries[] | select(.value.type | IN("architect","coder","researcher","reviewer")) | "  \(.key)  \(.value.type)  \(.value.status)  \(.value.description)"' "${STATUS_FILE}" 2>/dev/null || echo "  (none)"
         sleep 3
     done
 }
@@ -140,17 +151,17 @@ watch_mode() {
 # One-shot status for PS1 integration
 ps1_status() {
     init_status
-    local sessions_json=$(curl -sf --max-time 1 "http://localhost:4096/api/sessions" 2>/dev/null || echo '[]')
+    local sessions_json=$(get_sessions)
     local session_count=$(echo "${sessions_json}" | jq 'length' 2>/dev/null || echo "0")
-    local subagent_count=0
-    if [ -d "${OPENCODE_DIR}/session" ]; then
-        subagent_count=$(ls -1 "${OPENCODE_DIR}/session" 2>/dev/null | wc -l)
-    fi
+    local subagent_count=$(get_subagent_count)
     
     local opencode_indicator="●"
-    if curl -sf --max-time 1 "http://localhost:4096/health" > /dev/null 2>&1; then
-        opencode_indicator="●"
-    fi
+    for port in 4096 4097; do
+        if curl -sf --max-time 1 "http://localhost:${port}/health" > /dev/null 2>&1; then
+            opencode_indicator="●"
+            break
+        fi
+    done
     
     echo "⚡${session_count}🤖${subagent_count}"
 }
