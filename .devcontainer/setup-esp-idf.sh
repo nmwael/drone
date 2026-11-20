@@ -39,5 +39,19 @@ EOF
 
 chmod +x /workspaces/drone/.devcontainer/esp-idf-env.sh
 
+# Install clangd via pip for latest version (user-level install for vscode)
+if [ ! -d "/home/vscode/.local" ]; then
+    mkdir -p /home/vscode/.local
+fi
+chown -R vscode:vscode /home/vscode/.local 2>/dev/null || true
+sudo -u vscode pip install --user clangd 2>/dev/null || pip install --user clangd 2>/dev/null || true
+
+# Add clangd to PATH in environment file
+cat >> /workspaces/drone/.devcontainer/esp-idf-env.sh << 'EOF'
+
+# Add clangd (LSP) to PATH
+export PATH="/home/vscode/.local/bin:$PATH"
+EOF
+
 echo "ESP-IDF setup complete!"
 echo "Run 'source /workspaces/drone/.devcontainer/esp-idf-env.sh' or restart terminal"

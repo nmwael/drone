@@ -293,7 +293,7 @@ static int rtmp_handshake(int fd)
 static int rtmp_write_chunk(int fd, uint8_t chunk_type, uint32_t chunk_stream_id,
                             uint32_t timestamp, const uint8_t *data, int len)
 {
-    uint8_t header[12];
+    uint8_t header[13];
     int hlen = 0;
 
     /* Chunk Type 0: 11-byte header (fmt=0, csid follows) */
@@ -315,11 +315,17 @@ static int rtmp_write_chunk(int fd, uint8_t chunk_type, uint32_t chunk_stream_id
     /* Type (1 byte) - 0x09 = video */
     header[hlen++] = 0x09;
 
-    /* Stream ID (4 bytes, little-endian) - ffmpeg uses stream_id=0 */
+    /* Stream ID (4 bytes, little-endian) - ffmpeg uses server-assigned stream_id
+     from createStream _result for video data chunk headers */
     header[hlen++] = s_rtmp.stream_id & 0xFF;
     header[hlen++] = (s_rtmp.stream_id >> 8) & 0xFF;
     header[hlen++] = (s_rtmp.stream_id >> 16) & 0xFF;
     header[hlen++] = (s_rtmp.stream_id >> 24) & 0xFF;
+
+    /* Extended timestamp (1 byte, only when timestamp >= 0xFFFFFF) */
+    if (timestamp >= 0xFFFFFF) {
+        header[hlen++] = (timestamp >> 24) & 0xFF;
+    }
 
     /* Write header */
     if (rtmp_write(fd, header, hlen) < 0) return -1;
@@ -336,12 +342,18 @@ static int rtmp_write_chunk(int fd, uint8_t chunk_type, uint32_t chunk_stream_id
 
         /* If chunked, send subsequent chunk header (fmt=2: timestamp + csid only) */
         if (offset < len) {
-            uint8_t ext_header[4];
+            uint8_t ext_header[5];
             ext_header[0] = (2 << 6) | chunk_stream_id;  /* fmt=2, csid */
             uint32_t ext_ts = timestamp;
             if (ext_ts >= 0xFFFFFF) ext_ts = 0xFFFFFF;
             rtmp_put_be24(&ext_header[1], ext_ts);
-            if (rtmp_write(fd, ext_header, 4) < 0) return -1;
+            /* Extended timestamp byte for fmt=2 */
+            if (timestamp >= 0xFFFFFF) {
+                ext_header[4] = (timestamp >> 24) & 0xFF;
+                if (rtmp_write(fd, ext_header, 5) < 0) return -1;
+            } else {
+                if (rtmp_write(fd, ext_header, 4) < 0) return -1;
+            }
         }
     }
 
@@ -586,7 +598,8 @@ static int rtmp_send_publish(int fd)
      * matching ffmpeg's behavior with MediaMTX) */
     rtmp_put_amf_string(&p, "live");
 
-    return rtmp_write_chunk(fd, 0, RTMP_CHUNK_INVOKE, 0, buf, (int)(p - buf));
+    /* ffmpeg uses RTMP_SOURCE_CHANNEL (4) for publish, not RTMP_CHUNK_INVOKE (3) */
+    return rtmp_write_chunk(fd, 0, RTMP_CHUNK_SOURCE, 0, buf, (int)(p - buf));
 }
 
 /* Send releaseStream (csid 3) */
@@ -955,19 +968,18 @@ esp_err_t network_tx_rtmp_module_init(void)
         }
         rtmp_drain_response(fd);
 
-        /* Send _result for connect */
-        if (rtmp_send_connect_result(fd) < 0) {
-            ESP_LOGE(TAG, "RTMP: connect _result failed");
+        /* ffmpeg sends releaseStream and FCPublish before createStream */
+        if (rtmp_send_release_stream(fd) < 0) {
+            ESP_LOGE(TAG, "RTMP: releaseStream failed");
             close(fd);
-            continue;
+            continue;  /* Try next stream ID */
         }
         rtmp_drain_response(fd);
 
-        /* Send onBWDone */
-        if (rtmp_send_on_bw_done(fd) < 0) {
-            ESP_LOGE(TAG, "RTMP: onBWDone failed");
+        if (rtmp_send_fc_publish(fd) < 0) {
+            ESP_LOGE(TAG, "RTMP: FCPublish failed");
             close(fd);
-            continue;
+            continue;  /* Try next stream ID */
         }
         rtmp_drain_response(fd);
 
@@ -978,7 +990,16 @@ esp_err_t network_tx_rtmp_module_init(void)
             continue;  /* Try next stream ID */
         }
 
-        /* Read _result for createStream (drains any available response) */
+        /* Read _result for createStream to extract server-assigned stream ID */
+        esp_err_t err = rtmp_read_create_stream_response(fd);
+        if (err == ESP_OK) {
+            ESP_LOGI(TAG, "Using server-assigned stream_id=%d", s_rtmp.stream_id);
+        } else {
+            ESP_LOGE(TAG, "Failed to read stream_id from createStream response, falling back to 1");
+            s_rtmp.stream_id = 1;
+        }
+
+        /* Read any remaining createStream response data */
         rtmp_drain_response(fd);
 
         /* Publish */
@@ -991,10 +1012,8 @@ esp_err_t network_tx_rtmp_module_init(void)
         /* Read MediaMTX response to publish (_result + onStatus NetStream.Publish.Start) */
         rtmp_drain_response(fd);
 
-        /* Success! stream_id = 1 (MediaMTX assigns stream_id=1 for first publish). */
         s_rtmp.tcp_fd = fd;
         s_rtmp.connected = true;
-        s_rtmp.stream_id = 1;
         s_rtmp.stream_published = true;
         s_rtmp.timestamp = 0;
         s_rtmp.mutex = xSemaphoreCreateMutex();
@@ -1109,15 +1128,17 @@ static int find_start_code(const uint8_t *data, int len, int offset)
     return -1;
 }
 
-/* Send onMetaData RTMP invoke message (ffmpeg sends this before first video frame) */
+/* Send onMetaData RTMP notify message (ffmpeg sends this before first video frame) */
 static int rtmp_send_on_metadata(int fd)
 {
     uint8_t buf[256];
     uint8_t *p = buf;
 
-    memcpy(p, "onMetaData", 10); p += 10;
-    *p++ = 0x00; /* AMF_NUMBER */
-    rtmp_put_be64(p, 6.0); /* transaction ID */
+    /* Prefix with "@setDataFrame" as ffmpeg does for NOTIFY packets */
+    memcpy(p, "@setDataFrame", 13); p += 13;
+
+    /* AMF: "onMetaData" string */
+    rtmp_put_amf_string(&p, "onMetaData");
     *p++ = 0x05; /* AMF_NULL */
     *p++ = 0x03; /* AMF_OBJECT */
     /* Metadata properties */
@@ -1131,17 +1152,20 @@ static int rtmp_send_on_metadata(int fd)
     rtmp_put_amf_object_prop(&p, "videodatarate", 0.0);
     rtmp_put_amf_object_end(&p);
 
-    /* Build RTMP chunk header: fmt=0, csid=3 (invoke), timestamp=0,
-       length=p-buf, type=0x14 (INVOKE), stream_id=0 */
-    uint8_t header[11];
+    /* Build RTMP chunk header: fmt=0, csid=4 (source), timestamp=0,
+       length=p-buf, type=0x12 (NOTIFY), stream_id=server-assigned */
+    uint8_t header[12];
     int hlen = 0;
-    header[hlen++] = (0 << 6) | RTMP_CHUNK_INVOKE; /* fmt=0, csid=3 */
+    header[hlen++] = (0 << 6) | RTMP_CHUNK_SOURCE; /* fmt=0, csid=4 */
     rtmp_put_be24(&header[hlen], 0); hlen += 3; /* timestamp */
     rtmp_put_be24(&header[hlen], (uint32_t)(p - buf)); hlen += 3; /* body length */
-    header[hlen++] = 0x14; /* type = INVOKE */
-    header[hlen++] = 0; header[hlen++] = 0; header[hlen++] = 0; /* stream ID = 0 (3 bytes) */
+    header[hlen++] = 0x12; /* type = NOTIFY */
+    header[hlen++] = s_rtmp.stream_id & 0xFF;
+    header[hlen++] = (s_rtmp.stream_id >> 8) & 0xFF;
+    header[hlen++] = (s_rtmp.stream_id >> 16) & 0xFF;
+    header[hlen++] = (s_rtmp.stream_id >> 24) & 0xFF;
 
-    uint8_t combined[11 + 256];
+    uint8_t combined[12 + 256];
     memcpy(combined, header, hlen);
     memcpy(combined + hlen, buf, p - buf);
 
@@ -1335,9 +1359,10 @@ static int rtmp_send_video_nalu(int fd, const uint8_t *data, int len,
     /* Concatenate all NALs with 4-byte big-endian length prefix */
     int copy_len = 0;
     for (int i = 0; i < nalu_count; i++) {
-        rtmp_put_be24(&flv_tag[hlen + copy_len], 0); /* top 3 bytes of 4-byte length (always 0 for <16MB) */
-        copy_len += 3;
-        flv_tag[hlen + copy_len++] = nalus[i].len & 0xFF; /* 4th byte */
+        flv_tag[hlen + copy_len++] = (nalus[i].len >> 24) & 0xFF;
+        flv_tag[hlen + copy_len++] = (nalus[i].len >> 16) & 0xFF;
+        flv_tag[hlen + copy_len++] = (nalus[i].len >> 8) & 0xFF;
+        flv_tag[hlen + copy_len++] = nalus[i].len & 0xFF;
         memcpy(flv_tag + hlen + copy_len, nalus[i].data, nalus[i].len);
         copy_len += nalus[i].len;
         if (copy_len >= (int)(sizeof(flv_tag) - hlen - 4)) break;
@@ -1381,6 +1406,13 @@ int network_tx_rtmp_send(const uint8_t *data, int len, uint32_t timestamp_ms)
     } else {
         /* Subsequent frames: send frame NALUs as AVCPacketType=1 */
         ret = rtmp_send_video_nalu(s_rtmp.tcp_fd, data, len, timestamp_ms);
+    }
+
+    /* Debug: log first video frame wire format for verification */
+    static bool first_video_logged = false;
+    if (!first_video_logged && s_rtmp.avc_config_sent && ret >= 0) {
+        first_video_logged = true;
+        ESP_LOGI(TAG, "RTMP: First video frame sent successfully (timestamp=%u ms)", timestamp_ms);
     }
 
     if (ret < 0) {

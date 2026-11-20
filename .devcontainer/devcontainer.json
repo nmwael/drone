@@ -4,7 +4,7 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers-extra/features/apt-get-packages:1.0.8": {
-      "packages": "curl,git,jq,build-essential,cmake,ninja-build,ffmpeg,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping,unzip,wget,ca-certificates,libusb-1.0-0,minicom,screen,usbutils,picocom"
+      "packages": "curl,git,jq,build-essential,cmake,ninja-build,ffmpeg,clangd,clang-tools,python3-pip,python3-venv,vim,tmux,htop,net-tools,iproute2,iputils-ping,unzip,wget,ca-certificates,libusb-1.0-0,minicom,screen,usbutils,picocom"
     },
     "ghcr.io/devcontainers-extra/features/npm-package:1.0.4": {
       "package": "@opencode/cli",
@@ -44,7 +44,8 @@
       "extensions": [
         "espressif.esp-idf-extension",
         "ms-vscode.cpptools",
-        "ms-vscode.cmake-tools"
+        "ms-vscode.cmake-tools",
+        "llvm-vs-code-extensions.vscode-clangd"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
@@ -56,6 +57,26 @@
               "/workspaces/drone/.devcontainer/esp-idf-env.sh"
             ]
           }
+        },
+        "clangd.path": "/home/vscode/.local/bin/clangd",
+        "clangd.arguments": [
+          "--compile-commands-dir=/workspaces/drone/firmware/stanag-s3-simulator/build",
+          "--header-insertion=never",
+          "--background-index",
+          "--suggest-missing-includes",
+          "--all-scopes-completion",
+          "--clang-tidy",
+          "--header-insertion=iwyu",
+          "--function-arg-placeholders",
+          "--fallback-style=LLVM",
+          "--limit-results=20",
+          "--pch-storage=memory"
+        ],
+        "C_Cpp.intelliSenseEngine": "disabled",
+        "C_Cpp.errorSquiggles": "disabled",
+        "files.associations": {
+          "*.c": "c",
+          "*.h": "c"
         }
       }
     }
@@ -67,6 +88,6 @@
   "remoteEnv": {
     "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}"
   },
-  "postStartCommand": "bash -c \"modprobe cdc_acm 2>/dev/null || true; udevadm trigger --subsystem-match=tty 2>/dev/null || true; chmod 666 /dev/ttyACM* 2>/dev/null || true; chmod 666 /dev/ttyUSB* 2>/dev/null || true\"; nohup bash .devcontainer/scripts/auto-startup.sh > /home/vscode/.cache/auto-startup.log 2>&1 & bash -c \"if [ -d /home/vscode/.local ]; then chown -R vscode:vscode /home/vscode/.local; echo Fixed /home/vscode/.local ownership; fi\"",
+  "postStartCommand": "bash -c \"modprobe cdc_acm 2>/dev/null || true; udevadm trigger --subsystem-match=tty 2>/dev/null || true; chmod 666 /dev/ttyACM* 2>/dev/null || true; chmod 666 /dev/ttyUSB* 2>/dev/null || true\"; nohup bash .devcontainer/scripts/auto-startup.sh > /home/vscode/.cache/auto-startup.log 2>&1 & bash -c \"if [ -d /home/vscode/.local ]; then chown -R vscode:vscode /home/vscode/.local; echo Fixed /home/vscode/.local ownership; fi\"; bash .devcontainer/scripts/agent-status.sh update 'opencode-server' 'server' 'running' 'OpenCode API server on port 4096' 0",
   "remoteUser": "vscode"
 }

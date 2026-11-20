@@ -842,8 +842,9 @@ __attribute__((weak)) int srt_sendmsg2(SRTSOCKET u, const char *buf, int len,
     /* Word 2: Originating timestamp */
     put32(p + 8, now_us());
 
-    /* Word 3: Source socket id (our ID - receiver uses this for ACKs) */
-    put32(p + 12, c->sockid_local);
+    /* Word 3: Destination socket id (peer) - MediaMTX expects peer's sockid,
+     * not our local sockid. Using sockid_local causes ECONNRESET/errno 104. */
+    put32(p + 12, c->sockid_peer);
 
     /* Store for potential retransmission */
     if (!c->retransmit_buffer.in_use) {
