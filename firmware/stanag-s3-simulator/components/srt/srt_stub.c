@@ -18,6 +18,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <fcntl.h>
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include "lwip/priv/sockets_priv.h"
@@ -613,6 +614,10 @@ __attribute__((weak)) SRTSOCKET srt_accept(SRTSOCKET u, struct sockaddr *name, i
     
     /* Connect the UDP socket for easier sending */
     connect(new_fd, (struct sockaddr *)&from, fromlen);
+
+    /* Set socket to non-blocking so send() never blocks the 30fps pipeline */
+    int flags = fcntl(new_fd, F_GETFL, 0);
+    fcntl(new_fd, F_SETFL, flags | O_NONBLOCK);
     
     /* Return peer address if requested */
     if (name && namelen) {
@@ -695,6 +700,10 @@ __attribute__((weak)) int srt_connect(SRTSOCKET u, const struct sockaddr *name, 
     /* Connect the UDP socket so plain send() works for data packets */
     connect(u, name, namelen);
 
+    /* Set socket to non-blocking so send() never blocks the 30fps pipeline */
+    int flags = fcntl(u, F_GETFL, 0);
+    fcntl(u, F_SETFL, flags | O_NONBLOCK);
+
     ESP_LOGI(TAG, "SRT handshake complete, peer sockid=0x%08x", c->sockid_peer);
     return SRT_OK;
 }
@@ -771,7 +780,7 @@ __attribute__((weak)) int srt_sendmsg2(SRTSOCKET u, const char *buf, int len,
     srt_conn_t *c = conn_from_fd(u);
     if (!c || !c->connected || len <= 0) return SRT_ERROR;
 
-    int hdr = 28;   /* SRT DATA packet header */
+    int hdr = 16;   /* SRT DATA packet header: 4 words */
 
     if (hdr + len > (int)sizeof(c->txbuf)) {
         ESP_LOGW(TAG, "sendmsg2: payload too big (%d)", len);
@@ -779,22 +788,29 @@ __attribute__((weak)) int srt_sendmsg2(SRTSOCKET u, const char *buf, int len,
     }
 
     uint8_t *p = c->txbuf;
+    uint32_t send_start = now_us();
 
-    /* CDT: DATA, SOLO, ordered */
-    put32(p + 0, CDT_DATA(PB_SOLO, 1));
-    /* TSBPD delay (µs) */
-    put32(p + 4, 0);
-    /* Originating timestamp */
+    /* --- SRT DATA packet header (per libsrt wire format) ---
+     * Word 0: SEQNO  — bit31=0(data), bits30-16=0(DATA msg type), bits15-0=seqno
+     * Word 1: MSGNO  — boundary bits31-30, inorder bit29, msg seq bits25-0
+     * Word 2: TIMESTAMP
+     * Word 3: SOCKET ID (peer)
+     * Total: 16 bytes, then payload follows immediately
+     */
+
+    /* Word 0: DATA packet, sequence number in low 16 bits */
+    uint32_t word0 = (uint32_t)(c->seq_no & 0xFFFFu);  /* control=0, msgtype=0(DATA) */
+    put32(p + 0, word0);
+
+    /* Word 1: MSGNO — PB_SOLO boundary, in-order, msg seq */
+    uint32_t word1 = ((uint32_t)PB_SOLO << 30) | (1u << 29);
+    put32(p + 4, word1);
+
+    /* Word 2: Originating timestamp */
     put32(p + 8, now_us());
-    /* Destination socket id (peer) */
-    put32(p + 12, c->sockid_peer);
-    /* Sequence number */
-    put32(p + 16, c->seq_no);
-    /* Message number */
-    put32(p + 20, 0);
-    /* Payload length + flags */
-    put16(p + 24, (uint16_t)len);
-    put16(p + 26, 0);
+
+    /* Word 3: Source socket id (our ID - receiver uses this for ACKs) */
+    put32(p + 12, c->sockid_local);
 
     /* Store for potential retransmission */
     if (!c->retransmit_buffer.in_use) {
@@ -812,6 +828,11 @@ __attribute__((weak)) int srt_sendmsg2(SRTSOCKET u, const char *buf, int len,
     /* Destination address: use connected UDP socket */
     int s = send(u, (const char *)p, hdr + len, 0);
     if (s < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            /* Non-blocking send would block - drop this packet */
+            c->pkts_lost++;
+            return SRT_ERROR;
+        }
         ESP_LOGW(TAG, "send() failed: errno %d", errno);
         s_last_error = SRT_ERROR;
         return SRT_ERROR;
@@ -819,6 +840,11 @@ __attribute__((weak)) int srt_sendmsg2(SRTSOCKET u, const char *buf, int len,
     
     c->pkts_sent++;
     c->bytes_sent += len;
+    
+    uint32_t send_elapsed = now_us() - send_start;
+    if (send_elapsed > 10000) {  /* Log if send took >10ms */
+        ESP_LOGW(TAG, "SRT send took %u us for %d bytes", send_elapsed, len);
+    }
     
     return len;
 }
