@@ -330,7 +330,8 @@ static bool parse_control_packet(srt_conn_t *c, const uint8_t *data, int len,
     /* Check if it's a control packet */
     if ((cdt & 0x80000000) == 0) return false;
     
-    ESP_LOGD(TAG, "Received control packet: cdt=0x%08x, subtype=%u (0x%x)", cdt, subtype, subtype);
+    ESP_LOGI(TAG, "Received control packet: cdt=0x%08x, subtype=%u from %s",
+             cdt, subtype, inet_ntoa(src_addr->sin_addr));
     
     switch (subtype) {
         case SRT_CTRL_HANDSHAKE: {
@@ -351,7 +352,8 @@ static bool parse_control_packet(srt_conn_t *c, const uint8_t *data, int len,
         
         case SRT_CTRL_KEEPALIVE: {
             /* Keepalive - respond with keepalive */
-            ESP_LOGD(TAG, "Received keepalive, sending response");
+            ESP_LOGI(TAG, "Received keepalive from %s, sending response",
+                     inet_ntoa(src_addr->sin_addr));
             uint8_t resp[16];
             int rlen = build_keepalive(resp);
             sendto(c->udp_fd, resp, rlen, 0, (struct sockaddr *)src_addr, *src_len);
@@ -363,8 +365,9 @@ static bool parse_control_packet(srt_conn_t *c, const uint8_t *data, int len,
             /* ACK received - clear retransmission buffer if matches */
             if (len < 12) return false;
             uint32_t ack_seq = get32(data + 8);
+            ESP_LOGI(TAG, "Received ACK for seq=%u from %s", ack_seq,
+                     inet_ntoa(src_addr->sin_addr));
             if (c->retransmit_buffer.in_use && c->retransmit_buffer.seq_no == ack_seq) {
-                ESP_LOGD(TAG, "ACK received for seq=%u, clearing retransmit buffer", ack_seq);
                 c->retransmit_buffer.in_use = false;
             }
             return true;
