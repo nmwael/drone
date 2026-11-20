@@ -22,6 +22,8 @@ typedef enum {
     LED_STATE_WIFI_WAIT,   /* slow blink */
     LED_STATE_SRT_WAIT,    /* medium blink */
     LED_STATE_SRT_ON,      /* solid on */
+    LED_STATE_RTMP_WAIT,   /* cyan blink */
+    LED_STATE_RTMP_ON,     /* solid cyan */
     LED_STATE_ERROR,       /* double-flash repeat */
     LED_STATE_ON,           /* solid on (raw) */
     LED_STATE_MAX

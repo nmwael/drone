@@ -13,6 +13,7 @@
 typedef enum {
     NETWORK_TX_MODE_UDP,
     NETWORK_TX_MODE_SRT,
+    NETWORK_TX_MODE_RTMP,
     NETWORK_TX_MODE_ESP_NOW,
     NETWORK_TX_MODE_UNIX_SOCKET
 } network_tx_mode_t;
@@ -41,6 +42,17 @@ esp_err_t network_tx_srt_init(void);  /* Call after network_tx_init() if using S
 bool network_tx_srt_is_connected(void);
 esp_err_t network_tx_srt_get_stats(char *buf, size_t buf_len);
 void network_tx_srt_deinit(void);     /* Tear down SRT for reconnect */
+
+/* RTMP Configuration */
+void network_tx_set_rtmp_config(const char *server, uint16_t port,
+                                const char *app, const char *stream,
+                                const char *user, const char *pass);
+void network_tx_rtmp_config_default(void);
+
+/* RTMP Runtime */
+esp_err_t network_tx_rtmp_init(void);  /* Call after network_tx_init() if using RTMP */
+bool network_tx_rtmp_is_connected(void);
+void network_tx_rtmp_deinit(void);
 
 /* Get current transport mode */
 network_tx_mode_t network_tx_get_mode(void);

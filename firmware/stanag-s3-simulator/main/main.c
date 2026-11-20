@@ -210,20 +210,16 @@ void app_main(void)
 
     /* SRT Configuration — endpoint + credentials come from srt_endpoint.h
        (gitignored; see srt_endpoint.h.example). Do NOT commit secrets. */
-    network_tx_set_mode(NETWORK_TX_MODE_SRT);
-    srt_config_t srt_cfg;
-    network_tx_srt_config_default(&srt_cfg);
-    strcpy(srt_cfg.ip, SRT_ENDPOINT_IP);
-    srt_cfg.port = SRT_ENDPOINT_PORT;
-    srt_cfg.mode = SRT_MODE_CALLER;             // Connect to listener
-    srt_cfg.latency_ms = 200;                   // 200ms buffer
-    // Stream ID with credentials (passed via SRTO_STREAMID socket option)
-    // Format: publish:live/<stream_id>:<credential_id>:<credential_secret>
-    strcpy(srt_cfg.stream_id, SRT_ENDPOINT_STREAM_ID);
-    // Optional encryption (if needed):
-    // strcpy(srt_cfg.passphrase, "secret");
-    // srt_cfg.pbkeylen = 16;  // AES-128
-    network_tx_set_srt_config(&srt_cfg);
+    network_tx_set_mode(NETWORK_TX_MODE_RTMP);
+    /* RTMP Configuration — use RTMP instead of SRT since SRT is blocked
+       by server-side firewall on 172.160.27.93:8890 */
+    network_tx_set_rtmp_config(
+        "172.160.27.93", 1935,          /* server:port */
+        "live",                          /* app */
+        "sse_drone_f71919",              /* stream */
+        "sse_drone_f71919",              /* user */
+        "5eefeb2389cf8b2ac83218ae926e7143"  /* pass */
+    );
 
     /* UDP Configuration (commented out - works with MediaMTX)
        network_tx_set_mode(NETWORK_TX_MODE_UDP);
@@ -231,13 +227,13 @@ void app_main(void)
     */
 
     ESP_ERROR_CHECK(network_tx_init());
-    
-    /* Initialize SRT if using SRT mode (after network_tx_init).
+
+    /* Initialize RTMP if using RTMP mode (after network_tx_init).
        Non-fatal: retried in the main loop until the network is reachable. */
-    if (network_tx_get_mode() == NETWORK_TX_MODE_SRT) {
-        esp_err_t srt_ret = network_tx_srt_init();
-        if (srt_ret != ESP_OK) {
-            ESP_LOGW(TAG, "SRT init deferred (will retry): %s", esp_err_to_name(srt_ret));
+    if (network_tx_get_mode() == NETWORK_TX_MODE_RTMP) {
+        esp_err_t rtmp_ret = network_tx_rtmp_init();
+        if (rtmp_ret != ESP_OK) {
+            ESP_LOGW(TAG, "RTMP init deferred (will retry): %s", esp_err_to_name(rtmp_ret));
         }
     }
     
@@ -256,12 +252,6 @@ void app_main(void)
     uint32_t frame_count = 0;
     TickType_t last_srt_retry = last_wake;
     const TickType_t srt_retry_ticks = pdMS_TO_TICKS(2000);  /* retry every 2s */
-    const TickType_t led_tick_ticks = pdMS_TO_TICKS(20);     /* LED refresh ~50Hz */
-    TickType_t last_led_tick = last_wake;
-    static int srt_retry_fail_count = 0;   /* consecutive SRT retry failures */
-    bool srt_diag_run = false;             /* diagnostics run flag */
-    uint32_t srt_connected_since_ms = 0;   /* when SRT connection was established */
-    bool srt_diag_ack_timeout = false;     /* ran ACK-timeout diagnostics */
 
     ESP_LOGI(TAG, "Entering main loop...");
     printf(">>> Entering main loop...\n");
@@ -276,56 +266,18 @@ void app_main(void)
         TickType_t now = xTaskGetTickCount();
         status_led_update();
 
-        /* LED state: SRT streaming > WiFi up > WiFi waiting */
-        if (network_tx_get_mode() == NETWORK_TX_MODE_SRT) {
-            if (network_tx_srt_is_connected()) {
-                status_led_set(LED_STATE_SRT_ON);
-                static bool s_was_connected = false;
-                if (!s_was_connected) {
-                    s_was_connected = true;
-                    srt_retry_fail_count = 0;
-                    srt_diag_run = false;
-                    srt_diag_ack_timeout = false;
-                    srt_connected_since_ms = (uint32_t)(now * portTICK_PERIOD_MS);
-                    ESP_LOGI(TAG, "SRT connection established, waiting for ACKs...");
-                }
-
-                /* ACK timeout diagnostics: if connected for >10s with no inbound
-                   ACKs/keepalives, the server may have rejected our stream at the
-                   application level (MediaMTX path not found, auth failed, etc.) */
-                if (srt_connected_since_ms > 0 &&
-                    (uint32_t)(now * portTICK_PERIOD_MS) - srt_connected_since_ms > 10000 &&
-                    !srt_any_ack_received() && !srt_diag_ack_timeout) {
-                    srt_diag_ack_timeout = true;
-                    ESP_LOGW(TAG, "=== SRT DIAGNOSTICS (connected but no ACKs from server) ===");
-                    network_tx_print_netif_info();
-                    network_tx_run_udp_probe(SRT_ENDPOINT_IP);
-                    network_tx_try_alternate_stream_ids();
-                }
+        /* LED state: RTMP streaming > WiFi up > WiFi waiting */
+        if (network_tx_get_mode() == NETWORK_TX_MODE_RTMP) {
+            if (network_tx_rtmp_is_connected()) {
+                status_led_set(LED_STATE_RTMP_ON);
             } else if (s_wifi_got_ip) {
-                status_led_set(LED_STATE_SRT_WAIT);
+                status_led_set(LED_STATE_RTMP_WAIT);
                 /* Time-based reconnect attempt */
                 if (now - last_srt_retry >= srt_retry_ticks) {
                     last_srt_retry = now;
-                    srt_retry_fail_count++;
-                    ESP_LOGI(TAG, "Retrying SRT connection... (attempt %d)",
-                             srt_retry_fail_count);
-                    network_tx_srt_deinit();
-                    network_tx_srt_init();
-
-                    /* After 5 consecutive failures, run creative diagnostics */
-                    if (srt_retry_fail_count == 5 && !srt_diag_run) {
-                        srt_diag_run = true;
-                        ESP_LOGW(TAG, "=== SRT DIAGNOSTICS (5 consecutive failures) ===");
-                        network_tx_print_netif_info();
-                        network_tx_run_udp_probe(SRT_ENDPOINT_IP);
-                        network_tx_try_alternate_stream_ids();
-                    } else if (srt_retry_fail_count > 5) {
-                        /* Re-run probe every 30 failures */
-                        if (srt_retry_fail_count % 30 == 0) {
-                            network_tx_run_udp_probe(SRT_ENDPOINT_IP);
-                        }
-                    }
+                    ESP_LOGI(TAG, "Retrying RTMP connection...");
+                    network_tx_rtmp_deinit();
+                    network_tx_rtmp_init();
                 }
             } else {
                 status_led_set(LED_STATE_WIFI_WAIT);

@@ -8,6 +8,7 @@ idf_component_register(
         "ts_muxer.c"
         "network_tx.c"
         "network_tx_srt.c"
+        "network_tx_rtmp.c"
         "uart_telemetry.c"
         "status_led.c"
     INCLUDE_DIRS

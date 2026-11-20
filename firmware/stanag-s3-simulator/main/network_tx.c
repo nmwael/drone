@@ -19,6 +19,7 @@
 
 #include "network_tx.h"
 #include "network_tx_srt.h"
+#include "network_tx_rtmp.h"
 
 /* MAC address formatting macros (from esp_rom/ets_sys.h) */
 #ifndef MACSTR
@@ -172,6 +173,16 @@ esp_err_t network_tx_srt_init(void)
     return network_tx_srt_module_init(&s_srt_config);
 }
 
+/* Initialize RTMP transport (call after network_tx_init if using RTMP mode) */
+esp_err_t network_tx_rtmp_init(void)
+{
+    if (s_active_mode != NETWORK_TX_MODE_RTMP) {
+        ESP_LOGW(TAG, "RTMP init called but active mode is %d", s_active_mode);
+        return ESP_ERR_INVALID_STATE;
+    }
+    return network_tx_rtmp_module_init();
+}
+
 /* Initialize ESP-NOW after WiFi is started (for hardware testing) */
 esp_err_t network_tx_espnow_init(void)
 {
@@ -294,6 +305,16 @@ void network_tx_send(ts_packet_t *ts)
         }
     }
 
+    /* Send via RTMP (if active mode) */
+    if (s_active_mode == NETWORK_TX_MODE_RTMP) {
+        int ret = network_tx_rtmp_send(ts->data, ts->total_len, 0);
+        if (ret >= 0) {
+            sent_any = true;
+        } else {
+            ESP_LOGW(TAG, "RTMP not connected, packet dropped");
+        }
+    }
+
     /* Send via Unix socket (QEMU/devcontainer testing) */
     if (s_active_mode == NETWORK_TX_MODE_UNIX_SOCKET ||
         (s_net_config.use_unix_socket && s_net_config.unix_socket_fd >= 0)) {
@@ -366,6 +387,11 @@ void network_tx_deinit(void)
     /* Deinit SRT if active */
     if (s_active_mode == NETWORK_TX_MODE_SRT) {
         network_tx_srt_module_deinit();
+    }
+
+    /* Deinit RTMP if active */
+    if (s_active_mode == NETWORK_TX_MODE_RTMP) {
+        network_tx_rtmp_deinit();
     }
 
     if (s_net_config.use_espnow && s_espnow_peer_added) {
