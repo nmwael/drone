@@ -5,13 +5,22 @@
  *   LED 0 -> WiFi link state
  *   LED 1 -> SRT connection / streaming state
  *
+ * NOTE: set_pixel(g, r, b) - green channel first (WS2812 GRB order)
+ *
  * Blink patterns (to keep the existing single-state API):
- *   BOOT         both amber, fast blink
- *   WIFI_WAIT    LED0 blue slow blink, LED1 dark
- *   SRT_WAIT     LED0 green solid, LED1 amber fast blink
+ *   BOOT         both amber, 200ms blink
+ *   WIFI_WAIT    LED0 blue slow blink (500ms), LED1 dark
+ *   SRT_WAIT     LED0 green solid, LED1 amber fast blink (500ms)
  *   SRT_ON       both green solid
- *   ERROR        both red, double-flash
+ *   ERROR        both red, slow double-flash (200ms on / 800ms off)
  *   OFF          both dark
+ *
+ * Color cheat sheet:
+ *   GREEN  = streaming (SRT connected)
+ *   BLUE   = waiting for WiFi
+ *   AMBER  = booting / connecting to SRT
+ *   RED    = error
+ *   OFF    = LED disabled / not initialized
  */
 
 #include "status_led.h"
@@ -180,35 +189,35 @@ static void apply_state(led_state_t state, bool phase_on)
 {
     switch (state) {
     case LED_STATE_BOOT:
-        /* both amber, fast blink */
+        /* both amber blink. set_pixel(g, r, b): G=180, R=60, B=0 -> AMBER */
         if (phase_on) { set_pixel(0, 180, 60, 0); set_pixel(1, 180, 60, 0); }
         else          { set_pixel(0, 0, 0, 0);    set_pixel(1, 0, 0, 0); }
         break;
 
     case LED_STATE_WIFI_WAIT:
         /* LED0 blue slow blink = waiting for WiFi; LED1 dark */
-        set_pixel(0, 0, 0, phase_on ? 255 : 0);
+        set_pixel(0, 0, 0, phase_on ? 255 : 0);   /* G=0, R=0, B=255 -> BLUE */
         set_pixel(1, 0, 0, 0);
         break;
 
     case LED_STATE_SRT_WAIT:
         /* LED0 green solid = WiFi OK; LED1 amber fast blink = SRT connecting */
-        set_pixel(0, 0, 255, 0);
-        if (phase_on) { set_pixel(1, 180, 60, 0); }
+        set_pixel(0, 255, 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
+        if (phase_on) { set_pixel(1, 180, 60, 0); }   /* G=180, R=60, B=0 -> AMBER */
         else          { set_pixel(1, 0, 0, 0); }
         break;
 
     case LED_STATE_SRT_ON:
     case LED_STATE_ON:
         /* both green solid = streaming */
-        set_pixel(0, 0, 255, 0);
-        set_pixel(1, 0, 255, 0);
+        set_pixel(0, 255, 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
+        set_pixel(1, 255, 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
         break;
 
     case LED_STATE_ERROR:
         /* both red double flash, handled by phase windows */
-        set_pixel(0, phase_on ? 255 : 0, 0, 0);
-        set_pixel(1, phase_on ? 255 : 0, 0, 0);
+        set_pixel(0, 0, phase_on ? 255 : 0, 0);   /* G=0, R=255/0, B=0 -> RED */
+        set_pixel(1, 0, phase_on ? 255 : 0, 0);   /* G=0, R=255/0, B=0 -> RED */
         break;
 
     case LED_STATE_OFF:
