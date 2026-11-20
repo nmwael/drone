@@ -90,15 +90,15 @@ header[hlen++] = s_rtmp.stream_id & 0xFF;
 
 ## Wire-Format Fixes Applied (all verified against ffmpeg_rtmp_proto.c)
 
-### P0 — CRITICAL (prevent ECONNRESET on video)
-| # | Fix | Location |
-|---|-----|----------|
-| 1 | Removed `rtmp_send_connect_result()` — client must not send server→client message | ~L958-963 |
-| 2 | Removed `rtmp_send_on_bw_done()` — client must not send server→client message | ~L966-971 |
-| 3 | `RTMP_CHUNK_VIDEO`: 5 → 4 (matches `RTMP_SOURCE_CHANNEL`) | L39 |
-| 4 | Publish CSID: 3 → 4 (matches `RTMP_SOURCE_CHANNEL`) | ~L590 |
-| 5 | Video chunk header stream_id: uses `s_rtmp.stream_id` (server-assigned) | L318-322 |
-| 6 | Extended timestamp byte when timestamp ≥ 0xFFFFFF | L325-330, L345-352 |
+### P0 — CRITICAL (prevent ECONNRESET on video) — **ALL APPLIED**
+| # | Fix | Location | Status |
+|---|-----|----------|--------|
+| 1 | Removed `rtmp_send_connect_result()` — client must not send server→client message | ~L958-963 | ✅ |
+| 2 | Removed `rtmp_send_on_bw_done()` — client must not send server→client message | ~L966-971 | ✅ |
+| 3 | `RTMP_CHUNK_VIDEO`: 4 → 5 (matches ffmpeg `RTMP_VIDEO_CHANNEL`) | L39 | ✅ **Fixed** |
+| 4 | Publish CSID: 3 → 4 (matches `RTMP_SOURCE_CHANNEL`) | ~L590 | ✅ |
+| 5 | Video chunk header stream_id: uses `s_rtmp.stream_id` (server-assigned) | L318-322 | ✅ |
+| 6 | Extended timestamp byte when timestamp ≥ 0xFFFFFF | L325-330, L345-352 | ✅ |
 
 ### P1 — HIGH (interoperability)
 | # | Fix | Location |
