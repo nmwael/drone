@@ -40,8 +40,10 @@ static const char *TAG = "SRT";
 #define SRT_MAX_PAYLOAD     1316
 
 /* CDT word helpers (first 32 bits of every SRT packet)                    */
+/* Bit 31 = control flag, bits 16-30 = control subtype, bits 0-15 = reserved */
 #define CDT_DATA(bnd, ord)  (0x00000000u | ((uint32_t)(bnd) << 29) | ((uint32_t)(ord) << 28))
-#define CDT_CONTROL(st)     (0x80000000u | (uint32_t)(st))
+#define CDT_CONTROL(st)     (0x80000000u | ((uint32_t)(st) << 16))
+#define CDT_SUBTYPE(cdt)    (((cdt) >> 16) & 0x7FFF)
 
 /* Packet boundaries                                                     */
 #define PB_SUBSEQUENT 0
@@ -165,35 +167,94 @@ static uint32_t now_ms(void)
 /* ------------------------------------------------------------------ */
 /* Handshake packet builders                                            */
 /* ------------------------------------------------------------------ */
+/* SRT handshake protocol versions (m_iVersion field) */
+#define SRT_HS_VERSION_UDT4  4
+#define SRT_HS_VERSION_SRT1  5
+
+/* UDT socket types (m_iType field when version == UDT4) */
+#define SRT_UDT_UNDEFINED  0
+#define SRT_UDT_STREAM     1
+#define SRT_UDT_DGRAM      2
+
+/* UDT request types (m_iReqType field) */
+#define SRT_URQ_INDUCTION  1
+#define SRT_URQ_CONCLUSION (-1)
+
+/* Handshake content size (48 bytes = 12 words) */
+#define SRT_HS_CONTENT_SIZE 48
+
+/* Extension flags (m_iType when version == SRT1) */
+#define SRT_HS_EXT_HSREQ   0x00000001
+#define SRT_HS_EXT_KMREQ   0x00000002
+#define SRT_HS_EXT_CONFIG  0x00000004
+
 static int build_handshake(uint8_t *out, uint32_t subtype,
                            uint32_t sockid_dst, uint32_t sockid_src,
                            const char *stream_id)
 {
     int pos = 0;
+    bool have_sid = (stream_id != NULL && strlen(stream_id) > 0);
 
-    /* CDT: control + handshake subtype */
+    /* Use SRT1 version when we have a stream ID (to carry SID extension),
+       UDT4 version otherwise (max compatibility with peers like ffmpeg) */
+    uint32_t version = have_sid ? SRT_HS_VERSION_SRT1 : SRT_HS_VERSION_UDT4;
+    uint32_t mtype   = have_sid ? (SRT_HS_EXT_HSREQ | SRT_HS_EXT_CONFIG)
+                                : SRT_UDT_DGRAM;
+
+    /* Word 0: CDT = control + handshake subtype (subtype at bits 16-30) */
     put32(out + pos, CDT_CONTROL(subtype)); pos += 4;
 
-    /* Destination socket id (0 for induction, peer id for conclusion) */
+    /* Word 1: MSGNO = 0 (reserved for control packets) */
+    put32(out + pos, 0); pos += 4;
+
+    /* Word 2: TIMESTAMP = 0 (filled by sender at transmit time) */
+    put32(out + pos, 0); pos += 4;
+
+    /* Word 3: Destination socket id (0 for induction, peer id for conclusion) */
     put32(out + pos, sockid_dst); pos += 4;
 
-    /* SRT version */
-    put32(out + pos, SRT_VERSION_1_5_3); pos += 4;
+    /* --- CHandShake content (48 bytes = 12 words) --- */
 
-    /* Type-specific: max payload size */
+    /* Word 4: m_iVersion */
+    put32(out + pos, version); pos += 4;
+
+    /* Word 5: m_iType (UDT_DGRAM for v4, extension flags for v5) */
+    put32(out + pos, mtype); pos += 4;
+
+    /* Word 6: m_iISN = random initial sequence number */
+    put32(out + pos, esp_random()); pos += 4;
+
+    /* Word 7: m_iMSS = maximum segment size */
     put32(out + pos, SRT_MAX_PAYLOAD); pos += 4;
 
-    /* Extension flags: bit 0 -> SID extension present */
-    uint32_t ext_flags = (stream_id && strlen(stream_id) > 0) ? 0x00000001u : 0;
-    put32(out + pos, ext_flags); pos += 4;
+    /* Word 8: m_iFlightFlagSize = flow control window size */
+    put32(out + pos, 0x00002000u); pos += 4;  /* 8192 */
 
-    if (ext_flags) {
+    /* Word 9: m_iReqType = INDUCTION (1) */
+    put32(out + pos, SRT_URQ_INDUCTION); pos += 4;
+
+    /* Word 10: m_iID = sender's SRT socket ID */
+    put32(out + pos, sockid_src); pos += 4;
+
+    /* Word 11: m_iCookie = cookie (0 for simple handshake) */
+    put32(out + pos, 0); pos += 4;
+
+    /* Words 12-15: m_piPeerIP[4] = peer IP (0 = unknown) */
+    put32(out + pos, 0); pos += 4;
+    put32(out + pos, 0); pos += 4;
+    put32(out + pos, 0); pos += 4;
+    put32(out + pos, 0); pos += 4;
+
+    /* --- Extensions (only for SRT1 version with HS_EXT_CONFIG) --- */
+    if (have_sid && (mtype & SRT_HS_EXT_CONFIG)) {
         int sid_len = (int)strlen(stream_id);
+        /* SRT_CMD_SID extension */
         put16(out + pos, SRT_CMD_SID); pos += 2;
         put16(out + pos, (uint16_t)sid_len); pos += 2;
         memcpy(out + pos, stream_id, sid_len); pos += sid_len;
         while (pos % 4) out[pos++] = 0;  /* pad to 4 */
     }
+
     return pos;
 }
 
@@ -203,23 +264,30 @@ static int build_handshake(uint8_t *out, uint32_t subtype,
 static int build_keepalive(uint8_t *out)
 {
     int pos = 0;
-    put32(out + pos, CDT_CONTROL(SRT_CTRL_KEEPALIVE)); pos += 4;
-    put32(out + pos, 0); pos += 4;  /* reserved */
+    put32(out + pos, CDT_CONTROL(SRT_CTRL_KEEPALIVE)); pos += 4;  /* Word 0: CDT */
+    put32(out + pos, 0); pos += 4;  /* Word 1: MSGNO = 0 */
+    put32(out + pos, 0); pos += 4;  /* Word 2: TIMESTAMP = 0 */
+    put32(out + pos, 0); pos += 4;  /* Word 3: DstSocketID = 0 (filled by sender) */
     return pos;
 }
 
 static int build_ack(uint8_t *out, uint32_t seq_no)
 {
     int pos = 0;
-    put32(out + pos, CDT_CONTROL(SRT_CTRL_ACK)); pos += 4;
-    put32(out + pos, seq_no); pos += 4;  /* ACK sequence number */
+    put32(out + pos, CDT_CONTROL(SRT_CTRL_ACK)); pos += 4;   /* Word 0: CDT */
+    put32(out + pos, seq_no); pos += 4;   /* Word 1: MSGNO = ACK seq no */
+    put32(out + pos, 0); pos += 4;   /* Word 2: TIMESTAMP = 0 */
+    put32(out + pos, 0); pos += 4;   /* Word 3: DstSocketID = 0 (filled by sender) */
     return pos;
 }
 
 __attribute__((unused)) static int build_nak(uint8_t *out, const uint32_t *lost_seq, int count)
 {
     int pos = 0;
-    put32(out + pos, CDT_CONTROL(SRT_CTRL_NAK)); pos += 4;
+    put32(out + pos, CDT_CONTROL(SRT_CTRL_NAK)); pos += 4;  /* Word 0: CDT */
+    put32(out + pos, 0); pos += 4;  /* Word 1: MSGNO = 0 */
+    put32(out + pos, 0); pos += 4;  /* Word 2: TIMESTAMP = 0 */
+    put32(out + pos, 0); pos += 4;  /* Word 3: DstSocketID = 0 */
     put16(out + pos, (uint16_t)count); pos += 2;  /* number of lost sequences */
     put16(out + pos, 0); pos += 2;  /* reserved */
     for (int i = 0; i < count; i++) {
@@ -231,8 +299,10 @@ __attribute__((unused)) static int build_nak(uint8_t *out, const uint32_t *lost_
 static int build_shutdown(uint8_t *out)
 {
     int pos = 0;
-    put32(out + pos, CDT_CONTROL(SRT_CTRL_SHUTDOWN)); pos += 4;
-    put32(out + pos, 0); pos += 4;  /* reserved */
+    put32(out + pos, CDT_CONTROL(SRT_CTRL_SHUTDOWN)); pos += 4;  /* Word 0: CDT */
+    put32(out + pos, 0); pos += 4;  /* Word 1: MSGNO = 0 */
+    put32(out + pos, 0); pos += 4;  /* Word 2: TIMESTAMP = 0 */
+    put32(out + pos, 0); pos += 4;  /* Word 3: DstSocketID = 0 */
     return pos;
 }
 
@@ -245,20 +315,25 @@ static bool parse_control_packet(srt_conn_t *c, const uint8_t *data, int len,
     if (len < 8) return false;
     
     uint32_t cdt = get32(data);
-    uint32_t subtype = get32(data + 4);
+    /* Extract subtype from CDT bits 16-30 (not from offset 4!) */
+    uint32_t subtype = CDT_SUBTYPE(cdt);
     
     /* Check if it's a control packet */
     if ((cdt & 0x80000000) == 0) return false;
     
-    ESP_LOGD(TAG, "Received control packet: cdt=0x%08x, subtype=0x%08x", cdt, subtype);
+    ESP_LOGD(TAG, "Received control packet: cdt=0x%08x, subtype=%u (0x%x)", cdt, subtype, subtype);
     
     switch (subtype) {
         case SRT_CTRL_HANDSHAKE: {
-            /* Handshake response from peer */
+            /* Handshake response from peer.
+             * Wire format:
+             *   W0: CDT, W1: MSGNO, W2: TIMESTAMP, W3: DstSocketID (=peer's sockid)
+             *   W4: m_iVersion, W5: m_iType, W6: m_iISN, ...
+             */
             if (len < 16) return false;
-            uint32_t peer_sockid = get32(data + 8);  /* peer's socket id */
+            uint32_t peer_sockid = get32(data + 12);  /* peer's socket id (word 3) */
             c->sockid_peer = peer_sockid;
-            c->phx_version = get32(data + 12);
+            c->phx_version = get32(data + 16);  /* m_iVersion (word 4) */
             
             ESP_LOGI(TAG, "Handshake response: peer_sockid=0x%08x, version=0x%08x",
                      c->sockid_peer, c->phx_version);
@@ -453,8 +528,8 @@ __attribute__((weak)) SRTSOCKET srt_accept(SRTSOCKET u, struct sockaddr *name, i
     
     if (r < 8) { s_last_error = SRT_ERROR; return SRT_INVALID_SOCK; }
     
-    uint32_t cdt = get32(resp);
-    uint32_t caller_sockid = get32(resp + 4);
+    /* Caller's socket id is at word 3 (offset 12), not word 1 */
+    uint32_t caller_sockid = get32(resp + 12);
     
     ESP_LOGI(TAG, "Received induction HS from caller sockid=0x%08x", caller_sockid);
     
@@ -528,7 +603,8 @@ __attribute__((weak)) SRTSOCKET srt_accept(SRTSOCKET u, struct sockaddr *name, i
     }
     
     (void)get32(resp);  /* CDT - unused */
-    uint32_t peer_sockid = get32(resp + 4);
+    /* Peer's socket id is at word 3 (offset 12) */
+    uint32_t peer_sockid = get32(resp + 12);
     
     ESP_LOGI(TAG, "Received conclusion HS, peer sockid=0x%08x", peer_sockid);
     
@@ -598,14 +674,16 @@ __attribute__((weak)) int srt_connect(SRTSOCKET u, const struct sockaddr *name, 
         return SRT_ERROR;
     }
 
-    /* Parse listener response: CDT | dst sockid | ... */
-    if (r < 8) { s_last_error = SRT_ERROR; return SRT_ERROR; }
-    uint32_t cdt   = get32(resp);
-    uint32_t phx   = get32(resp + 4);
-    ESP_LOGI(TAG, "HS response: cdt=0x%08x phx_sockid=0x%08x", cdt, phx);
+    /* Parse listener response:
+     *   W0: CDT, W1: MSGNO, W2: TIMESTAMP, W3: DstSocketID (=peer's sockid)
+     *   W4: m_iVersion, W5: m_iType, ...
+     */
+    if (r < 16) { s_last_error = SRT_ERROR; return SRT_ERROR; }
+    uint32_t cdt = get32(resp);
+    ESP_LOGI(TAG, "HS response: cdt=0x%08x", cdt);
 
-    c->sockid_peer = phx;              /* peer's socket id */
-    c->phx_version = get32(resp + 8);
+    c->sockid_peer = get32(resp + 12);  /* peer's socket id (word 3) */
+    c->phx_version = get32(resp + 16);  /* m_iVersion (word 4) */
 
     /* 3. Conclusion handshake (repeat, with dst = peer id) */
     n = build_handshake(pkt, SRT_CMD_HSREQ, c->sockid_peer, c->sockid_local, c->stream_id);

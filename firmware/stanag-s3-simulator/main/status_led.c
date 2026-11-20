@@ -283,12 +283,14 @@ void status_led_update(void)
 /* white so an addressable LED is unmistakable.                        */
 /* Skips 26-37 (octal PSRAM), 19-20 (USB D-/D+), 43-44 (console UART). */
 /* ------------------------------------------------------------------ */
+#if CONFIG_STATUS_LED_SCAN
 static const int s_scan_pins[] = {
     0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
     10, 11, 12, 13, 14, 15, 16, 17, 18,
     21, 22, 23, 24, 25,
     38, 39, 40, 41, 42, 45, 47, 48
 };
+#endif /* CONFIG_STATUS_LED_SCAN */
 
 void status_led_pin_scan(void)
 {
