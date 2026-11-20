@@ -112,7 +112,8 @@ typedef struct {
     uint64_t bytes_sent;
     uint64_t bytes_received;
     uint32_t last_rtt_ms;
-    uint32_t last_keepalive_ms;
+    uint32_t last_keepalive_ms;       /* last keepalive received */
+    uint32_t last_keepalive_send_ms;  /* last keepalive sent */
     
     SemaphoreHandle_t mutex;
 } srt_conn_t;
@@ -464,6 +465,7 @@ __attribute__((weak)) SRTSOCKET srt_create_socket(void)
             s_conns[i].is_listener = false;
             s_conns[i].peer_addr_len = sizeof(struct sockaddr_in);
             s_conns[i].last_keepalive_ms = now_ms();
+            s_conns[i].last_keepalive_send_ms = now_ms();
             s_conns[i].mutex = xSemaphoreCreateMutex();
             return fd;
         }
@@ -563,6 +565,7 @@ __attribute__((weak)) SRTSOCKET srt_accept(SRTSOCKET u, struct sockaddr *name, i
             s_conns[i].peer_addr = from;
             s_conns[i].peer_addr_len = fromlen;
             s_conns[i].last_keepalive_ms = now_ms();
+            s_conns[i].last_keepalive_send_ms = now_ms();
             s_conns[i].mutex = xSemaphoreCreateMutex();
             
             /* Copy stream_id from listener */
@@ -779,6 +782,23 @@ __attribute__((weak)) int srt_sendmsg2(SRTSOCKET u, const char *buf, int len,
     (void)msgflg;
     srt_conn_t *c = conn_from_fd(u);
     if (!c || !c->connected || len <= 0) return SRT_ERROR;
+
+    /* Send proactive keepalive if it's been >1s since last keepalive activity
+       (send or receive). This keeps the SRT connection alive even during
+       brief gaps in data flow. */
+    uint32_t now = now_ms();
+    if (now - c->last_keepalive_send_ms > 1000 &&
+        now - c->last_keepalive_ms > 1000) {
+        uint8_t kp[16];
+        int kplen = build_keepalive(kp);
+        sendto(u, kp, kplen, 0, (struct sockaddr *)&c->peer_addr, c->peer_addr_len);
+        c->last_keepalive_send_ms = now;
+        ESP_LOGD(TAG, "Sent proactive keepalive");
+    }
+
+    /* Drain incoming SRT control packets (keepalives, ACKs, etc.)
+       so the connection stays alive. Socket is non-blocking. */
+    process_incoming_packet(c);
 
     int hdr = 16;   /* SRT DATA packet header: 4 words */
 
