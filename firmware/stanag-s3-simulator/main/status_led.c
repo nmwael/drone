@@ -167,7 +167,7 @@ static void pattern_ms(led_state_t st, int *on, int *off)
     switch (st) {
     case LED_STATE_OFF:       *on = 0;    *off = 0;    break;
     case LED_STATE_BOOT:     *on = 200;  *off = 200;  break;  /* slower boot blink */
-    case LED_STATE_WIFI_WAIT:  *on = 2000; *off = 2000; break;  /* slow blue pulse = waiting for WiFi */
+    case LED_STATE_WIFI_WAIT:  *on = 500;  *off = 500;  break;  /* blue pulse = waiting for WiFi */
     case LED_STATE_SRT_WAIT:  *on = 500;  *off = 500;  break;  /* medium amber pulse = SRT connecting */
     case LED_STATE_SRT_ON:
     case LED_STATE_ON:        *on = 1;    *off = 0;    break;  /* solid green = streaming */
@@ -187,7 +187,7 @@ static void apply_state(led_state_t state, bool phase_on)
 
     case LED_STATE_WIFI_WAIT:
         /* LED0 blue slow blink = waiting for WiFi; LED1 dark */
-        set_pixel(0, phase_on ? 0 : 0, phase_on ? 0 : 0, phase_on ? 255 : 0);
+        set_pixel(0, 0, 0, phase_on ? 255 : 0);
         set_pixel(1, 0, 0, 0);
         break;
 

@@ -83,6 +83,7 @@ void app_main(void)
     // Status LED (boot pattern until WiFi/SRT state is known)
     status_led_init();
     status_led_set(LED_STATE_BOOT);
+    status_led_update();  /* Force immediate render of boot pattern */
 
 #if CONFIG_STATUS_LED_SCAN
     /* Diagnostic: identify which GPIO the onboard LED is on */
