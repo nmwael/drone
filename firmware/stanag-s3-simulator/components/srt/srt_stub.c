@@ -197,11 +197,11 @@ static int build_handshake(uint8_t *out, uint32_t subtype,
     int pos = 0;
     bool have_sid = (stream_id != NULL && strlen(stream_id) > 0);
 
-    /* Use SRT1 version when we have a stream ID (to carry SID extension),
-       UDT4 version otherwise (max compatibility with peers like ffmpeg) */
-    uint32_t version = have_sid ? SRT_HS_VERSION_SRT1 : SRT_HS_VERSION_UDT4;
-    uint32_t mtype   = have_sid ? (SRT_HS_EXT_HSREQ | SRT_HS_EXT_CONFIG)
-                                : SRT_UDT_DGRAM;
+    /* Always use UDT4 version (4) for max compatibility with peers like
+       ffmpeg/MediaMTX. Still include SRT_CMD_SID extension when stream_id
+       is present so the stream name is carried in the handshake. */
+    uint32_t version = SRT_HS_VERSION_UDT4;
+    uint32_t mtype   = SRT_UDT_DGRAM;
 
     /* Word 0: CDT = control + handshake subtype (subtype at bits 16-30) */
     put32(out + pos, CDT_CONTROL(subtype)); pos += 4;
@@ -217,10 +217,10 @@ static int build_handshake(uint8_t *out, uint32_t subtype,
 
     /* --- CHandShake content (48 bytes = 12 words) --- */
 
-    /* Word 4: m_iVersion */
+    /* Word 4: m_iVersion = UDT4 (4) */
     put32(out + pos, version); pos += 4;
 
-    /* Word 5: m_iType (UDT_DGRAM for v4, extension flags for v5) */
+    /* Word 5: m_iType = UDT_DGRAM (2) */
     put32(out + pos, mtype); pos += 4;
 
     /* Word 6: m_iISN = random initial sequence number */
@@ -247,10 +247,12 @@ static int build_handshake(uint8_t *out, uint32_t subtype,
     put32(out + pos, 0); pos += 4;
     put32(out + pos, 0); pos += 4;
 
-    /* --- Extensions (only for SRT1 version with HS_EXT_CONFIG) --- */
-    if (have_sid && (mtype & SRT_HS_EXT_CONFIG)) {
+    /* --- Extensions: SRT_CMD_SID (stream ID) ---
+       Always append when stream_id is present, even with UDT4 version.
+       MediaMTX and other SRT servers parse this extension to validate
+       the stream name (format: action:pathname[:user:pass[:query]]). */
+    if (have_sid) {
         int sid_len = (int)strlen(stream_id);
-        /* SRT_CMD_SID extension */
         put16(out + pos, SRT_CMD_SID); pos += 2;
         put16(out + pos, (uint16_t)sid_len); pos += 2;
         memcpy(out + pos, stream_id, sid_len); pos += sid_len;
