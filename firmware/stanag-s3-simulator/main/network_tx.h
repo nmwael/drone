@@ -45,4 +45,9 @@ void network_tx_srt_deinit(void);     /* Tear down SRT for reconnect */
 /* Get current transport mode */
 network_tx_mode_t network_tx_get_mode(void);
 
+/* Creative network diagnostics - run when SRT connection fails */
+void network_tx_print_netif_info(void);
+void network_tx_run_udp_probe(const char *ip);
+void network_tx_try_alternate_stream_ids(void);
+
 #endif // NETWORK_TX_H

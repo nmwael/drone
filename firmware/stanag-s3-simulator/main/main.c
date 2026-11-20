@@ -24,6 +24,7 @@
 #include "klv_builder.h"
 #include "ts_muxer.h"
 #include "network_tx.h"
+#include "srt.h"
 #include "uart_telemetry.h"
 #include "srt_endpoint.h"
 #include "status_led.h"
@@ -257,6 +258,10 @@ void app_main(void)
     const TickType_t srt_retry_ticks = pdMS_TO_TICKS(2000);  /* retry every 2s */
     const TickType_t led_tick_ticks = pdMS_TO_TICKS(20);     /* LED refresh ~50Hz */
     TickType_t last_led_tick = last_wake;
+    static int srt_retry_fail_count = 0;   /* consecutive SRT retry failures */
+    bool srt_diag_run = false;             /* diagnostics run flag */
+    uint32_t srt_connected_since_ms = 0;   /* when SRT connection was established */
+    bool srt_diag_ack_timeout = false;     /* ran ACK-timeout diagnostics */
 
     ESP_LOGI(TAG, "Entering main loop...");
     printf(">>> Entering main loop...\n");
@@ -275,14 +280,52 @@ void app_main(void)
         if (network_tx_get_mode() == NETWORK_TX_MODE_SRT) {
             if (network_tx_srt_is_connected()) {
                 status_led_set(LED_STATE_SRT_ON);
+                static bool s_was_connected = false;
+                if (!s_was_connected) {
+                    s_was_connected = true;
+                    srt_retry_fail_count = 0;
+                    srt_diag_run = false;
+                    srt_diag_ack_timeout = false;
+                    srt_connected_since_ms = (uint32_t)(now * portTICK_PERIOD_MS);
+                    ESP_LOGI(TAG, "SRT connection established, waiting for ACKs...");
+                }
+
+                /* ACK timeout diagnostics: if connected for >10s with no inbound
+                   ACKs/keepalives, the server may have rejected our stream at the
+                   application level (MediaMTX path not found, auth failed, etc.) */
+                if (srt_connected_since_ms > 0 &&
+                    (uint32_t)(now * portTICK_PERIOD_MS) - srt_connected_since_ms > 10000 &&
+                    !srt_any_ack_received() && !srt_diag_ack_timeout) {
+                    srt_diag_ack_timeout = true;
+                    ESP_LOGW(TAG, "=== SRT DIAGNOSTICS (connected but no ACKs from server) ===");
+                    network_tx_print_netif_info();
+                    network_tx_run_udp_probe(SRT_ENDPOINT_IP);
+                    network_tx_try_alternate_stream_ids();
+                }
             } else if (s_wifi_got_ip) {
                 status_led_set(LED_STATE_SRT_WAIT);
-                /* Time-based reconnect attempt (frame counter is unreliable here) */
+                /* Time-based reconnect attempt */
                 if (now - last_srt_retry >= srt_retry_ticks) {
                     last_srt_retry = now;
-                    ESP_LOGI(TAG, "Retrying SRT connection...");
+                    srt_retry_fail_count++;
+                    ESP_LOGI(TAG, "Retrying SRT connection... (attempt %d)",
+                             srt_retry_fail_count);
                     network_tx_srt_deinit();
                     network_tx_srt_init();
+
+                    /* After 5 consecutive failures, run creative diagnostics */
+                    if (srt_retry_fail_count == 5 && !srt_diag_run) {
+                        srt_diag_run = true;
+                        ESP_LOGW(TAG, "=== SRT DIAGNOSTICS (5 consecutive failures) ===");
+                        network_tx_print_netif_info();
+                        network_tx_run_udp_probe(SRT_ENDPOINT_IP);
+                        network_tx_try_alternate_stream_ids();
+                    } else if (srt_retry_fail_count > 5) {
+                        /* Re-run probe every 30 failures */
+                        if (srt_retry_fail_count % 30 == 0) {
+                            network_tx_run_udp_probe(SRT_ENDPOINT_IP);
+                        }
+                    }
                 }
             } else {
                 status_led_set(LED_STATE_WIFI_WAIT);

@@ -389,3 +389,128 @@ void network_tx_deinit(void)
 
     s_net_config.initialized = false;
 }
+
+/* ------------------------------------------------------------------ */
+/* Creative Network Diagnostics                                       */
+/* Helps diagnose why 172.160.27.93:8890 doesn't respond to ESP32     */
+/* ------------------------------------------------------------------ */
+
+/* Ports to probe on the remote SRT endpoint */
+static const uint16_t s_probe_ports[] = {8890, 8888, 1935, 8554, 8889, 554};
+#define S_PROBE_PORTS_COUNT (sizeof(s_probe_ports) / sizeof(s_probe_ports[0]))
+
+/* Print ESP32 network interface info (IP, gateway, netmask, MAC) */
+void network_tx_print_netif_info(void)
+{
+    esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    if (!netif) {
+        ESP_LOGW(TAG, "Cannot get WiFi STA netif handle");
+        return;
+    }
+
+    esp_netif_ip_info_t ip_info;
+    if (esp_netif_get_ip_info(netif, &ip_info) == ESP_OK) {
+        ESP_LOGI(TAG, "=== ESP32 Network Interface ===");
+        ESP_LOGI(TAG, "IP:    " IPSTR, IP2STR(&ip_info.ip));
+        ESP_LOGI(TAG, "Mask:  " IPSTR, IP2STR(&ip_info.netmask));
+        ESP_LOGI(TAG, "GW:    " IPSTR, IP2STR(&ip_info.gw));
+        ESP_LOGI(TAG, "=================================");
+    }
+
+    uint8_t mac[6];
+    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    ESP_LOGI(TAG, "MAC: " MACSTR, MAC2STR(mac));
+}
+
+/* Send a raw UDP probe packet to a specific port.
+   Returns >0 if we get ANY response (including ICMP port unreachable),
+   0 if timeout, <0 on error. */
+int network_tx_udp_probe_port(const char *ip, uint16_t port, int timeout_ms)
+{
+    int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (fd < 0) {
+        ESP_LOGE(TAG, "probe: socket() failed: errno %d", errno);
+        return -1;
+    }
+
+    /* Set receive timeout */
+    struct timeval tv;
+    tv.tv_sec = timeout_ms / 1000;
+    tv.tv_usec = (timeout_ms % 1000) * 1000;
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+    struct sockaddr_in dst;
+    memset(&dst, 0, sizeof(dst));
+    dst.sin_family = AF_INET;
+    dst.sin_port = htons(port);
+    inet_pton(AF_INET, ip, &dst.sin_addr);
+
+    const char *probe = "SRT_PROBE";
+    int sent = sendto(fd, probe, 9, 0, (struct sockaddr *)&dst, sizeof(dst));
+    if (sent < 0) {
+        ESP_LOGW(TAG, "probe port %d: sendto failed: errno %d", port, errno);
+        close(fd);
+        return -1;
+    }
+
+    /* Try to receive any response (ICMP port unreachable, ACK, etc.) */
+    uint8_t buf[256];
+    struct sockaddr_in src;
+    socklen_t srclen = sizeof(src);
+    int r = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&src, &srclen);
+    close(fd);
+
+    if (r < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return 0;  /* timeout - no response */
+        }
+        return -1;
+    }
+    return r;  /* got some response */
+}
+
+/* Run a full UDP port probe against the remote endpoint.
+   This tells us if the host is reachable at all, or if a firewall
+   is dropping all packets. */
+void network_tx_run_udp_probe(const char *ip)
+{
+    ESP_LOGW(TAG, "=== UDP Port Probe: %s ===", ip);
+    ESP_LOGW(TAG, "Probing ports: %d, %d, %d, %d, %d, %d",
+             s_probe_ports[0], s_probe_ports[1], s_probe_ports[2],
+             s_probe_ports[3], s_probe_ports[4], s_probe_ports[5]);
+
+    int reachable_count = 0;
+    for (int i = 0; i < S_PROBE_PORTS_COUNT; i++) {
+        uint16_t port = s_probe_ports[i];
+        int r = network_tx_udp_probe_port(ip, port, 500);
+
+        if (r > 0) {
+            ESP_LOGW(TAG, "  Port %d: GOT RESPONSE (%d bytes) - HOST IS REACHABLE!", port, r);
+            reachable_count++;
+        } else if (r == 0) {
+            ESP_LOGW(TAG, "  Port %d: TIMEOUT - firewall dropping or no service", port);
+        } else {
+            ESP_LOGW(TAG, "  Port %d: ERROR", port);
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+
+    if (reachable_count > 0) {
+        ESP_LOGW(TAG, "=== RESULT: %d port(s) responded - host IS reachable ===", reachable_count);
+    } else {
+        ESP_LOGW(TAG, "=== RESULT: NO ports responded - host may be firewalled or unreachable ===");
+    }
+    ESP_LOGW(TAG, "===============================================================");
+}
+
+/* Try alternative stream ID formats that MediaMTX might accept */
+void network_tx_try_alternate_stream_ids(void)
+{
+    ESP_LOGW(TAG, "=== Alternative Stream ID Formats ===");
+    ESP_LOGW(TAG, "Current:  publish:live/sse_drone_f71919:sse_drone_f71919:5eefeb2389cf8b2ac83218ae926e7143");
+    ESP_LOGW(TAG, "Alt 1:    publish:stanag");
+    ESP_LOGW(TAG, "Alt 2:    publish:live/stanag");
+    ESP_LOGW(TAG, "Alt 3:    publish:drone");
+    ESP_LOGW(TAG, "Alt 4:    publish:live/sse_drone_f71919");
+    ESP_LOGW(TAG, "===============================================================");
+}

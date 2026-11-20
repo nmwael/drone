@@ -150,6 +150,10 @@ SRT_API int srt_cleanup(void);
 /* Version string */
 SRT_API const char* srt_getversion(void);
 
+/* Diagnostics */
+SRT_API bool srt_any_ack_received(void);
+SRT_API void srt_reset_ack_received(void);
+
 #ifdef __cplusplus
 }
 #endif

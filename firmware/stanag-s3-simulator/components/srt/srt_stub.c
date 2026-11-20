@@ -120,6 +120,7 @@ typedef struct {
 
 static srt_conn_t s_conns[SRT_MAX_CONNS];
 static int s_last_error = SRT_OK;
+static bool s_any_ack_received = false;   /* set when we receive any inbound control packet */
 
 /* ------------------------------------------------------------------ */
 /* Big-endian helpers                                                   */
@@ -354,6 +355,7 @@ static bool parse_control_packet(srt_conn_t *c, const uint8_t *data, int len,
             /* Keepalive - respond with keepalive */
             ESP_LOGI(TAG, "Received keepalive from %s, sending response",
                      inet_ntoa(src_addr->sin_addr));
+            s_any_ack_received = true;
             uint8_t resp[16];
             int rlen = build_keepalive(resp);
             sendto(c->udp_fd, resp, rlen, 0, (struct sockaddr *)src_addr, *src_len);
@@ -367,6 +369,7 @@ static bool parse_control_packet(srt_conn_t *c, const uint8_t *data, int len,
             uint32_t ack_seq = get32(data + 8);
             ESP_LOGI(TAG, "Received ACK for seq=%u from %s", ack_seq,
                      inet_ntoa(src_addr->sin_addr));
+            s_any_ack_received = true;
             if (c->retransmit_buffer.in_use && c->retransmit_buffer.seq_no == ack_seq) {
                 c->retransmit_buffer.in_use = false;
             }
@@ -957,6 +960,16 @@ __attribute__((weak)) const char* srt_getlasterror_str(void)
 __attribute__((weak)) void srt_clearlasterror(void)
 {
     s_last_error = SRT_OK;
+}
+
+__attribute__((weak)) bool srt_any_ack_received(void)
+{
+    return s_any_ack_received;
+}
+
+__attribute__((weak)) void srt_reset_ack_received(void)
+{
+    s_any_ack_received = false;
 }
 
 /* ------------------------------------------------------------------ */
