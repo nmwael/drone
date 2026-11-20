@@ -285,10 +285,7 @@ void status_led_update(void)
 /* ------------------------------------------------------------------ */
 #if CONFIG_STATUS_LED_SCAN
 static const int s_scan_pins[] = {
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-    10, 11, 12, 13, 14, 15, 16, 17, 18,
-    21, 22, 23, 24, 25,
-    38, 39, 40, 41, 42, 45, 47, 48
+    45, 46, 47, 48
 };
 #endif /* CONFIG_STATUS_LED_SCAN */
 
@@ -298,7 +295,7 @@ void status_led_pin_scan(void)
     const int npins = (int)(sizeof(s_scan_pins) / sizeof(s_scan_pins[0]));
 
     ESP_LOGW(TAG, "=== PIN SCAN START: watch the WS2812s and note which GPIO glows white ===");
-    printf("=== WS2812 PIN SCAN: %d pins, ~400ms each (~%ds) ===\n", npins, (npins * 400) / 1000);
+    ESP_LOGW(TAG, "=== WS2812 PIN SCAN: %d pins (45-48), 1s on + 0.5s pause each ===", npins);
     fflush(stdout);
 
     for (int i = 0; i < npins; i++) {
@@ -323,19 +320,37 @@ void status_led_pin_scan(void)
         s_ws.gpio = gpio_num;
         s_ws.initialized = true;
 
-        /* Fill both LEDs white, twice, so it is unmistakable */
+        /* Fill both LEDs with a unique color per GPIO so you can tell by color */
+        uint8_t g_r = 0, g_g = 0, g_b = 0;
+        switch (gpio_num) {
+        case 45: g_r = 255; g_g = 0;   g_b = 0;   break; /* RED */
+        case 46: g_r = 0;   g_g = 255; g_b = 0;   break; /* GREEN */
+        case 47: g_r = 0;   g_g = 0;   g_b = 255; break; /* BLUE */
+        case 48: g_r = 255; g_g = 255; g_b = 255; break; /* WHITE */
+        default: g_r = 128; g_g = 128; g_b = 128; break;
+        }
+
+        /* Flash that color twice, 1s on each */
         for (int b = 0; b < 2; b++) {
-            set_pixel(0, 255, 255, 255);
-            set_pixel(1, 255, 255, 255);
+            set_pixel(0, g_g, g_r, g_b);
+            set_pixel(1, g_g, g_r, g_b);
             refresh();
-            vTaskDelay(pdMS_TO_TICKS(120));
+            vTaskDelay(pdMS_TO_TICKS(1000));  /* 1 second on - long enough to see */
             set_pixel(0, 0, 0, 0);
             set_pixel(1, 0, 0, 0);
             refresh();
-            vTaskDelay(pdMS_TO_TICKS(80));
+            vTaskDelay(pdMS_TO_TICKS(200));   /* 200ms off */
         }
 
-        ESP_LOGW(TAG, "[scan] GPIO %d done", gpio_num);
+        /* Extra pause between GPIOs so you can tell which color was which */
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        ESP_LOGW(TAG, "[scan] GPIO %d done (%s) - did the LED glow %s?",
+                 gpio_num,
+                 gpio_num == 45 ? "RED" : gpio_num == 46 ? "GREEN" :
+                 gpio_num == 47 ? "BLUE" : "WHITE",
+                 gpio_num == 45 ? "RED" : gpio_num == 46 ? "GREEN" :
+                 gpio_num == 47 ? "BLUE" : "WHITE");
     }
 
     /* Restore the configured pin */
