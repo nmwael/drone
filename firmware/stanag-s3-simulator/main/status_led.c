@@ -47,7 +47,15 @@
 #define CONFIG_STATUS_LED_SCAN 0
 #endif
 
+#ifndef CONFIG_STATUS_LED_BRIGHTNESS
+#define CONFIG_STATUS_LED_BRIGHTNESS 128   /* 0-255, 128 = ~50% brightness */
+#endif
+
 static const char *TAG = "STATUS_LED";
+
+/* Brightness scale: 0-255, default 128 (~50%). All color values are
+   multiplied by this factor / 255 to dim the LEDs. */
+#define LED_SCALE(c) (((uint32_t)(c) * CONFIG_STATUS_LED_BRIGHTNESS) / 255)
 
 #if !CONFIG_STATUS_LED_ENABLE
 
@@ -190,34 +198,39 @@ static void apply_state(led_state_t state, bool phase_on)
     switch (state) {
     case LED_STATE_BOOT:
         /* both amber blink. set_pixel(g, r, b): G=180, R=60, B=0 -> AMBER */
-        if (phase_on) { set_pixel(0, 180, 60, 0); set_pixel(1, 180, 60, 0); }
-        else          { set_pixel(0, 0, 0, 0);    set_pixel(1, 0, 0, 0); }
+        if (phase_on) {
+            set_pixel(0, LED_SCALE(180), LED_SCALE(60), 0);
+            set_pixel(1, LED_SCALE(180), LED_SCALE(60), 0);
+        } else {
+            set_pixel(0, 0, 0, 0);
+            set_pixel(1, 0, 0, 0);
+        }
         break;
 
     case LED_STATE_WIFI_WAIT:
         /* LED0 blue slow blink = waiting for WiFi; LED1 dark */
-        set_pixel(0, 0, 0, phase_on ? 255 : 0);   /* G=0, R=0, B=255 -> BLUE */
+        set_pixel(0, 0, 0, phase_on ? LED_SCALE(255) : 0);   /* G=0, R=0, B=255 -> BLUE */
         set_pixel(1, 0, 0, 0);
         break;
 
     case LED_STATE_SRT_WAIT:
         /* LED0 green solid = WiFi OK; LED1 amber fast blink = SRT connecting */
-        set_pixel(0, 255, 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
-        if (phase_on) { set_pixel(1, 180, 60, 0); }   /* G=180, R=60, B=0 -> AMBER */
+        set_pixel(0, LED_SCALE(255), 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
+        if (phase_on) { set_pixel(1, LED_SCALE(180), LED_SCALE(60), 0); }   /* G=180, R=60, B=0 -> AMBER */
         else          { set_pixel(1, 0, 0, 0); }
         break;
 
     case LED_STATE_SRT_ON:
     case LED_STATE_ON:
         /* both green solid = streaming */
-        set_pixel(0, 255, 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
-        set_pixel(1, 255, 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
+        set_pixel(0, LED_SCALE(255), 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
+        set_pixel(1, LED_SCALE(255), 0, 0);                  /* G=255, R=0, B=0 -> GREEN */
         break;
 
     case LED_STATE_ERROR:
         /* both red double flash, handled by phase windows */
-        set_pixel(0, 0, phase_on ? 255 : 0, 0);   /* G=0, R=255/0, B=0 -> RED */
-        set_pixel(1, 0, phase_on ? 255 : 0, 0);   /* G=0, R=255/0, B=0 -> RED */
+        set_pixel(0, 0, phase_on ? LED_SCALE(255) : 0, 0);   /* G=0, R=255/0, B=0 -> RED */
+        set_pixel(1, 0, phase_on ? LED_SCALE(255) : 0, 0);   /* G=0, R=255/0, B=0 -> RED */
         break;
 
     case LED_STATE_OFF:

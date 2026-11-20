@@ -2,7 +2,8 @@
 
 **GPIO:** 48 (confirmed via color-coded pin scan)  
 **LED count:** 2 (LED0 = WiFi state, LED1 = SRT state)  
-**Color order:** GRB (Green-Red-Blue) — `set_pixel(g, r, b)`
+**Color order:** GRB (Green-Red-Blue) — `set_pixel(g, r, b)`  
+**Brightness:** ~50% (CONFIG_STATUS_LED_BRIGHTNESS=128, range 0-255)
 
 ---
 
