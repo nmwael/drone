@@ -295,6 +295,13 @@ static int rtmp_send_connect(int fd)
     rtmp_put_amf_object_prop(&p, "videoCodecs", 252.0);
     rtmp_put_amf_object_prop(&p, "videoFunction", 1.0);
     rtmp_put_amf_object_prop(&p, "objectEncoding", 0.0);
+    /* Authentication credentials */
+    if (s_rtmp.user[0] != '\0') {
+        rtmp_put_amf_string_prop(&p, "user", s_rtmp.user);
+    }
+    if (s_rtmp.pass[0] != '\0') {
+        rtmp_put_amf_string_prop(&p, "pass", s_rtmp.pass);
+    }
     rtmp_put_amf_object_end(&p);
 
     return rtmp_write_chunk(fd, 0, RTMP_CHUNK_INVOKE, 0, buf, (int)(p - buf));
@@ -328,6 +335,20 @@ static int rtmp_send_publish(int fd)
     *p++ = 0x05; /* AMF_NULL */
 
     rtmp_put_amf_string(&p, s_rtmp.stream);
+    /* Publish with credentials embedded: action:pathname:user:pass */
+    if (s_rtmp.user[0] != '\0' && s_rtmp.pass[0] != '\0') {
+        char publish_name[256];
+        int n = snprintf(publish_name, sizeof(publish_name),
+                         "publish:%s:%s:%s",
+                         s_rtmp.stream, s_rtmp.user, s_rtmp.pass);
+        if (n > 0 && n < (int)sizeof(publish_name)) {
+            rtmp_put_amf_string(&p, publish_name);
+        } else {
+            rtmp_put_amf_string(&p, s_rtmp.stream);
+        }
+    } else {
+        rtmp_put_amf_string(&p, s_rtmp.stream);
+    }
     rtmp_put_amf_string(&p, "live");
 
     return rtmp_write_chunk(fd, 0, RTMP_CHUNK_INVOKE, 0, buf, (int)(p - buf));
