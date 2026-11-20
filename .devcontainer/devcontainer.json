@@ -38,7 +38,7 @@
       "port": 8082
     }
   },
-  "postCreateCommand": "bash /workspaces/drone/.devcontainer/setup-esp-idf.sh",
+  "postCreateCommand": "bash /workspaces/drone/.devcontainer/setup-esp-idf.sh && bash /workspaces/drone/.devcontainer/scripts/install-opencode-plugins.sh",
   "customizations": {
     "vscode": {
       "extensions": [

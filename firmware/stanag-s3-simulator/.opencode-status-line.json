@@ -1,0 +1,32 @@
+{
+  "usage": {
+    "segments": ["context", "cache", "meter", "cost", "time", "diff"],
+    "surfaces": {
+      "prompt.footer": ["context", "cache", "meter", "cost", "time", "diff"],
+      "sidebar.content": ["context", "cache", "meter", "cost", "time", "diff"]
+    },
+    "separator": " · "
+  },
+  "colors": {
+    "enabled": true,
+    "palette": "host"
+  },
+  "gauge": {
+    "width": 12,
+    "floor": 0.0,
+    "fastTps": 80,
+    "slowTps": 15
+  },
+  "context": {
+    "warnAt": 0.7,
+    "dangerAt": 0.9
+  },
+  "diff": {
+    "refreshMs": 5000
+  },
+  "readings": ["sliding", "cumulative"],
+  "stats": {
+    "windowMs": 60000
+  },
+  "capMode": "peak"
+}

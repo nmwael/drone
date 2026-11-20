@@ -54,6 +54,7 @@
     "reviewer":  { "model": "mistral/mistral-medium-latest",           "temperature": 0.1, "steps": 15 }
   },
   "enabled_providers": ["nvidia", "mistral", "opencode"],
+  "plugins": [],
   "subagent_depth": 3,
   "permission": "allow",
   "limit": { "context": 32768 }
