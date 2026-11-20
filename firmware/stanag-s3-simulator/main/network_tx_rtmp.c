@@ -57,6 +57,26 @@ static struct {
     SemaphoreHandle_t mutex;
 } s_rtmp = {0};
 
+/* Alternative stream IDs to try if MediaMTX rejects the primary one */
+static const char *s_rtmp_alt_streams[] = {
+    "sse_drone_f71919",
+    "stanag",
+    "drone",
+    "live",
+    "live/stanag",
+};
+#define S_RTMP_ALT_STREAMS_COUNT (sizeof(s_rtmp_alt_streams) / sizeof(s_rtmp_alt_streams[0]))
+static int s_rtmp_alt_stream_idx = 0;
+
+/* Try the next alternative stream ID */
+static void rtmp_next_stream_id(void)
+{
+    s_rtmp_alt_stream_idx = (s_rtmp_alt_stream_idx + 1) % S_RTMP_ALT_STREAMS_COUNT;
+    strncpy(s_rtmp.stream, s_rtmp_alt_streams[s_rtmp_alt_stream_idx],
+            sizeof(s_rtmp.stream) - 1);
+    ESP_LOGW(TAG, "RTMP: trying alternate stream ID: %s", s_rtmp.stream);
+}
+
 /* ------------------------------------------------------------------ */
 /* Helpers                                                            */
 /* ------------------------------------------------------------------ */
@@ -71,6 +91,7 @@ static int rtmp_write(int fd, const uint8_t *data, int len)
                 vTaskDelay(pdMS_TO_TICKS(10));
                 continue;
             }
+            ESP_LOGE(TAG, "RTMP: send() failed: errno %d", errno);
             return -1;
         }
         total += r;
@@ -195,7 +216,7 @@ static int rtmp_write_chunk(int fd, uint8_t chunk_type, uint32_t chunk_stream_id
     int hlen = 0;
 
     /* Chunk Type 0: 11-byte header (fmt=0, csid follows) */
-    header[0] = (chunk_type << 6) | chunk_stream_id;
+    header[0] = (0 << 6) | chunk_stream_id;  /* fmt=0 for first chunk */
     hlen = 1;
 
     /* Timestamp (3 bytes) */
@@ -210,8 +231,8 @@ static int rtmp_write_chunk(int fd, uint8_t chunk_type, uint32_t chunk_stream_id
     rtmp_put_be24(&header[hlen], len);
     hlen += 3;
 
-    /* Type (1 byte) */
-    header[hlen++] = RTMP_CHUNK_INVOKE;
+    /* Type (1 byte) - 0x09 = video */
+    header[hlen++] = 0x09;
 
     /* Stream ID (4 bytes, little-endian) */
     header[hlen++] = chunk_stream_id & 0xFF;
@@ -232,10 +253,10 @@ static int rtmp_write_chunk(int fd, uint8_t chunk_type, uint32_t chunk_stream_id
         if (rtmp_write(fd, data + offset, chunk_len) < 0) return -1;
         offset += chunk_len;
 
-        /* If chunked, send timestamp extended + chunk stream id for subsequent chunks */
+        /* If chunked, send subsequent chunk header (fmt=2: timestamp + csid only) */
         if (offset < len) {
             uint8_t ext_header[4];
-            ext_header[0] = (chunk_type << 6) | chunk_stream_id;
+            ext_header[0] = (2 << 6) | chunk_stream_id;  /* fmt=2 */
             uint32_t ext_ts = timestamp;
             if (ext_ts >= 0xFFFFFF) ext_ts = 0xFFFFFF;
             rtmp_put_be24(&ext_header[1], ext_ts);
@@ -386,6 +407,7 @@ static int rtmp_send_ts_as_video(int fd, const uint8_t *ts_data, int ts_len,
 {
     int offset = 0;
     int nal_count = 0;
+    int sent_count = 0;
 
     while (offset < ts_len - 4) {
         int start = find_start_code(ts_data, ts_len, offset);
@@ -395,17 +417,19 @@ static int rtmp_send_ts_as_video(int fd, const uint8_t *ts_data, int ts_len,
         int nal_len = (next < 0) ? (ts_len - start) : (next - start);
 
         /* Skip the start code bytes */
-        int nal_start = start;
         int nal_code_len = 4;
         if (ts_data[start] == 0x00 && ts_data[start+1] == 0x00 &&
             ts_data[start+2] == 0x00 && ts_data[start+3] == 0x01) {
             nal_code_len = 4;
-        } else {
+        } else if (ts_data[start] == 0x00 && ts_data[start+1] == 0x00 &&
+                   ts_data[start+2] == 0x01) {
             nal_code_len = 3;
-            nal_start = start;
+        } else {
+            offset = start + 1;
+            continue;
         }
 
-        const uint8_t *nal_data = ts_data + nal_start + nal_code_len;
+        const uint8_t *nal_data = ts_data + start + nal_code_len;
         int nal_data_len = nal_len - nal_code_len;
 
         if (nal_data_len > 0) {
@@ -414,16 +438,28 @@ static int rtmp_send_ts_as_video(int fd, const uint8_t *ts_data, int ts_len,
             if (nal_type <= 5 || nal_type == 7 || nal_type == 8) {
                 if (rtmp_send_video_tag(fd, nal_data, nal_data_len,
                                         timestamp_ms) < 0) {
-                    return -1;
+                    ESP_LOGW(TAG, "RTMP: send_video_tag failed for NAL type %d", nal_type);
+                    return sent_count > 0 ? sent_count : -1;
                 }
-                nal_count++;
+                sent_count++;
             }
+            nal_count++;
         }
 
         offset = start + nal_len;
     }
 
-    return nal_count;
+    if (nal_count == 0) {
+        /* No NAL units found in TS data - try sending raw TS as single video tag */
+        ESP_LOGD(TAG, "RTMP: no NAL units found in TS packet, sending raw TS (%d bytes)", ts_len);
+        if (rtmp_send_video_tag(fd, ts_data, ts_len, timestamp_ms) < 0) {
+            ESP_LOGW(TAG, "RTMP: send raw TS failed");
+            return -1;
+        }
+        sent_count = 1;
+    }
+
+    return sent_count;
 }
 
 /* ------------------------------------------------------------------ */
@@ -467,92 +503,104 @@ esp_err_t network_tx_rtmp_module_init(void)
         return ESP_OK;
     }
 
-    /* Create TCP socket */
-    int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (fd < 0) {
-        ESP_LOGE(TAG, "RTMP: socket() failed: errno %d", errno);
-        return ESP_FAIL;
-    }
+    /* Try alternative stream IDs if MediaMTX rejects the primary one */
+    for (int attempt = 0; attempt < S_RTMP_ALT_STREAMS_COUNT; attempt++) {
+        if (attempt > 0) {
+            rtmp_next_stream_id();
+        }
 
-    /* Set non-blocking */
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        ESP_LOGI(TAG, "RTMP: connecting to %s:%d app=%s stream=%s (attempt %d/%d)",
+                 s_rtmp.server, s_rtmp.port, s_rtmp.app, s_rtmp.stream,
+                 attempt + 1, S_RTMP_ALT_STREAMS_COUNT);
 
-    /* Connect to server */
-    struct sockaddr_in dst;
-    memset(&dst, 0, sizeof(dst));
-    dst.sin_family = AF_INET;
-    dst.sin_port = htons(s_rtmp.port);
-    if (inet_pton(AF_INET, s_rtmp.server, &dst.sin_addr) <= 0) {
-        ESP_LOGE(TAG, "RTMP: inet_pton() failed for %s", s_rtmp.server);
-        close(fd);
-        return ESP_FAIL;
-    }
+        /* Create TCP socket */
+        int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (fd < 0) {
+            ESP_LOGE(TAG, "RTMP: socket() failed: errno %d", errno);
+            return ESP_FAIL;
+        }
 
-    ESP_LOGI(TAG, "RTMP: connecting to %s:%d app=%s stream=%s",
-             s_rtmp.server, s_rtmp.port, s_rtmp.app, s_rtmp.stream);
+        /* Set non-blocking */
+        int flags = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
-    if (connect(fd, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
-        if (errno != EINPROGRESS) {
-            ESP_LOGE(TAG, "RTMP: connect() failed: errno %d", errno);
+        /* Connect to server */
+        struct sockaddr_in dst;
+        memset(&dst, 0, sizeof(dst));
+        dst.sin_family = AF_INET;
+        dst.sin_port = htons(s_rtmp.port);
+        if (inet_pton(AF_INET, s_rtmp.server, &dst.sin_addr) <= 0) {
+            ESP_LOGE(TAG, "RTMP: inet_pton() failed for %s", s_rtmp.server);
             close(fd);
             return ESP_FAIL;
         }
-        /* Wait for connect to complete */
-        struct timeval tv;
-        tv.tv_sec = 5;
-        tv.tv_usec = 0;
-        setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
-        /* Simple wait - in production use select/poll */
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        if (connect(fd, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
+            if (errno != EINPROGRESS) {
+                ESP_LOGE(TAG, "RTMP: connect() failed: errno %d", errno);
+                close(fd);
+                continue;  /* Try next stream ID */
+            }
+            /* Wait for connect to complete */
+            struct timeval tv;
+            tv.tv_sec = 5;
+            tv.tv_usec = 0;
+            setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
-        int so_error = 0;
-        socklen_t len = sizeof(so_error);
-        getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
-        if (so_error != 0) {
-            ESP_LOGE(TAG, "RTMP: connect() error: %d", so_error);
-            close(fd);
-            return ESP_FAIL;
+            /* Simple wait - in production use select/poll */
+            vTaskDelay(pdMS_TO_TICKS(1000));
+
+            int so_error = 0;
+            socklen_t len = sizeof(so_error);
+            getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
+            if (so_error != 0) {
+                ESP_LOGE(TAG, "RTMP: connect() error: %d", so_error);
+                close(fd);
+                continue;  /* Try next stream ID */
+            }
         }
+
+        /* RTMP handshake */
+        if (rtmp_handshake(fd) < 0) {
+            close(fd);
+            continue;  /* Try next stream ID */
+        }
+
+        /* Connect command */
+        if (rtmp_send_connect(fd) < 0) {
+            ESP_LOGE(TAG, "RTMP: connect command failed");
+            close(fd);
+            continue;  /* Try next stream ID */
+        }
+
+        /* CreateStream */
+        if (rtmp_send_create_stream(fd) < 0) {
+            ESP_LOGE(TAG, "RTMP: createStream command failed");
+            close(fd);
+            continue;  /* Try next stream ID */
+        }
+
+        /* Publish */
+        if (rtmp_send_publish(fd) < 0) {
+            ESP_LOGE(TAG, "RTMP: publish command failed");
+            close(fd);
+            continue;  /* Try next stream ID */
+        }
+
+        /* Success! */
+        s_rtmp.tcp_fd = fd;
+        s_rtmp.connected = true;
+        s_rtmp.stream_published = true;
+        s_rtmp.timestamp = 0;
+        s_rtmp.mutex = xSemaphoreCreateMutex();
+
+        ESP_LOGI(TAG, "RTMP: connected and publishing to %s/%s (stream: %s)",
+                 s_rtmp.app, s_rtmp.stream, s_rtmp.stream);
+        return ESP_OK;
     }
 
-    /* RTMP handshake */
-    if (rtmp_handshake(fd) < 0) {
-        close(fd);
-        return ESP_FAIL;
-    }
-
-    /* Connect command */
-    if (rtmp_send_connect(fd) < 0) {
-        ESP_LOGE(TAG, "RTMP: connect command failed");
-        close(fd);
-        return ESP_FAIL;
-    }
-
-    /* CreateStream */
-    if (rtmp_send_create_stream(fd) < 0) {
-        ESP_LOGE(TAG, "RTMP: createStream command failed");
-        close(fd);
-        return ESP_FAIL;
-    }
-
-    /* Publish */
-    if (rtmp_send_publish(fd) < 0) {
-        ESP_LOGE(TAG, "RTMP: publish command failed");
-        close(fd);
-        return ESP_FAIL;
-    }
-
-    s_rtmp.tcp_fd = fd;
-    s_rtmp.connected = true;
-    s_rtmp.stream_published = true;
-    s_rtmp.timestamp = 0;
-    s_rtmp.mutex = xSemaphoreCreateMutex();
-
-    ESP_LOGI(TAG, "RTMP: connected and publishing to %s/%s",
-             s_rtmp.app, s_rtmp.stream);
-    return ESP_OK;
+    ESP_LOGE(TAG, "RTMP: all stream ID attempts failed");
+    return ESP_FAIL;
 }
 
 bool network_tx_rtmp_is_connected(void)
@@ -591,6 +639,18 @@ int network_tx_rtmp_send(const uint8_t *data, int len, uint32_t timestamp_ms)
     }
 
     int ret = rtmp_send_ts_as_video(s_rtmp.tcp_fd, data, len, timestamp_ms);
+
+    if (ret < 0) {
+        /* Send failed - mark connection as dead so main loop retries with
+           next stream ID */
+        ESP_LOGW(TAG, "RTMP: send failed, marking connection as dead");
+        s_rtmp.connected = false;
+        s_rtmp.stream_published = false;
+        if (s_rtmp.tcp_fd >= 0) {
+            close(s_rtmp.tcp_fd);
+            s_rtmp.tcp_fd = -1;
+        }
+    }
 
     if (s_rtmp.mutex) {
         xSemaphoreGive(s_rtmp.mutex);
