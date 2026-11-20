@@ -365,3 +365,13 @@ esp_err_t h264_encoder_deinit(void)
     s_enc_state.frame_num = 0;
     return ESP_OK;
 }
+
+/* Reset SPS/PPS sent flag - called on RTMP reconnect to ensure
+ * SPS/PPS are included in first frame of new RTMP session */
+void h264_encoder_reset_sps_pps(void)
+{
+    if (s_enc_state.initialized) {
+        s_enc_state.sps_pps_sent = false;
+        ESP_LOGI(TAG, "H.264 encoder: SPS/PPS flag reset for new RTMP session");
+    }
+}

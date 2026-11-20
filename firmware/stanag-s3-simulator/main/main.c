@@ -17,6 +17,7 @@
 #include "esp_wifi.h"
 #include "esp_now.h"
 #include "esp_task_wdt.h"
+#include "driver/usb_serial_jtag.h"
 
 #include "jpeg_loader.h"
 #include "sensor_sim.h"
@@ -24,6 +25,7 @@
 #include "klv_builder.h"
 #include "ts_muxer.h"
 #include "network_tx.h"
+#include "network_tx_rtmp.h"
 #include "srt.h"
 #include "uart_telemetry.h"
 #include "srt_endpoint.h"
@@ -90,6 +92,14 @@ void app_main(void)
     /* Diagnostic: identify which GPIO the onboard LED is on */
     status_led_pin_scan();
 #endif
+    
+    // Explicitly initialize USB-Serial-JTAG for console output
+    usb_serial_jtag_driver_config_t usb_serial_jtag_config = {
+        .tx_buffer_size = 256,
+        .rx_buffer_size = 256,
+    };
+    ESP_ERROR_CHECK(usb_serial_jtag_driver_install(&usb_serial_jtag_config));
+    ESP_LOGI(TAG, "USB-Serial-JTAG driver installed");
     
     // Early printf to ensure output before any crash
     printf("\n\n=== STANAG S3 Simulator Starting ===\n");
@@ -327,13 +337,16 @@ void app_main(void)
             ESP_LOGE(TAG, "KLV build failed");
         }
 
-        // 6. Mux H.264 + KLV into MPEG-TS
+        // 6. Send NAL units via RTMP (bypass TS muxer for RTMP)
+        network_tx_rtmp_send(nalu->data, nalu->len, nalu->timestamp_us / 1000);
+
+        // 7. Mux H.264 + KLV into MPEG-TS
         ts_packet_t *ts = ts_muxer_mux(nalu, klv);
         if (!ts) {
             ESP_LOGE(TAG, "TS mux failed");
         }
 
-        // 7. Transmit via ESP-NOW/UDP/SRT
+        // 8. Transmit via ESP-NOW/UDP/SRT
         if (ts) {
             network_tx_send(ts);
         }
