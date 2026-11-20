@@ -197,11 +197,17 @@ static int build_handshake(uint8_t *out, uint32_t subtype,
     int pos = 0;
     bool have_sid = (stream_id != NULL && strlen(stream_id) > 0);
 
-    /* Always use UDT4 version (4) for max compatibility with peers like
-       ffmpeg/MediaMTX. Still include SRT_CMD_SID extension when stream_id
-       is present so the stream name is carried in the handshake. */
-    uint32_t version = SRT_HS_VERSION_UDT4;
-    uint32_t mtype   = SRT_UDT_DGRAM;
+    /* Match ffmpeg's handshake pattern:
+       - Induction HSREQ (dst_sockid=0):  UDT4 version, no extensions
+       - Conclusion HSREQ (dst_sockid!=0): SRT1 version + HS_EXT_CONFIG +
+         SRT_CMD_SID extension (MediaMTX reads stream name here)
+       - HSRESP: caller sets version/type, listener echoes back */
+    bool is_conclusion = (sockid_dst != 0);
+    uint32_t version = (is_conclusion && have_sid) ? SRT_HS_VERSION_SRT1
+                                                   : SRT_HS_VERSION_UDT4;
+    uint32_t mtype   = (is_conclusion && have_sid)
+                       ? (SRT_HS_EXT_HSREQ | SRT_HS_EXT_CONFIG)
+                       : SRT_UDT_DGRAM;
 
     /* Word 0: CDT = control + handshake subtype (subtype at bits 16-30) */
     put32(out + pos, CDT_CONTROL(subtype)); pos += 4;
@@ -217,10 +223,10 @@ static int build_handshake(uint8_t *out, uint32_t subtype,
 
     /* --- CHandShake content (48 bytes = 12 words) --- */
 
-    /* Word 4: m_iVersion = UDT4 (4) */
+    /* Word 4: m_iVersion */
     put32(out + pos, version); pos += 4;
 
-    /* Word 5: m_iType = UDT_DGRAM (2) */
+    /* Word 5: m_iType (UDT_DGRAM for v4, extension flags for v5) */
     put32(out + pos, mtype); pos += 4;
 
     /* Word 6: m_iISN = random initial sequence number */
@@ -248,10 +254,9 @@ static int build_handshake(uint8_t *out, uint32_t subtype,
     put32(out + pos, 0); pos += 4;
 
     /* --- Extensions: SRT_CMD_SID (stream ID) ---
-       Always append when stream_id is present, even with UDT4 version.
-       MediaMTX and other SRT servers parse this extension to validate
-       the stream name (format: action:pathname[:user:pass[:query]]). */
-    if (have_sid) {
+       Only appended for conclusion HSREQ with SRT1 version, matching ffmpeg.
+       MediaMTX reads the stream name from this extension. */
+    if (is_conclusion && have_sid) {
         int sid_len = (int)strlen(stream_id);
         put16(out + pos, SRT_CMD_SID); pos += 2;
         put16(out + pos, (uint16_t)sid_len); pos += 2;
