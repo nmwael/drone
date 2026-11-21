@@ -48,14 +48,15 @@
     }
   },
   "agent": {
-    "architect": { "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "temperature": 0.1, "steps": 30 },
-    "coder":     { "model": "mistral/codestral-2508",                   "temperature": 0.1, "steps": 25 },
-    "researcher":{ "model": "mistral/ministral-8b-2512",               "temperature": 0.1, "steps": 20 },
-    "reviewer":  { "model": "mistral/mistral-medium-latest",           "temperature": 0.1, "steps": 15 }
+    "build":     { "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "temperature": 0.1, "steps": 50, "max_tokens": 16384 },
+    "architect": { "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "temperature": 0.1, "steps": 30, "max_tokens": 16384 },
+    "coder":     { "model": "mistral/codestral-2508",                   "temperature": 0.1, "steps": 25, "max_tokens": 8192 },
+    "researcher":{ "model": "mistral/ministral-8b-2512",               "temperature": 0.1, "steps": 20, "max_tokens": 8192 },
+    "reviewer":  { "model": "mistral/mistral-medium-latest",           "temperature": 0.1, "steps": 15, "max_tokens": 8192 }
   },
   "enabled_providers": ["nvidia", "mistral", "opencode"],
-  "plugins": [],
+  "plugins": ["./plugins/opencode-subagent-statusline"],
   "subagent_depth": 3,
   "permission": "allow",
-  "limit": { "context": 32768 }
+  "limit": { "context": 131072 }
 }

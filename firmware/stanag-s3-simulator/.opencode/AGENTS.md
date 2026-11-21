@@ -78,6 +78,16 @@ Critical files:
 | `researcher` | Explore codebase, search patterns, understand architecture | `mistral/ministral-8b-2512` | Mistral |
 | `reviewer` | Audit code for bugs, style, security, performance | `mistral/mistral-medium-latest` | Mistral |
 
+## Primary Agent Continuation Policy (CRITICAL)
+
+The primary `build` agent MUST drive every task to completion:
+
+1. **Do not stop after delegating.** Spawning a subagent is not a stopping point. Wait for all `Result` envelopes (treat missing as "still running").
+2. **Retry on blocked.** If a subagent returns `status: blocked`, refine the directive and re-delegate (max 2 retries per subtask); only then ask the user.
+3. **Verify before declaring done.** Confirm every claimed artifact with your own `read`/`git status`/checks. Never declare DONE on a subagent's word alone.
+4. **No "I will continue later".** Either act now or state exactly "I am waiting for instructions".
+5. **Bounded self-correction.** Two failed attempts on the same error → stop and report blocked; do not attempt a third.
+
 ## HITL Gate
 
 For any task that changes code: architect plans → human approves (via `question` tool: "I am waiting for approval") → coder implements → reviewer audits → architect verifies on disk (`git status`) → complete.

@@ -171,9 +171,11 @@
       }
     },
     "build": {
-      "temperature": 0.2,
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "temperature": 0.1,
       "top_p": 0.95,
-      "max_tokens": 16384
+      "max_tokens": 16384,
+      "steps": 50
     },
     "ui": {
       "temperature": 0.3,
@@ -223,5 +225,6 @@
     "web_search": true,
     "web_fetch": true,
     "task": true
-  }
+  },
+  "subagent_depth": 3
 }
