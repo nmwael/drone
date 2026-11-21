@@ -1,5 +1,7 @@
 # MediaMTX RTMP Source Reference
 
+> **AI hint:** Reference for MediaMTX's RTMP implementation (conn.go/server.go/session.go): handshake sequence, chunk stream IDs, AMF command order, FLV video tag format, constants. Use when comparing ESP32 wire format against MediaMTX expectations. Related: `RTMP_DEBUG_JOURNAL.md`, `RTMP_E2E_TEST_PLAN.md`, `main/network_tx_rtmp.c`.
+
 ## Repository
 **URL:** https://github.com/bluenviron/mediamtx (formerly github.com/aler9/mediamtx)
 

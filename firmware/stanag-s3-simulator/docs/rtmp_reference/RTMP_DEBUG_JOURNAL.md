@@ -1,5 +1,7 @@
 # RTMP Debug Journal - ESP32 to MediaMTX
 
+> **AI hint:** Chronological record of RTMP wire-format fixes (chunk stream IDs, FLV wrapping, control messages, stream IDs, tcUrl, onMetaData) and remaining network gate. Read before touching `network_tx_rtmp.c`. Related: `RTMP_E2E_TEST_PLAN.md`, `REMOTE_VALIDATION_PLAN.md`, `docs/rtmp_reference/MEDIAMTX_RTMP.md`.
+
 ## Problem Statement
 ESP32 RTMP connects and publishes successfully, but MediaMTX rejects video data with ECONNRESET (errno 104) on first video DATA packet.
 

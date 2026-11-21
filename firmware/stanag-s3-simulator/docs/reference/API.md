@@ -1,5 +1,7 @@
 # STANAG S3 Simulator — API Reference
 
+> **AI hint:** Complete API reference for all modules (types, functions, init sequences). Source of truth for signatures; update when changing APIs (per AGENTS.md convention). Related: `AGENTS.md`, `OVERVIEW.md`, headers in `main/`.
+
 ## Core Types (`stanag_types.h`)
 
 ### `jpeg_frame_t`

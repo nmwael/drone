@@ -1,5 +1,7 @@
 # STANAG/MISB Glossary — STANAG S3 Simulator
 
+> **AI hint:** Terminology reference for STANAG 4609, MISB ST 0601 KLV, MPEG-TS, H.264, sensors, ESP32-S3, networking, WebXR. Consult when an unfamiliar acronym appears in code or logs. Related: `docs/reference/API.md`, `docs/architecture/OVERVIEW.md`, `AGENTS.md`.
+
 ## Standards
 
 | Term | Definition |

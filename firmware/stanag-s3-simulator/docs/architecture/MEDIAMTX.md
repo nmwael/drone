@@ -1,5 +1,7 @@
 # MediaMTX Ground Station Configuration
 
+> **AI hint:** Ground-station setup: install, `mediamtx.yml`, ports (8888 UDP TS, 8889 WebRTC, 8554 RTSP, 9997 API, 9998 metrics), Meta Quest browser steps, KLV extraction hook, troubleshooting, production checklist. Related: `docs/rtmp_reference/MEDIAMTX_RTMP.md`, `SRT_SETUP.md` (in docs/), `AGENTS.md` (transport status).
+
 MediaMTX is a lightweight, zero-dependency media server that ingests the STANAG 4609 MPEG-TS stream from the ESP32-S3 and serves it via WebRTC to browsers (including Meta Quest 2/3).
 
 ## Quick Start

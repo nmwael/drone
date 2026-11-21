@@ -1,5 +1,7 @@
 # STANAG S3 Simulator — Data Flow
 
+> **AI hint:** Per-frame pipeline timing (33 ms budget) and data flow through `app_main()` at 30 fps. Read when changing frame rate, profiling overruns, or adding pipeline stages. Related: `OVERVIEW.md`, `AGENTS.md` (frame rate task), `main/main.c`.
+
 Per-frame data flow through the 30 fps processing pipeline in `app_main()`.
 
 ## Pipeline Sequence

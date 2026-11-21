@@ -102,7 +102,7 @@ idf.py -p /dev/ttyUSB0 flash monitor
 2. Add encoding logic in `klv_builder_build()`
 3. Update `parse_klv_value()` in `scripts/parse_ts_output.py`
 4. Add test in `test/klv_builder_test.c`
-5. Update `API.md` and `DATA-FLOW.md` tables
+5. Update `docs/reference/API.md` and `docs/architecture/DATA-FLOW.md` tables
 
 ### 4. Modifying Sensor Simulation
 - Edit `main/sensor_sim.c` → `sensor_sim_get_data()`
@@ -111,7 +111,7 @@ idf.py -p /dev/ttyUSB0 flash monitor
 
 ### 5. Changing Frame Rate
 - Modify `FRAME_RATE_HZ` in `main/main.c`
-- Update timing budget in `DATA-FLOW.md` (Mermaid gantt)
+- Update timing budget in `docs/architecture/DATA-FLOW.md` (Mermaid gantt)
 - Adjust `FRAME_INTERVAL_MS` calculation
 
 ---
@@ -130,12 +130,12 @@ idf.py -p /dev/ttyUSB0 flash monitor
 | File | Purpose |
 |------|---------|
 | `firmware/stanag-s3-simulator/README.md` | Quick start, features, hardware |
-| `firmware/stanag-s3-simulator/OVERVIEW.md` | Architecture + Mermaid diagrams |
-| `firmware/stanag-s3-simulator/DATA-FLOW.md` | Per-frame pipeline + timing |
-| `firmware/stanag-s3-simulator/API.md` | Complete API reference |
-| `firmware/stanag-s3-simulator/BUILD.md` | Build guide + troubleshooting |
-| `firmware/stanag-s3-simulator/TESTING.md` | Unit tests (64), QEMU, CI |
-| `firmware/stanag-s3-simulator/MEDIAMTX.md` | Ground station + WebRTC + Quest |
+| `firmware/stanag-s3-simulator/docs/architecture/OVERVIEW.md` | Architecture + Mermaid diagrams |
+| `firmware/stanag-s3-simulator/docs/architecture/DATA-FLOW.md` | Per-frame pipeline + timing |
+| `firmware/stanag-s3-simulator/docs/reference/API.md` | Complete API reference |
+| `firmware/stanag-s3-simulator/docs/build/BUILD.md` | Build guide + troubleshooting |
+| `firmware/stanag-s3-simulator/docs/testing/TESTING.md` | Unit tests (64), QEMU, CI |
+| `firmware/stanag-s3-simulator/docs/architecture/MEDIAMTX.md` | Ground station + WebRTC + Quest |
 
 ### Key Source Files
 | File | Purpose |
@@ -202,7 +202,7 @@ idf.py -p /dev/ttyUSB0 flash monitor
 - **Error handling:** Check `esp_err_t` returns, use `ESP_ERROR_CHECK()` for critical init
 - **Memory:** PSRAM for large buffers (`MALLOC_CAP_SPIRAM`), static buffers for hot path
 - **Tests:** Unity framework, `test/<module>_test.c`, registered in `test/test_runner.c`
-- **Documentation:** Markdown with Mermaid diagrams, update `API.md` when changing APIs
+- **Documentation:** Markdown with Mermaid diagrams, update `docs/reference/API.md` when changing APIs
 
 ---
 

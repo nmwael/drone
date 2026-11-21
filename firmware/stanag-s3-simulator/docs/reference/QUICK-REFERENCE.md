@@ -1,5 +1,7 @@
 # Quick Reference — STANAG S3 Simulator
 
+> **AI hint:** Cheat sheet: live serial, build/flash/test commands, ports, KLV tags, PIDs, sensor rates, frame rate. Read for fast command lookup. Related: `AGENTS.md`, `README.md`, `API.md`.
+
 ## 🎯 Live on `/dev/ttyACM0` @ 115200 baud
 
 ---
@@ -160,6 +162,6 @@ test/
 | `OVERVIEW.md` | Architecture diagrams |
 | `DATA-FLOW.md` | Pipeline + timing |
 | `API.md` | Complete API reference |
-| `BUILD.md` | Build guide |
+| `docs/build/BUILD.md` | Build guide |
 | `TESTING.md` | Tests + CI |
 | `MEDIAMTX.md` | Ground station |

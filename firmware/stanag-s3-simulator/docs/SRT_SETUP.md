@@ -1,5 +1,7 @@
 # SRT Transport Setup Guide
 
+> **AI hint:** How to enable the (currently incomplete) SRT transport: component install, config in `main.c`, MediaMTX path, ffmpeg test, encryption, stats, troubleshooting. Status: SRT handshake completes but DATA packets rejected by MediaMTX; deprioritized until RTMP baseline works. Related: `docs/rtmp_reference/MEDIAMTX_SRT.md`, `docs/architecture/MEDIAMTX.md`, `AGENTS.md`.
+
 This document explains how to enable SRT (Secure Reliable Transport) for the STANAG S3 Simulator.
 
 ## Overview

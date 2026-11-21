@@ -1,5 +1,7 @@
 # STANAG S3 Simulator — Architecture Overview
 
+> **AI hint:** High-level architecture: system/component/build-output/partition diagrams (Mermaid) and release artifacts. Read to understand module boundaries and flash layout. Related: `DATA-FLOW.md` (per-frame pipeline), `AGENTS.md`, `README.md`.
+
 ESP32-S3 firmware proof-of-concept that loops 5 JPEG frames from SPIFFS, simulates GPS/IMU/Magnetometer/Barometer/AHT20 sensor data, encodes to H.264 (software fallback), builds MISB ST 0601 KLV metadata, muxes into MPEG-TS, and streams via ESP-NOW/UDP for STANAG 4609 compliance testing.
 
 ## System Diagram

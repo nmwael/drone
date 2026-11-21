@@ -8,7 +8,7 @@ Use when a build, flash, or runtime behavior fails and the cause is not immediat
 4. Formulate one hypothesis at a time; change one thing; re-run to verify.
 5. If blocked after two attempts, return a Result with `status: blocked` and the exact error as the blocker; do not loop.
 
-Common firmware fixes (from `TROUBLESHOOTING.md` / `BUILD.md`):
+Common firmware fixes (from `TROUBLESHOOTING.md` / `docs/build/BUILD.md`):
 - SPIFFS image fails → `CONFIG_PARTITION_TABLE_CUSTOM=y` in `sdkconfig.defaults`
 - `esp_psram_*` undefined → `CONFIG_SPIRAM=y` in `sdkconfig.defaults`
 - `idf.py` not found → run `eim shell v5.5.6`

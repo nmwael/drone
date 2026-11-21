@@ -2,16 +2,17 @@
 
 ## 🎯 Active & Running
 - **[STANAG S3 Simulator](../firmware/stanag-s3-simulator/README.md)** — ESP32-S3 STANAG 4609 POC **currently on `/dev/ttyACM0`**
-  - [Architecture Overview](../firmware/stanag-s3-simulator/OVERVIEW.md)
-  - [Data Flow & Timing](../firmware/stanag-s3-simulator/DATA-FLOW.md)
-  - [API Reference](../firmware/stanag-s3-simulator/API.md)
-  - [Build Guide](../firmware/stanag-s3-simulator/BUILD.md)
-  - [Testing Guide](../firmware/stanag-s3-simulator/TESTING.md)
-  - [MediaMTX Ground Station](../firmware/stanag-s3-simulator/MEDIAMTX.md)
-  - [Glossary](../firmware/stanag-s3-simulator/GLOSSARY.md)
-  - [Troubleshooting](../firmware/stanag-s3-simulator/TROUBLESHOOTING.md)
+  - [Architecture Overview](../firmware/stanag-s3-simulator/docs/architecture/OVERVIEW.md)
+  - [Data Flow & Timing](../firmware/stanag-s3-simulator/docs/architecture/DATA-FLOW.md)
+  - [MediaMTX Ground Station](../firmware/stanag-s3-simulator/docs/architecture/MEDIAMTX.md)
+  - [API Reference](../firmware/stanag-s3-simulator/docs/reference/API.md)
+  - [Glossary](../firmware/stanag-s3-simulator/docs/reference/GLOSSARY.md)
+  - [Quick Reference](../firmware/stanag-s3-simulator/docs/reference/QUICK-REFERENCE.md)
+  - [Build Guide](../firmware/stanag-s3-simulator/docs/build/BUILD.md)
+  - [Testing Guide](../firmware/stanag-s3-simulator/docs/testing/TESTING.md)
+  - [Troubleshooting](../firmware/stanag-s3-simulator/docs/testing/TROUBLESHOOTING.md)
   - [AI Onboarding](../firmware/stanag-s3-simulator/AGENTS.md)
-  - [Quick Reference](../firmware/stanag-s3-simulator/QUICK-REFERENCE.md)
+  - [RTMP Debug Journal](../firmware/stanag-s3-simulator/docs/rtmp_reference/RTMP_DEBUG_JOURNAL.md)
 
 ## Firmware (Planned — Now with AI Onboarding)
 - **[ESP32-S3 Vision](../firmware/esp32-s3-vision/README.md)** — STANAG H.264 Day Camera Video Streaming

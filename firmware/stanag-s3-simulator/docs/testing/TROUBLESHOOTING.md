@@ -1,5 +1,7 @@
 # Troubleshooting Guide — STANAG S3 Simulator
 
+> **AI hint:** Symptom→cause→fix decision trees (SPIFFS, PSRAM, idf.py, UDP errno 118, frame overrun, JPEG decode, RTMP errno 104/118). Read when a build/flash/runtime error appears. Related: `AGENTS.md` (troubleshooting table), `docs/build/BUILD.md`.
+
 ## Quick Decision Trees
 
 ### Build Failures

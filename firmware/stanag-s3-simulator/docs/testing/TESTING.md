@@ -1,5 +1,7 @@
 # STANAG S3 Simulator — Testing Guide
 
+> **AI hint:** How to build/run the 64 Unity tests on QEMU, test module index, expected pass counts, single-test invocation. Read before modifying tests or adding a module. Related: `AGENTS.md` (testing table), `API.md`, `test/test_runner.c`.
+
 ## Test Suite Overview
 
 64 Unity unit tests across 8 modules, registered in `test/test_runner.c`.

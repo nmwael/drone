@@ -1,5 +1,7 @@
 # STANAG S3 Simulator — ESP32-S3 POC
 
+> **AI hint:** Project entry point. Start here for feature list, hardware, quick start, project structure, sensor/KLV/TS specs, testing, CI, config. For AI-agent workflow and architecture details see `AGENTS.md`; for module API see `docs/reference/API.md`.
+
 ESP32-S3 firmware that loops 5 JPEG frames, simulates GPS/IMU/Mag/Baro/AHT20 sensors, encodes to H.264, muxes into MPEG-TS with MISB ST 0601 KLV metadata, and streams via ESP-NOW/UDP for STANAG 4609 compliance testing.
 
 ## Features
@@ -63,12 +65,12 @@ stanag-s3-simulator/
 ├── sdkconfig                  # ESP-IDF config (PSRAM enabled)
 ├── partitions.csv             # Partition table (SPIFFS ~960KB)
 ├── CMakeLists.txt
-├── MEDIAMTX.md                # Ground station documentation
-├── OVERVIEW.md                # Architecture overview with Mermaid diagrams
-├── DATA-FLOW.md               # Per-frame data flow with Mermaid diagrams
-├── BUILD.md                   # Build guide and troubleshooting
-├── TESTING.md                 # Unit test guide (64 Unity tests)
-├── API.md                     # API reference for all modules
+├── docs/architecture/MEDIAMTX.md   # Ground station documentation
+├── docs/architecture/OVERVIEW.md   # Architecture overview with Mermaid diagrams
+├── docs/architecture/DATA-FLOW.md  # Per-frame data flow with Mermaid diagrams
+├── docs/build/BUILD.md            # Build guide and troubleshooting
+├── docs/testing/TESTING.md        # Unit test guide (64 Unity tests)
+├── docs/reference/API.md          # API reference for all modules
 └── README.md
 ```
 
@@ -123,7 +125,7 @@ Per-frame tags:
 
 ## Ground Station
 
-See **[MediaMTX Ground Station Documentation](MEDIAMTX.md)** for complete setup including:
+See **[MediaMTX Ground Station Documentation](docs/architecture/MEDIAMTX.md)** for complete setup including:
 - MediaMTX installation (binary/Docker)
 - Complete `mediamtx.yml` configuration for STANAG 4609
 - WebRTC setup for Meta Quest 2/3
@@ -145,7 +147,7 @@ Open `http://<ground-ip>:8889` in browser or Meta Quest 2 browser.
 ### Files
 - `mediamtx.yml` — Ready-to-use MediaMTX config
 - `scripts/klv_extractor.sh` — KLV extraction hook
-- `MEDIAMTX.md` — Full documentation
+- `docs/architecture/MEDIAMTX.md` — Full documentation
 
 ## Testing
 
@@ -213,12 +215,12 @@ For hardware testing (not QEMU):
 
 | Document | Description |
 |---|---|
-| `OVERVIEW.md` | Architecture overview with Mermaid diagrams |
-| `DATA-FLOW.md` | Per-frame data flow with Mermaid diagrams |
-| `BUILD.md` | Build guide and troubleshooting |
-| `TESTING.md` | Unit test guide (64 Unity tests) |
-| `API.md` | API reference for all modules |
-| `MEDIAMTX.md` | Ground station setup (MediaMTX + WebRTC + Meta Quest) |
+| `docs/architecture/OVERVIEW.md` | Architecture overview with Mermaid diagrams |
+| `docs/architecture/DATA-FLOW.md` | Per-frame data flow with Mermaid diagrams |
+| `docs/build/BUILD.md` | Build guide and troubleshooting |
+| `docs/testing/TESTING.md` | Unit test guide (64 Unity tests) |
+| `docs/reference/API.md` | API reference for all modules |
+| `docs/architecture/MEDIAMTX.md` | Ground station setup (MediaMTX + WebRTC + Meta Quest) |
 | `mediamtx.yml` | MediaMTX configuration file |
 
 ## License

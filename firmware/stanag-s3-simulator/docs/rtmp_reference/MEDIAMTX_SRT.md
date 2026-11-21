@@ -1,5 +1,7 @@
 # MediaMTX SRT Source Reference
 
+> **AI hint:** Reference for MediaMTX's SRT implementation: handshake sequence, DATA packet header (16 bytes), socket-ID convention (peer's ID in word 3), constants. Critical for the sockid_local vs sockid_peer bug. Related: `SRT_SETUP.md`, `main/network_tx_srt.c`, `AGENTS.md` (SRT status).
+
 ## Repository
 **URL:** https://github.com/bluenviron/mediamtx (formerly github.com/aler9/mediamtx)
 

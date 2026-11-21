@@ -180,7 +180,7 @@ timeout 60 idf.py -p /dev/null qemu monitor
 2. Add encoding in `klv_builder_build()` (big-endian 2-byte key/len)
 3. Update `parse_klv_value()` in `scripts/parse_ts_output.py`
 4. Add test case in `test/klv_builder_test.c`
-5. Update `API.md` KLV table and `DATA-FLOW.md` diagram
+5. Update `docs/reference/API.md` KLV table and `docs/architecture/DATA-FLOW.md` diagram
 
 ### 5. Modify Sensor Simulation
 - Edit `main/sensor_sim.c` → `sensor_sim_get_data()`
@@ -191,7 +191,7 @@ timeout 60 idf.py -p /dev/null qemu monitor
 ### 6. Change Frame Rate
 - Modify `FRAME_RATE_HZ` in `main/main.c`
 - Update `FRAME_INTERVAL_MS = 1000 / FRAME_RATE_HZ`
-- Update timing budget in `DATA-FLOW.md` (Mermaid gantt chart)
+- Update timing budget in `docs/architecture/DATA-FLOW.md` (Mermaid gantt chart)
 - Adjust sensor update rates in `sensor_sim.c` if needed
 
 ---
@@ -265,6 +265,26 @@ See [RTMP Debug Journal](docs/rtmp_reference/RTMP_DEBUG_JOURNAL.md) for detailed
 - **RTMP Reference:** `docs/rtmp_reference/` — ffmpeg RTMP source, MediaMTX RTMP analysis, RTMP debug journal
 - **SRT Reference:** `docs/srt_reference/` — MediaMTX SRT source (conn.go, server.go, dest.go, streamid.go, listener.go)
 
+### Planning & Diagnostic Documents
+- **Remote Validation Plan:** `REMOTE_VALIDATION_PLAN.md` — step-by-step validation against production MediaMTX (172.160.27.93)
+- **RTMP Diagnostic Plan:** `RTMP_DIAGNOSTIC_PLAN.md` — root cause analysis of errno 118 (ETIMEDOUT) and diagnostic stages
+- **RTMP E2E Test Plan:** `RTMP_E2E_TEST_PLAN.md` — end-to-end test plan (network, build/flash, serial stages, MediaMTX verification)
+- **Glossary:** `docs/reference/GLOSSARY.md` — STANAG/MISB, video, sensor, ESP32, networking terminology
+- **SRT Setup Guide:** `docs/SRT_SETUP.md` — enabling SRT transport, MediaMTX config, ffmpeg testing
+- **MediaMTX RTMP Reference:** `docs/rtmp_reference/MEDIAMTX_RTMP.md` — MediaMTX RTMP source files, handshake, chunk IDs, FLV video format
+- **MediaMTX SRT Reference:** `docs/rtmp_reference/MEDIAMTX_SRT.md` — MediaMTX SRT source files, handshake, DATA packet format, socket IDs
+
+### Core Documentation Index
+- `README.md` — project entry point, features, quick start, structure
+- `docs/architecture/OVERVIEW.md` — architecture diagrams, partitions, build artifacts
+- `docs/architecture/DATA-FLOW.md` — per-frame 30 fps pipeline and timing budget
+- `docs/architecture/MEDIAMTX.md` — ground station, ports, WebRTC, Quest, KLV extraction
+- `docs/build/BUILD.md` — build environment, steps, artifacts, troubleshooting
+- `docs/testing/TESTING.md` — 64 Unity tests, QEMU run, coverage
+- `docs/testing/TROUBLESHOOTING.md` — symptom→cause→fix decision trees
+- `docs/reference/API.md` — complete API reference (update on signature changes)
+- `docs/reference/QUICK-REFERENCE.md` — commands, ports, tags, PIDs cheat sheet
+
 ---
 
 ## Key Conventions
@@ -274,7 +294,7 @@ See [RTMP Debug Journal](docs/rtmp_reference/RTMP_DEBUG_JOURNAL.md) for detailed
 - **ESP_LOGI(TAG, ...)** with module-specific TAG
 - **Error handling:** `ESP_ERROR_CHECK()` for init, check returns in loop
 - **Tests:** Unity, `setUp()`/`tearDown()`, `RUN_TEST()` in `test_runner.c`
-- **Docs:** Update `API.md` when changing function signatures
+- **Docs:** Update `docs/reference/API.md` when changing function signatures
 
 ---
 
@@ -315,4 +335,4 @@ clangd --version
 2. **Check `test/test_runner.c`** — shows module init/usage patterns
 3. **Run tests on QEMU** — validates without hardware
 4. **Parse serial output** — `python3 scripts/parse_ts_output.py serial.log`
-5. **Check `DATA-FLOW.md`** — Mermaid sequence diagram of pipeline
+5. **Check `docs/architecture/DATA-FLOW.md`** — Mermaid sequence diagram of pipeline
