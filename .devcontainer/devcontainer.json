@@ -83,10 +83,14 @@
   },
   "runArgs": [
     "--privileged",
-    "--device=/dev/ttyACM0"
+    "--network=host"
+  ],
+  "mounts": [
+    "source=/dev,target=/dev,type=bind"
   ],
   "remoteEnv": {
-    "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}"
+    "NVIDIA_API_KEY": "${localEnv:NVIDIA_API_KEY}",
+    "MISTRAL_API_KEY": "${localEnv:MISTRAL_API_KEY}"
   },
   "postStartCommand": "bash -c \"modprobe cdc_acm 2>/dev/null || true; udevadm trigger --subsystem-match=tty 2>/dev/null || true; chmod 666 /dev/ttyACM* 2>/dev/null || true; chmod 666 /dev/ttyUSB* 2>/dev/null || true\"; nohup bash .devcontainer/scripts/auto-startup.sh > /home/vscode/.cache/auto-startup.log 2>&1 & bash -c \"if [ -d /home/vscode/.local ]; then chown -R vscode:vscode /home/vscode/.local; echo Fixed /home/vscode/.local ownership; fi\"; bash .devcontainer/scripts/agent-status.sh update 'opencode-server' 'server' 'running' 'OpenCode API server on port 4096' 0",
   "remoteUser": "vscode"
