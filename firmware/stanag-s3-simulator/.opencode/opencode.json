@@ -13,13 +13,11 @@
         }
       },
       "models": {
-        "nemotron-3-70b-instruct": { "name": "NVIDIA Nemotron 3 70B Instruct",   "limit": { "context": 32768, "output": 4096 } },
-        "nemotron-3-8b-instruct":  { "name": "NVIDIA Nemotron 3 8B Instruct",    "limit": { "context": 32768, "output": 4096 } },
-        "llama-3.1-70b-instruct":  { "name": "Llama 3.1 70B Instruct (NIM)",     "limit": { "context": 131072, "output": 4096 } },
-        "llama-3.1-8b-instruct":   { "name": "Llama 3.1 8B Instruct (NIM)",      "limit": { "context": 131072, "output": 4096 } },
-        "mixtral-8x22b-instruct":  { "name": "Mixtral 8x22B Instruct (NIM)",     "limit": { "context": 65536, "output": 4096 } },
-        "gemma-2-27b-it":          { "name": "Gemma 2 27B IT (NIM)",            "limit": { "context": 131072, "output": 4096 } },
-        "nemotron-3-ultra-550b-a55b": { "name": "Nemotron 3 Ultra 550B (NIM, strongest)", "limit": { "context": 131072, "output": 4096 } }
+        "nemotron-3-ultra-550b-a55b":            { "name": "Nemotron 3 Ultra 550B (NIM, strongest)", "limit": { "context": 131072, "output": 4096 } },
+        "nemotron-3-nano-omni-30b-a3b-reasoning": { "name": "Nemotron 3 Nano Omni 30B (reasoning)",  "limit": { "context": 131072, "output": 4096 } },
+        "nemotron-3.5-lightning-30b-a3b":         { "name": "Nemotron 3.5 Lightning 30B",           "limit": { "context": 131072, "output": 4096 } },
+        "nemotron-3.5-super-vl-120b-a12b":       { "name": "Nemotron 3.5 Super VL 120B",           "limit": { "context": 131072, "output": 4096 } },
+        "mistral-large-4-1t-a52b":                { "name": "Mistral Large 4 1T (NIM)",             "limit": { "context": 131072, "output": 4096 } }
       }
     },
     "mistral": {
@@ -50,9 +48,9 @@
   "agent": {
     "build":     { "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "temperature": 0.1, "steps": 50, "max_tokens": 16384 },
     "architect": { "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b", "temperature": 0.1, "steps": 30, "max_tokens": 16384 },
-    "coder":     { "model": "mistral/codestral-2508",                   "temperature": 0.1, "steps": 25, "max_tokens": 8192 },
-    "researcher":{ "model": "mistral/ministral-8b-2512",               "temperature": 0.1, "steps": 20, "max_tokens": 8192 },
-    "reviewer":  { "model": "mistral/mistral-medium-latest",           "temperature": 0.1, "steps": 15, "max_tokens": 8192 }
+    "coder":     { "model": "nvidia/nemotron-3.5-lightning-30b-a3b",   "temperature": 0.1, "steps": 25, "max_tokens": 8192 },
+    "researcher":{ "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning", "temperature": 0.1, "steps": 20, "max_tokens": 8192 },
+    "reviewer":  { "model": "mistralai/mistral-large-4-1t-a52b",       "temperature": 0.1, "steps": 15, "max_tokens": 8192 }
   },
   "enabled_providers": ["nvidia", "mistral", "opencode"],
   "plugins": ["./plugins/opencode-subagent-statusline"],

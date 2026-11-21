@@ -32,9 +32,9 @@ Agent model assignments (quality over speed):
 | Agent | Role | Model | Provider | Reason |
 |-------|------|-------|----------|--------|
 | `architect` | Orchestration, planning, HITL gate, verification | `nvidia/nvidia/nemotron-3-ultra-550b-a55b` | NIM | 550B MoE — strongest reasoning for decomposition and planning |
-| `coder` | ESP-IDF C99 implementation, code edits | `mistral/codestral-2508` | Mistral | Code-specialist, verified generating embedded C |
-| `researcher` | Codebase exploration, pattern search | `mistral/ministral-8b-2512` | Mistral | Capable, 262k context for reading large files |
-| `reviewer` | Audit bugs, style, security, performance | `mistral/mistral-medium-latest` | Mistral | Strong reasoning (262k ctx) for detailed audit |
+| `coder` | ESP-IDF C99 implementation, code edits | `nvidia/nemotron-3.5-lightning-30b-a3b` | NIM | Fast, verified-working coding model (Mistral rate-limited) |
+| `researcher` | Codebase exploration, pattern search | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | NIM | Reasoning-capable, verified-working (Mistral rate-limited) |
+| `reviewer` | Audit bugs, style, security, performance | `mistralai/mistral-large-4-1t-a52b` (NIM) | NIM | Strong reasoning via NIM (Mistral provider rate-limited) |
 
 Switch models at runtime: `/model nvidia/nvidia/nemotron-3-ultra-550b-a55b` or `/model mistral/codestral-2508`
 
@@ -74,9 +74,9 @@ Critical files:
 | Agent | Use for | Model | Provider |
 |-------|---------|-------|----------|
 | `architect` | Decompose requests, plan, HITL approval, delegate, verify | `nvidia/nvidia/nemotron-3-ultra-550b-a55b` | NIM |
-| `coder` | Write/edit code, fix bugs, implement features | `mistral/codestral-2508` | Mistral |
-| `researcher` | Explore codebase, search patterns, understand architecture | `mistral/ministral-8b-2512` | Mistral |
-| `reviewer` | Audit code for bugs, style, security, performance | `mistral/mistral-medium-latest` | Mistral |
+| `coder` | Write/edit code, fix bugs, implement features | `nvidia/nemotron-3.5-lightning-30b-a3b` | NIM |
+| `researcher` | Explore codebase, search patterns, understand architecture | `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | NIM |
+| `reviewer` | Audit code for bugs, style, security, performance | `mistralai/mistral-large-4-1t-a52b` | NIM |
 
 ## Primary Agent Continuation Policy (CRITICAL)
 
