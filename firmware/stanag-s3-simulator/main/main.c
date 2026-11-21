@@ -212,23 +212,25 @@ void app_main(void)
     vTaskDelay(pdMS_TO_TICKS(10));
 
     ESP_LOGI(TAG, "Initializing network TX (ESP-NOW/UDP/SRT)...");
-    /* Uncomment for QEMU/devcontainer testing with Unix socket.
-       This bypasses WSL2 UDP loopback limitations.
+    /* Unix socket for local devcontainer testing with local MediaMTX.
        Requires MediaMTX configured with source: unix+mpegts:///tmp/stanag.sock
-       Real hardware (UDP) is unaffected when this is commented out. */
+       Real hardware (UDP/RTMP) is unaffected when this is active. */
     // network_tx_set_unix_socket("/tmp/stanag.sock");
+    // network_tx_set_mode(NETWORK_TX_MODE_UDP);
 
     /* SRT Configuration — endpoint + credentials come from srt_endpoint.h
        (gitignored; see srt_endpoint.h.example). Do NOT commit secrets. */
-    network_tx_set_mode(NETWORK_TX_MODE_RTMP);
+    // network_tx_set_mode(NETWORK_TX_MODE_SRT);
     /* RTMP Configuration — use RTMP instead of SRT since SRT is blocked
        by server-side firewall on 172.160.27.93:8890 */
+    network_tx_set_mode(NETWORK_TX_MODE_RTMP);
+    /* RTMP Configuration — Local MediaMTX for testing (127.0.0.1:1935) */
     network_tx_set_rtmp_config(
-        "172.160.27.93", 1935,          /* server:port */
+        "127.0.0.1", 1935,          /* server:port (local MediaMTX) */
         "live",                          /* app */
         "sse_drone_f71919",              /* stream */
-        "sse_drone_f71919",              /* user */
-        "5eefeb2389cf8b2ac83218ae926e7143"  /* pass */
+        "any",                          /* user (MediaMTX "any" user) */
+        ""                                /* pass (empty - MediaMTX "any" user has no password) */
     );
 
     /* UDP Configuration (commented out - works with MediaMTX)

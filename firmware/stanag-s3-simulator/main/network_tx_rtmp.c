@@ -273,7 +273,15 @@ static int rtmp_handshake(int fd)
         total += r;
     }
 
-    ESP_LOGI(TAG, "RTMP handshake complete (S0+S1+S2 received)");
+    ESP_LOGI(TAG, "RTMP handshake complete (S0+S1+S2 received, 3073 bytes)");
+
+    /* Send C2: copy of S1 (server's first 1536 bytes after S0) */
+    /* This acknowledges the server's handshake and completes the RTMP handshake */
+    if (rtmp_write(fd, s0s1s2 + 1, 1536) < 0) {
+        ESP_LOGE(TAG, "RTMP handshake: send C2 failed: errno %d", errno);
+        return -1;
+    }
+    ESP_LOGI(TAG, "RTMP handshake: C2 sent (1536 bytes), handshake complete");
 
     /* Send C2: copy of S1 (server's first 1536 bytes after S0) */
     /* This acknowledges the server's handshake and completes the RTMP handshake */
@@ -535,16 +543,26 @@ static int rtmp_send_connect(int fd)
     rtmp_put_amf_string_prop(&p, "flashVer", "LNX 9,0,124,2");
     rtmp_put_amf_string_prop(&p, "swfUrl", "");
 
-    /* tcUrl as full RTMP URL with credentials (matches ffmpeg format:
-     * rtmp://user:pass@host:port/app/stream) */
+    /* tcUrl format per ffmpeg (rtmp://host:port/app) - NO credentials, NO stream.
+     * Credentials sent as separate AMF properties in connect message.
+     * Stream name sent separately in publish command.
+     * For MediaMTX compatibility, we also support query-param auth format. */
     char tcUrl[256];
     int tcUrlLen;
-    if (s_rtmp.user[0] != '\0' && s_rtmp.pass[0] != '\0') {
+    if (s_rtmp.pass[0] != '\0') {
+        /* MediaMTX prefers query-param auth: rtmp://host:port/app/stream?user=xxx&pass=xxx */
         tcUrlLen = snprintf(tcUrl, sizeof(tcUrl),
-            "rtmp://%s:%s@%s:%d/%s/%s",
-            s_rtmp.user, s_rtmp.pass,
-            s_rtmp.server, s_rtmp.port, s_rtmp.app, s_rtmp.stream);
+            "rtmp://%s:%d/%s/%s?user=%s&pass=%s",
+            s_rtmp.server, s_rtmp.port, s_rtmp.app, s_rtmp.stream,
+            s_rtmp.user, s_rtmp.pass);
+    } else if (s_rtmp.user[0] != '\0') {
+        /* User only, no password */
+        tcUrlLen = snprintf(tcUrl, sizeof(tcUrl),
+            "rtmp://%s:%d/%s/%s?user=%s",
+            s_rtmp.server, s_rtmp.port, s_rtmp.app, s_rtmp.stream,
+            s_rtmp.user);
     } else {
+        /* No credentials in URL */
         tcUrlLen = snprintf(tcUrl, sizeof(tcUrl),
             "rtmp://%s:%d/%s/%s",
             s_rtmp.server, s_rtmp.port, s_rtmp.app, s_rtmp.stream);
@@ -554,6 +572,15 @@ static int rtmp_send_connect(int fd)
     } else {
         rtmp_put_amf_string_prop(&p, "tcUrl", s_rtmp.app);
     }
+
+    /* Explicit user/pass in connect message (some RTMP servers require this) */
+    if (s_rtmp.user[0] != '\0') {
+        rtmp_put_amf_string_prop(&p, "user", s_rtmp.user);
+    }
+    if (s_rtmp.pass[0] != '\0') {
+        rtmp_put_amf_string_prop(&p, "pass", s_rtmp.pass);
+    }
+
     rtmp_put_amf_object_prop(&p, "fpad", 0.0);
     rtmp_put_amf_object_prop(&p, "capabilities", 239.0);
     rtmp_put_amf_object_prop(&p, "audioCodecs", 3191.0);
@@ -885,7 +912,7 @@ esp_err_t network_tx_rtmp_module_init(void)
 
         if (connect(fd, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
             if (errno != EINPROGRESS) {
-                ESP_LOGE(TAG, "RTMP: connect() failed: errno %d", errno);
+                ESP_LOGE(TAG, "RTMP: connect() failed immediately: errno %d (%s)", errno, strerror(errno));
                 close(fd);
                 continue;  /* Try next stream ID */
             }
@@ -895,17 +922,46 @@ esp_err_t network_tx_rtmp_module_init(void)
             tv.tv_usec = 0;
             setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
-            /* Simple wait - in production use select/poll */
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            /* Wait for connect to complete with select() for better diagnostics */
+            fd_set write_fds, error_fds;
+            FD_ZERO(&write_fds);
+            FD_ZERO(&error_fds);
+            FD_SET(fd, &write_fds);
+            FD_SET(fd, &error_fds);
 
-            int so_error = 0;
-            socklen_t len = sizeof(so_error);
-            getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
-            if (so_error != 0) {
-                ESP_LOGE(TAG, "RTMP: connect() error: %d", so_error);
+            struct timeval connect_timeout;
+            connect_timeout.tv_sec = 10;
+            connect_timeout.tv_usec = 0;
+
+            ESP_LOGI(TAG, "RTMP: waiting for TCP connect to complete (non-blocking)...");
+            int sel_ret = select(fd + 1, NULL, &write_fds, &error_fds, &connect_timeout);
+            if (sel_ret <= 0) {
+                if (sel_ret == 0) {
+                    ESP_LOGE(TAG, "RTMP: connect() timed out after %d seconds (errno 118 ETIMEDOUT)", connect_timeout.tv_sec);
+                } else {
+                    ESP_LOGE(TAG, "RTMP: select() failed: errno %d (%s)", errno, strerror(errno));
+                }
                 close(fd);
                 continue;  /* Try next stream ID */
             }
+
+            /* Check for errors */
+            if (FD_ISSET(fd, &error_fds)) {
+                int so_error = 0;
+                socklen_t len = sizeof(so_error);
+                getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
+                ESP_LOGE(TAG, "RTMP: connect() failed with socket error: %d (%s)", so_error, strerror(so_error));
+                close(fd);
+                continue;  /* Try next stream ID */
+            }
+
+            if (!FD_ISSET(fd, &write_fds)) {
+                ESP_LOGE(TAG, "RTMP: select() returned but fd not writable");
+                close(fd);
+                continue;  /* Try next stream ID */
+            }
+
+            ESP_LOGI(TAG, "RTMP: TCP connect succeeded, proceeding to RTMP handshake");
         }
 
         /* Set socket timeouts for RTMP handshake and data exchange */
@@ -928,16 +984,21 @@ esp_err_t network_tx_rtmp_module_init(void)
         fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
 
         /* Connect command (csid 3) */
+        ESP_LOGI(TAG, "RTMP: sending connect command (app=%s, tcUrl=rtmp://%s:%d/%s/%s)...",
+                 s_rtmp.app, s_rtmp.server, s_rtmp.port, s_rtmp.app, s_rtmp.stream);
         if (rtmp_send_connect(fd) < 0) {
             ESP_LOGE(TAG, "RTMP: connect command failed");
             close(fd);
             continue;  /* Try next stream ID */
         }
+        ESP_LOGI(TAG, "RTMP: connect command sent, waiting for _result...");
 
         /* Read ALL server responses to connect:
            Window Ack Size, Set Peer BW, User Control, Chunk Size,
            _result for connect, onBWDone */
+        ESP_LOGI(TAG, "RTMP: reading server responses to connect command...");
         rtmp_drain_response(fd);
+        ESP_LOGI(TAG, "RTMP: server responses to connect processed");
 
         /* Client-side control messages per ffmpeg's read_connect() sequence */
         if (rtmp_send_window_ack_size(fd, s_rtmp.chunk_size) < 0) {
@@ -969,31 +1030,39 @@ esp_err_t network_tx_rtmp_module_init(void)
         rtmp_drain_response(fd);
 
         /* ffmpeg sends releaseStream and FCPublish before createStream */
+        ESP_LOGI(TAG, "RTMP: sending releaseStream for stream '%s'...", s_rtmp.stream);
         if (rtmp_send_release_stream(fd) < 0) {
             ESP_LOGE(TAG, "RTMP: releaseStream failed");
             close(fd);
             continue;  /* Try next stream ID */
         }
+        ESP_LOGI(TAG, "RTMP: releaseStream sent");
         rtmp_drain_response(fd);
+        ESP_LOGI(TAG, "RTMP: releaseStream response processed");
 
+        ESP_LOGI(TAG, "RTMP: sending FCPublish for stream '%s'...", s_rtmp.stream);
         if (rtmp_send_fc_publish(fd) < 0) {
             ESP_LOGE(TAG, "RTMP: FCPublish failed");
             close(fd);
             continue;  /* Try next stream ID */
         }
+        ESP_LOGI(TAG, "RTMP: FCPublish sent");
         rtmp_drain_response(fd);
+        ESP_LOGI(TAG, "RTMP: FCPublish response processed");
 
         /* CreateStream */
+        ESP_LOGI(TAG, "RTMP: sending createStream command...");
         if (rtmp_send_create_stream(fd) < 0) {
             ESP_LOGE(TAG, "RTMP: createStream command failed");
             close(fd);
             continue;  /* Try next stream ID */
         }
+        ESP_LOGI(TAG, "RTMP: createStream command sent, waiting for _result with stream ID...");
 
         /* Read _result for createStream to extract server-assigned stream ID */
         esp_err_t err = rtmp_read_create_stream_response(fd);
         if (err == ESP_OK) {
-            ESP_LOGI(TAG, "Using server-assigned stream_id=%d", s_rtmp.stream_id);
+            ESP_LOGI(TAG, "RTMP: createStream succeeded, server-assigned stream_id=%d", s_rtmp.stream_id);
         } else {
             ESP_LOGE(TAG, "Failed to read stream_id from createStream response, falling back to 1");
             s_rtmp.stream_id = 1;
@@ -1001,16 +1070,20 @@ esp_err_t network_tx_rtmp_module_init(void)
 
         /* Read any remaining createStream response data */
         rtmp_drain_response(fd);
+        ESP_LOGI(TAG, "RTMP: createStream response processed");
 
         /* Publish */
+        ESP_LOGI(TAG, "RTMP: sending publish command for stream '%s' (type=live)...", s_rtmp.stream);
         if (rtmp_send_publish(fd) < 0) {
             ESP_LOGE(TAG, "RTMP: publish command failed");
             close(fd);
             continue;  /* Try next stream ID */
         }
+        ESP_LOGI(TAG, "RTMP: publish command sent, waiting for onStatus...");
 
         /* Read MediaMTX response to publish (_result + onStatus NetStream.Publish.Start) */
         rtmp_drain_response(fd);
+        ESP_LOGI(TAG, "RTMP: publish response processed");
 
         s_rtmp.tcp_fd = fd;
         s_rtmp.connected = true;
@@ -1086,6 +1159,29 @@ static int rtmp_send_video_tag(int fd, const uint8_t *data, int len,
      *   Bytes 5+: Payload:
      *          - If AVCPacketType=0: AVCDecoderConfigurationRecord (contains SPS/PPS)
      *          - If AVCPacketType=1: NAL units with 4-byte length prefixes (NO start codes) */
+    if (!s_rtmp.connected) {
+        ESP_LOGW(TAG, "RTMP: not connected, dropping video frame (len=%d)", len);
+        return -1;
+    }
+
+    ESP_LOGD(TAG, "RTMP: sending video frame (type=%d, len=%d, timestamp=%u, avc_type=%d)",
+             0x09, len, timestamp_ms, avc_packet_type);
+
+    /* Send FLV-wrapped H.264 frame data as SINGLE RTMP video message (type 0x09).
+     * Input data contains concatenated NAL units (SPS+PPS+AUD+IDR or AUD+IDR).
+     * FLV video tag format:
+     *   Byte 0: 0x09 (tag type: video)
+     *   Bytes 1-3: data size (big-endian, includes FLV video body header + ALL NAL data)
+     *   Bytes 4-6: timestamp (big-endian)
+     *   Byte 7: timestamp extended (0)
+     *   Bytes 8-10: stream ID (0)
+     * FLV video body (AVC/CodecID=7):
+     *   Byte 0: FrameType (4 bits) | CodecID (4 bits) = 0x17 (1=keyframe, 7=AVC)
+     *   Byte 1: AVCPacketType: 0=Sequence Header, 1=NALU, 2=End of Sequence
+     *   Bytes 2-4: CompositionTimeOffset (24-bit, big-endian)
+     *   Bytes 5+: Payload:
+     *          - If AVCPacketType=0: AVCDecoderConfigurationRecord (contains SPS/PPS)
+     *          - If AVCPacketType=1: NAL units with 4-byte length prefixes (NO start codes) */
     uint8_t flv_tag[11 + RTMP_CHUNK_SIZE];
     int hlen = 0;
 
@@ -1107,7 +1203,13 @@ static int rtmp_send_video_tag(int fd, const uint8_t *data, int len,
     memcpy(flv_tag + hlen, data, copy_len);
 
     /* Total body length = FLV tag header (11) + FLV video body header (5) + ALL NAL data */
-    return rtmp_write_chunk(fd, 0, RTMP_CHUNK_VIDEO, timestamp_ms, flv_tag, 11 + 5 + len);
+    int ret = rtmp_write_chunk(fd, 0, RTMP_CHUNK_VIDEO, timestamp_ms, flv_tag, 11 + 5 + len);
+    if (ret < 0) {
+        ESP_LOGE(TAG, "RTMP: failed to send video frame (len=%d, timestamp=%u): errno %d", len, timestamp_ms, errno);
+    } else {
+        ESP_LOGD(TAG, "RTMP: video frame sent successfully (len=%d, timestamp=%u)", len, timestamp_ms);
+    }
+    return ret;
 }
 
 /* ------------------------------------------------------------------ */
